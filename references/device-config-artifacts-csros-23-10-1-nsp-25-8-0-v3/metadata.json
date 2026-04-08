@@ -1,0 +1,1106 @@
+{
+ "meta-data-header": {
+  "name": "predefined-cam-bundle-classic",
+  "version": "25.8.0",
+  "buildNumber": "1",
+  "formatVersion": "1.0",
+  "createdBy": "NOKIARND",
+  "creationDate": "Tue, 20 Jan 2026 15:13:38 UTC",
+  "title": "NSP Predefined Intents",
+  "description": "These are the predefined intent artifacts for NSP's Intent Based Configuration application",
+  "selectiveInstall": true
+ },
+ "artifact-meta-data": [
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "router-mpls-csros-23-10-1-24-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "356813",
+     "path": "content/router-mpls-csros-23-10-1-24-11",
+     "fileName": "router-mpls_csros_23-10-1_24-11_v1.zip",
+     "digest": "sha256:58330ef0f5f01d99fe872b02e28f5fde07f3332092fd9ef2e8a3ab8b1edf33f4"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.7",
+   "name": "qos-sap-egress-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "394712",
+     "path": "content/qos-sap-egress-csros-23-10-1-24-4",
+     "fileName": "qos-sap-egress_csros_23-10-1_24-4_v8.zip",
+     "digest": "sha256:586fbd0fe6351620b8017bf49e019d85ae7c4e8459d071545cdb31ac70eff54f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "policy-options-as-path-group-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358191",
+     "path": "content/policy-options-as-path-group-csros-23-10-1-23-11",
+     "fileName": "policy-options-as-path-group_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:4ace3fef8e9dc2b8319ed6cc7684800d74e8087ed209807ad6c6e32a4565dbce"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "qos-vlan-policy-cixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360602",
+     "path": "content/qos-vlan-policy-cixr-23-10-1-23-11",
+     "fileName": "qos-vlan-policy_cixr_23-10-1_23-11_v3.zip",
+     "digest": "sha256:6d5a27e0e4cbb5a10910f981583610ae97a03a620c7186c8ef7088b0ec83114b"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-sap-egress-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "348858",
+     "path": "content/qos-sap-egress-csas-23-10-1-23-11",
+     "fileName": "qos-sap-egress_csas_23-10-1_23-11_v4.zip",
+     "digest": "sha256:2a6d2b7ebcea999fd96d4db9eebec008602502b600fd5cd8f031ba9b280fe600"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "qos-network-queue-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "364799",
+     "path": "content/qos-network-queue-csros-23-10-1-23-11",
+     "fileName": "qos-network-queue_csros_23-10-1_23-11_v3.zip",
+     "digest": "sha256:a2fc611c37f1c1f05cc4983d03b04b11a0d192be157aab5f908cf7afc9b8a06a"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "routing-damping-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "356404",
+     "path": "content/routing-damping-csros-23-10-1-23-11",
+     "fileName": "routing-damping_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:9f1dd0fb765efc1a1dc2f545f31a81f3a08f13d4bcf4831e62ed3168db0a8484"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "bfd-sbfd-reflector-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "349457",
+     "path": "content/bfd-sbfd-reflector-csros-23-10-1-23-11",
+     "fileName": "bfd-sbfd-reflector_csros_23-10-1_23-11_v3.zip",
+     "digest": "sha256:2086580feba22447d5ec500a2dc8147d0d519f1e6c927fa049240a3bbdc074a0"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "lag-csas-23-10-1-24-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "105474",
+     "path": "content/lag-csas-23-10-1-24-11",
+     "fileName": "lag_csas_23-10-1_24-11_v1.zip",
+     "digest": "sha256:f9f10ef534eed357486942a5d82ffcf285e51e2ec9d769d70a8f9799c08b3f71"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "system-lldp-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "348779",
+     "path": "content/system-lldp-csros-23-10-1-23-11",
+     "fileName": "system-lldp_csros_23-10-1_23-11_v3.zip",
+     "digest": "sha256:d7b1aa46490b052cc92f0949ebeaf6186515defcb2702663533e4449129c9445"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.1",
+   "name": "subscriber-mgmt-sub-profile-csros-23-10-1-24-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "355202",
+     "path": "content/subscriber-mgmt-sub-profile-csros-23-10-1-24-11",
+     "fileName": "subscriber-mgmt-sub-profile_csros_23-10-1_24-11_v2.zip",
+     "digest": "sha256:302975a28c14c78a04e7b640eeda0eb122ac2f20b79ea53795c8479d103f16ba"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-aaa-local-profile-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358316",
+     "path": "content/sec-aaa-local-profile-csros-23-10-1-23-11",
+     "fileName": "sec-aaa-local-profile_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:96d9c2b35b3d45c57448b7b4b0f5daecc945de5bc8a6873eb1292edb111fa12d"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "port-xc-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "348334",
+     "path": "content/port-xc-csros-23-10-1-24-4",
+     "fileName": "port-xc_csros_23-10-1_24-4_v3.zip",
+     "digest": "sha256:cdf7308259d15a2a3e615203c82c35556b2028cf03173fe96bba8bc174ff9a51"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.0",
+   "name": "qos-sap-ingress-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "387719",
+     "path": "content/qos-sap-ingress-csros-23-10-1-24-4",
+     "fileName": "qos-sap-ingress_csros_23-10-1_24-4_v7.zip",
+     "digest": "sha256:912199af96b8289091ad10f6b3eef532f44fe88cc7b69055f91384d7c5e617c9"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.1",
+   "name": "router-mpls-dynamic-lsp-csros-23-10-1-25-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "375566",
+     "path": "content/router-mpls-dynamic-lsp-csros-23-10-1-25-4",
+     "fileName": "router-mpls-dynamic-lsp_csros_23-10-1_25-4_v2.zip",
+     "digest": "sha256:723fb88d6bda5c493dbe233e21794e91a5fc4875301460a5ef289cdb0d58c414"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-ingress-classification-cixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "361575",
+     "path": "content/qos-ingress-classification-cixr-23-10-1-23-11",
+     "fileName": "qos-ingress-classification_cixr_23-10-1_23-11_v4.zip",
+     "digest": "sha256:6292bbeb7dc1db761683c2afc833b6b69e7281b43437d26821f1d9eda7c62bb0"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.6",
+   "name": "routing-policy-statement-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "386796",
+     "path": "content/routing-policy-statement-csros-23-10-1-24-4",
+     "fileName": "routing-policy-statement_csros_23-10-1_24-4_v7.zip",
+     "digest": "sha256:a0d7aa72d1c263872c57393e7dca043bb2aa97ac129dbda74a2f8ab52148a992"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "log-syslog-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360030",
+     "path": "content/log-syslog-csros-23-10-1-23-11",
+     "fileName": "log-syslog_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:0b8d43b2132922aed730e8ae134fed67f844e8dd66fdda5ea92bc2e304bb92f4"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "policy-options-as-path-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357836",
+     "path": "content/policy-options-as-path-csros-23-10-1-23-11",
+     "fileName": "policy-options-as-path_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:4434eeab014cd1d64814d60eae27228fbf0327c9e7f0d521b80b3b6cbdd420c2"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "security-user-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "362439",
+     "path": "content/security-user-csros-23-10-1-23-11",
+     "fileName": "security-user_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:ae64b54d3216bc4569eb752694415490fb50727873b32d6f004660f13d5348df"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "router-rsvp-interface-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357100",
+     "path": "content/router-rsvp-interface-csros-23-10-1-24-4",
+     "fileName": "router-rsvp-interface_csros_23-10-1_24-4_v3.zip",
+     "digest": "sha256:4306451cc25aa33f28ec98c35285fb989365f730f41e99d017f45c7b5c3338e2"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "router-network-interface-cixr-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "390225",
+     "path": "content/router-network-interface-cixr-23-10-1-24-4",
+     "fileName": "router-network-interface_cixr_23-10-1_24-4_v5.zip",
+     "digest": "sha256:50fc8d470fee42aaa2b5e28f9e4e01b27fa20b522e607fa1c5283d50f8b24598"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-shared-policer-cixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358193",
+     "path": "content/qos-shared-policer-cixr-23-10-1-23-11",
+     "fileName": "qos-shared-policer_cixr_23-10-1_23-11_v4.zip",
+     "digest": "sha256:964ace51ffa138c385931d8ab36a7d44e06fcff98a85d761fcf730891b5c51cb"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-network-queue-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "344803",
+     "path": "content/qos-network-queue-csas-23-10-1-23-11",
+     "fileName": "qos-network-queue_csas_23-10-1_23-11_v4.zip",
+     "digest": "sha256:e8af901cf397e9d69edec0edd7519a93e915a5d6de1cb36e7a8cb5d30070f2bd"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "lag-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "441605",
+     "path": "content/lag-csros-23-10-1-24-4",
+     "fileName": "lag_csros_23-10-1_24-4_v5.zip",
+     "digest": "sha256:1447d3dd128d0cd43e827b4ec7890add3fac3d55d0693ec45b793f99a176eae2"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-schedulerpolicy-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "341411",
+     "path": "content/qos-schedulerpolicy-csas-23-10-1-23-11",
+     "fileName": "qos-schedulerpolicy_csas_23-10-1_23-11_v4.zip",
+     "digest": "sha256:cb1c22b6039a209ff275c0fbfe980fc3eb72ac90fe3de8178c50cfc602229296"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "qos-sap-ingress-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "376438",
+     "path": "content/qos-sap-ingress-csas-23-10-1-23-11",
+     "fileName": "qos-sap-ingress_csas_23-10-1_23-11_v5.zip",
+     "digest": "sha256:df34cda32f699c85d8b3f1e37981a3309c7bd458dcfab1fe2ee940b2bd090e41"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "security-zone-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "364371",
+     "path": "content/security-zone-csros-23-10-1-23-11",
+     "fileName": "security-zone_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:29091ce91fe5d5790a9a91b08f86222893d638da2cca5e5c094fc3a6084bdda1"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-port-ingress-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "349991",
+     "path": "content/qos-port-ingress-csas-23-10-1-23-11",
+     "fileName": "qos-port-ingress_csas_23-10-1_23-11_v4.zip",
+     "digest": "sha256:08037aa6f2eb95170b3782cd9edfb5678f4e41531ab3c8b0c365f48c0268827d"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "subscriber-mgmt-sla-profile-csros-23-10-1-24-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "356687",
+     "path": "content/subscriber-mgmt-sla-profile-csros-23-10-1-24-11",
+     "fileName": "subscriber-mgmt-sla-profile_csros_23-10-1_24-11_v1.zip",
+     "digest": "sha256:87b451595d7a6953a19531c577cadb10a8125c217c266a90f35f7e1dc46ac928"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-tls-trust-anchor-profile-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358484",
+     "path": "content/sec-tls-trust-anchor-profile-csros-23-10-1-23-11",
+     "fileName": "sec-tls-trust-anchor-profile_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:6163507fbde3e5380ac3223cc94102ccf10a5276c016687cb8847f28c8d406a8"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-ml-prefix-list-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357660",
+     "path": "content/qos-ml-prefix-list-csros-23-10-1-24-4",
+     "fileName": "qos-ml-prefix-list_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:4f62a7a057d2cd541cc05caad2f0bb4075cadb0464e95bc74a0ba3acb0d317c7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "router-ospf-area-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357013",
+     "path": "content/router-ospf-area-csros-23-10-1-24-4",
+     "fileName": "router-ospf-area_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:b5cbad0eff55be3690ab2893fafed0748e32d0ada5bb143202d10b88857a08e8"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.0",
+   "name": "routing-community-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358531",
+     "path": "content/routing-community-csros-23-10-1-23-11",
+     "fileName": "routing-community_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:dd43a7b12167c40a15d62e8b08ccb2379a78633b951b7ea4ed681ee0a73dd60b"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.1",
+   "name": "service-bgp-evpn-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "400303",
+     "path": "content/service-bgp-evpn-csros-23-10-1-24-4",
+     "fileName": "service-bgp-evpn_csros_23-10-1_24-4_v2.zip",
+     "digest": "sha256:c0b6ef42df5415eeeedd0fd851ecac04da4779f852517da55dceb478ea9117a1"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.6",
+   "name": "router-network-interface-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "390420",
+     "path": "content/router-network-interface-csros-23-10-1-24-4",
+     "fileName": "router-network-interface_csros_23-10-1_24-4_v7.zip",
+     "digest": "sha256:bed9bbdae7d4d63e55a16e4174b166bd12dd32e62aba2ab0d8b254307a4794b4"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "macsec-ca-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "348070",
+     "path": "content/macsec-ca-csros-23-10-1-23-11",
+     "fileName": "macsec-ca_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:50f914b9f9b05d5589ce3a1a377c456af974fea1636097864df0f42560dabcfa"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-server-tls-profile-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "361582",
+     "path": "content/sec-server-tls-profile-csros-23-10-1-23-11",
+     "fileName": "sec-server-tls-profile_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:b276ed9893b23b9a016b9a5ae5a527b00b5b1caeaafda06ae3698e852b84d5a9"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-policer-control-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358998",
+     "path": "content/qos-policer-control-csros-23-10-1-23-11",
+     "fileName": "qos-policer-control_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:1bda6eba894d7cb5d3ece4a900c3fdab95dd823d9f8d8fa23ae8357ab25dcee2"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-port-egress-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "348952",
+     "path": "content/qos-port-egress-csas-23-10-1-23-11",
+     "fileName": "qos-port-egress_csas_23-10-1_23-11_v4.zip",
+     "digest": "sha256:7650f7c51725d07c5d17ba0da24cece9e3ef16a59f66fc871ed5f057926bbd3e"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-wred-slope-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357042",
+     "path": "content/qos-wred-slope-csros-23-10-1-23-11",
+     "fileName": "qos-wred-slope_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:371daf2db0f8774e5652fa22ab4f8135a74f8021b585d8f4cdc3456f6782fbe7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-tls-client-cipher-list-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "359176",
+     "path": "content/sec-tls-client-cipher-list-csros-23-10-1-23-11",
+     "fileName": "sec-tls-client-cipher-list_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:10d0fad4e94ddd39f9b6d341f2121f59547fc9403a91fe8ad3032f8df27055e9"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "router-ospf-interface-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360570",
+     "path": "content/router-ospf-interface-csros-23-10-1-24-4",
+     "fileName": "router-ospf-interface_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:e8b9868ece6653804fdd5f056c6eb1a9e711411e958ad6c7ccc0236597acae2f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-ssh-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "352337",
+     "path": "content/sec-ssh-csros-23-10-1-23-11",
+     "fileName": "sec-ssh_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:0e65798c7f3ae0f36449f0202555b7ed50909fe1f7ebdd2aa60f8cad13ac1201"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-maf-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "368849",
+     "path": "content/sec-maf-csros-23-10-1-23-11",
+     "fileName": "sec-maf_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:1b8d06d83439118f2c840f460ed9b459445474780e5a95584e12b8e0508d89da"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "qos-network-csas-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "359099",
+     "path": "content/qos-network-csas-23-10-1-23-11",
+     "fileName": "qos-network_csas_23-10-1_23-11_v5.zip",
+     "digest": "sha256:8b33b7c99dc7d3f074d225d129dc6650d068bd8c60d0cbe352d1e2ea02937bda"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "router-mpls-srte-lsp-csros-23-10-1-25-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "372848",
+     "path": "content/router-mpls-srte-lsp-csros-23-10-1-25-4",
+     "fileName": "router-mpls-srte-lsp_csros_23-10-1_25-4_v1.zip",
+     "digest": "sha256:a7b60a4cebcd093b4941a73b1049c68f2dab0b0f7cef6326762e8aa687ea085f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "port-eth-csas-23-10-1-24-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "130638",
+     "path": "content/port-eth-csas-23-10-1-24-11",
+     "fileName": "port-eth_csas_23-10-1_24-11_v1.zip",
+     "digest": "sha256:92c5232f3dd327bc56a08737c0593a3b7448a8557b89dfb3718d603a57e666f5"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "router-isis-interface-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "359706",
+     "path": "content/router-isis-interface-csros-23-10-1-24-4",
+     "fileName": "router-isis-interface_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:42bb03ea31a819ff5884b9ab3d155ea7b9bd6e803b5e0d738044e4264f2bcd00"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "qos-egress-remark-policy-cixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "363019",
+     "path": "content/qos-egress-remark-policy-cixr-23-10-1-23-11",
+     "fileName": "qos-egress-remark-policy_cixr_23-10-1_23-11_v3.zip",
+     "digest": "sha256:e9a70d84ab4e8f770a0ebfbd3a850b401e0cb25526518fd64a22dc981915cee6"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "filter-ml-prefix-list-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "359159",
+     "path": "content/filter-ml-prefix-list-csros-23-10-1-23-11",
+     "fileName": "filter-ml-prefix-list_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:40c3bc0b513dd1b34921b57c2740e7b589d29f75d6e3aed558244a80bc7efbc7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.6",
+   "name": "port-eth-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "530588",
+     "path": "content/port-eth-csros-23-10-1-24-4",
+     "fileName": "port-eth_csros_23-10-1_24-4_v7.zip",
+     "digest": "sha256:d3de8309322d7fd65fec6a0f3980ad3bee24351fbb57e40ee44db6352f2ee177"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "lag-cixr-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "429857",
+     "path": "content/lag-cixr-23-10-1-24-4",
+     "fileName": "lag_cixr_23-10-1_24-4_v3.zip",
+     "digest": "sha256:8b1c229ebfa73a6f7ec66d6ac5f0331f4b351ed2d1b115c79a2340352766bbdd"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.0",
+   "name": "routing-prefix-list-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360857",
+     "path": "content/routing-prefix-list-csros-23-10-1-23-11",
+     "fileName": "routing-prefix-list_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:0a1cadaceac395903ce2f2b771f4bb7b997fc4cc4630671f06a74d3420531b5e"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.1",
+   "name": "router-mpls-path-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "355347",
+     "path": "content/router-mpls-path-csros-23-10-1-23-11",
+     "fileName": "router-mpls-path_csros_23-10-1_23-11_v2.zip",
+     "digest": "sha256:08f7ce3dbf7e1104e286dc9abd4d477ab3c4e97a1b26648e303610d3f16f1db1"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-ml-port-list-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "356227",
+     "path": "content/qos-ml-port-list-csros-23-10-1-24-4",
+     "fileName": "qos-ml-port-list_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:81fce6dadd82479a39ae561b8b46fecb840bdbffc70f348ebfcc4f40fe00861b"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "router-ospf-area-virtual-link-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "353608",
+     "path": "content/router-ospf-area-virtual-link-csros-23-10-1-24-4",
+     "fileName": "router-ospf-area-virtual-link_csros_23-10-1_24-4_v3.zip",
+     "digest": "sha256:7b048e6a1251fd8e2e4b4b6d9090e748b5f9ac97f45ddf5835f0fd0f7c9de014"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "routing-policy-statement-cixr-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "386673",
+     "path": "content/routing-policy-statement-cixr-23-10-1-24-4",
+     "fileName": "routing-policy-statement_cixr_23-10-1_24-4_v5.zip",
+     "digest": "sha256:b4b23c8d79d7946688b241062067c7ef7a62c80133536b041b3f35186596e04f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "filter-ml-port-list-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "356286",
+     "path": "content/filter-ml-port-list-csros-23-10-1-23-11",
+     "fileName": "filter-ml-port-list_csros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:1c535adf7c6e4dd5a87e2ab185c94fa1540da31b0f9936a4ee233f6b84144696"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "router-mpls-interface-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358646",
+     "path": "content/router-mpls-interface-csros-23-10-1-24-4",
+     "fileName": "router-mpls-interface_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:cd68a401978ba0cf76b1bf220ff783cb8a06a2026c9e6d64aa27695bfec78dcb"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-tls-server-cipher-list-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358932",
+     "path": "content/sec-tls-server-cipher-list-csros-23-10-1-23-11",
+     "fileName": "sec-tls-server-cipher-list_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:c56fb25830f8c776a84e041e765b88f90038d579b78279afdbbb7153dab6c6d7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-client-tls-profile-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "361415",
+     "path": "content/sec-client-tls-profile-csros-23-10-1-23-11",
+     "fileName": "sec-client-tls-profile_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:52baac60c9a4c16932954929916e87a294154a28f985ac2733a9264cd0f63524"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.6",
+   "name": "port-eth-cixr-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "470234",
+     "path": "content/port-eth-cixr-23-10-1-24-4",
+     "fileName": "port-eth_cixr_23-10-1_24-4_v7.zip",
+     "digest": "sha256:556943455874c665008a6580073eaa3a745f0f3336b6c565669fbdc0fa21841a"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "filter-redirect-policy-csros-23-10-1-24-4",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360954",
+     "path": "content/filter-redirect-policy-csros-23-10-1-24-4",
+     "fileName": "filter-redirect-policy_csros_23-10-1_24-4_v4.zip",
+     "digest": "sha256:422741d95f4e4c5379abb9ab1862935a545eed9591bf225a73834ab29eb5f302"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.0",
+   "name": "sec-tls-cert-profile-csros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "361615",
+     "path": "content/sec-tls-cert-profile-csros-23-10-1-23-11",
+     "fileName": "sec-tls-cert-profile_csros_23-10-1_23-11_v1.zip",
+     "digest": "sha256:3fb61bf4ded8fbe9b219cf47b4abf803148f7fb50c9821f4d61b3702580cd8a8"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "workflow-manager",
+   "applicationCompatibility": "24.0+",
+   "version": "2.0.0",
+   "name": "icm-wf-migrate-on-ne-upgrade",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "1981",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "README.md",
+     "digest": "sha256:e12a7bfd56701dafeb7e1af54ba20e7461066f5758e52ca8db488e2007408c3d"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5867",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-bf.yaml",
+     "digest": "sha256:4312de16868a50d414a07a54b9767165b1e01d7dc6049ba8c2408f22c87213cd"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "1912",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-ne-validation.yaml",
+     "digest": "sha256:1d999dadc2deebafa84a2c40dab6fc5b3d800646d609b38ebffcab406c58782b"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "4635",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-template-validation.yaml",
+     "digest": "sha256:cf3c80b49c2811c3561eb54bc4c6108dd5ff7fdc3384669ad0d610240826f45a"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5393",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.json",
+     "digest": "sha256:f9cc338d955be689b5c026828d8d7e0be78353d5e0e1e586bb4dfd35b4671ea5"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "3183",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.yaml",
+     "digest": "sha256:b40ed2b069fa6821141855d034aeb338dcff07e8a0ff5362e6d9beb20854ebc9"
+    }
+   ],
+   "dependencies": []
+  }
+ ]
+}

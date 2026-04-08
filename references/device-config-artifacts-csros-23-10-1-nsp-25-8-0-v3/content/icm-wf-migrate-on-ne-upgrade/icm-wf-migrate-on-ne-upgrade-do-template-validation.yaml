@@ -1,0 +1,131 @@
+version: "2.0"
+
+icm-wf-migrate-on-ne-upgrade-do-template-validation:
+  description: Workflow to check if sourceTemplate and targetTemplate are the valid.
+
+  type: direct
+
+  tags:
+    - ICM
+    - NE Upgrade Migration
+  workflow_meta:
+    title: Validate Source Target Pair
+    author: NOKIA R&D
+    version: "2.0.0"
+    license:
+    package: ICM NE upgrade
+    deprecated: false
+    dependencies:
+    platform:
+    nspOS: ["24.8", "24.11"]
+  input:
+    - sourceTemplate
+    - targetTemplate
+  tasks:
+    validate_pair:
+      action: std.noop
+      publish:
+        are_equal: <% $.sourceTemplate = $.targetTemplate %>
+      on-success:
+        - fail_if_equal: <% $.are_equal %>
+        - get_source_template_details: <% not $.are_equal %>
+
+    fail_if_equal:
+      action: std.fail
+      input:
+        error_data: "sourceTemplate and targetTemplate cannot be the same."
+
+    get_source_template_details:
+      action: nsp.https
+      input:
+        url: "https://restconf-gateway/restconf/operations/nsp-inventory:find"
+        method: POST
+        resultFilter: $.content
+        body: |
+          {
+            "input": {
+              "xpath-filter": "/nsp-icm:icm/templates/template[name='<% $.sourceTemplate %>']",
+              "depth": "3",
+              "offset": 0,
+              "limit": 1,
+              "fields": "name;life-cycle-state;config-form-state"
+            }
+          }
+      publish:
+        sourceTemplateObj: <% task().result.content %>
+      on-success:
+        get_target_template_details
+    get_target_template_details:
+      action: nsp.https
+      input:
+        url: "https://restconf-gateway/restconf/operations/nsp-inventory:find"
+        method: POST
+        resultFilter: $.content
+        body: |
+          {
+            "input": {
+              "xpath-filter": "/nsp-icm:icm/templates/template[name='<% $.targetTemplate %>']",
+              "depth": "3",
+              "offset": 0,
+              "limit": 1,
+              "fields": "name;life-cycle-state;config-form-state"
+            }
+          }
+      publish:
+        targetTemplateObj: <% task().result.content %>
+      on-success:
+        validate_data
+    
+    validate_data:
+      action: std.js
+      input: 
+        context: <% $ %>
+        script: |
+          source_template_obj= $.sourceTemplateObj
+          sourceTemplateName= $.sourceTemplate
+          if (source_template_obj["nsp-inventory:output"]["data"]){
+              if(source_template_obj["nsp-inventory:output"]["data"].length !== 1){
+                return `Source template "${sourceTemplateName}" does not exist`
+              } 
+              if(source_template_obj["nsp-inventory:output"]["data"][0]['life-cycle-state'] !== 'released'){
+                return `Source template "${sourceTemplateName}" is not in released state`
+              }
+              if(source_template_obj["nsp-inventory:output"]["data"][0]['config-form-state'] !== 'up-to-date' && source_template_obj["nsp-inventory:output"]["data"][0]['config-form-state'] !== 'outdated'){
+                return `Source template "${sourceTemplateName}" is not in either 'up-to-date' or 'outdated' config-form-state`
+              }
+          } else{
+            return `Source template "${sourceTemplateName}" does not exist`
+          }      
+          target_template_obj= $.targetTemplateObj
+          targetTemplateName= $.targetTemplate
+          if (target_template_obj["nsp-inventory:output"]["data"]){
+              if(target_template_obj["nsp-inventory:output"]["data"].length !== 1){
+                return `Target template "${targetTemplateName}" does not exist`
+              }
+              if(target_template_obj["nsp-inventory:output"]["data"][0]['life-cycle-state'] !== 'released'){
+                return `Target template "${targetTemplateName}" is not in released state`
+              } 
+              if(target_template_obj["nsp-inventory:output"]["data"][0]['config-form-state'] !== 'up-to-date'){
+                return `Target template "${targetTemplateName}" is not in 'up-to-date' config-form-state`
+              }
+          } else{
+            return `Target template "${targetTemplateName}" does not exist`
+          }
+          return "Both templates are fine"
+      publish:
+        areBothValid: <% task().result %>
+      on-success:
+        - check_if_valid_templates
+    check_if_valid_templates:
+      action: nsp.assert
+      input: 
+        input: <% $.areBothValid %>
+        expected: "Both templates are fine"
+        shouldFail: true
+      on-success:
+        continue
+      on-error:
+        error_data:  <% $.areBothValid %>
+
+    continue:
+      action: std.noop

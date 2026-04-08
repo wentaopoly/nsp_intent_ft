@@ -1,0 +1,354 @@
+{
+ "meta-data-header": {
+  "name": "predefined-cam-bundle-md-classic-unified",
+  "version": "25.8.0",
+  "buildNumber": "1",
+  "formatVersion": "1.0",
+  "createdBy": "NOKIARND",
+  "creationDate": "Tue, 20 Jan 2026 15:13:46 UTC",
+  "title": "NSP Predefined Intents",
+  "description": "These are the predefined intent artifacts for NSP's Intent Based Configuration application",
+  "selectiveInstall": true
+ },
+ "artifact-meta-data": [
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.3",
+   "name": "icm-equipment-port-e-m",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "340748",
+     "path": "content/icm-equipment-port-e-m",
+     "fileName": "icm-equipment-port-e_m-2408.zip",
+     "digest": "sha256:6bd9c1483c9131d9035b7760b2a22e218e66f3015ee0ef134de73a1016d38147"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.9",
+   "name": "icm-te-tunnel",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "450671",
+     "path": "content/icm-te-tunnel",
+     "fileName": "icm-te-tunnel-2404.zip",
+     "digest": "sha256:26e4577b53b59767a7fca15600abe8986e2d05c36d5a659c5121e9edf43ed2c7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-equipment-port-access-x21",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "342154",
+     "path": "content/icm-equipment-port-access-x21",
+     "fileName": "icm-equipment-port-access-x21-2408.zip",
+     "digest": "sha256:b722335e9b0d528306dd7799d70ef1ddf689995fbdf2fbd91b0136040014dba7"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-equipment-port-access-ce",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "344542",
+     "path": "content/icm-equipment-port-access-ce",
+     "fileName": "icm-equipment-port-access-ce-2408.zip",
+     "digest": "sha256:09f24bab3eeacac022e7354ce2c72e4c8cda89eab4755a15e605edc9585d89c3"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.3",
+   "name": "icm-nge-key-group",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "341387",
+     "path": "content/icm-nge-key-group",
+     "fileName": "icm-nge-key_group-2408.zip",
+     "digest": "sha256:042b3c75a430f1f0335e6bb62d67ed4e92cf178100fe3e165ded15676f045fe0"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.5",
+   "name": "icm-filter-ip-filter",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "369963",
+     "path": "content/icm-filter-ip-filter",
+     "fileName": "icm-filter-ip_filter-2408.zip",
+     "digest": "sha256:7219a5ccf5b2a24dbbb029cde5cd63b2a8f0fb04d73fc940f83c9b8b17fb4a08"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.6",
+   "name": "icm-system-security-cpm",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "375163",
+     "path": "content/icm-system-security-cpm",
+     "fileName": "icm-system-security_cpm-2408.zip",
+     "digest": "sha256:4948bd90b7fcc053073fe3200c81bbc9e93108a2a13b171561d4befa3d2d6304"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-service-customer",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "354437",
+     "path": "content/icm-service-customer",
+     "fileName": "icm-service-customer-2408.zip",
+     "digest": "sha256:a386697a74bd3c1bd760f8cfd6f366107521f5a22f4a8b1b4a88864743ba8427"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.6",
+   "name": "icm-equipment-port-ethernet",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "380592",
+     "path": "content/icm-equipment-port-ethernet",
+     "fileName": "icm-equipment-port-ethernet-2408.zip",
+     "digest": "sha256:f7dba2a1f15039899e9ea72245d7d1f1f5e49889d30ac5cbba3145d25510b6ed"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.6",
+   "name": "icm-router-bgp-group",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "382066",
+     "path": "content/icm-router-bgp-group",
+     "fileName": "icm-router-bgp_group-2408.zip",
+     "digest": "sha256:87f8850c6099a945b2272479e46eda51a25711066dfea5dbfbbac35b293dffca"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-service-system-evpn",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360306",
+     "path": "content/icm-service-system-evpn",
+     "fileName": "icm-service-system_evpn-2408.zip",
+     "digest": "sha256:cae57236ed8e82283b981a1ca968086f5e2d7b67adeb784e60303f14279419dd"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.5",
+   "name": "icm-router-policystatement-srrouter",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "362921",
+     "path": "content/icm-router-policystatement-srrouter",
+     "fileName": "icm-router-policystatement-srrouter-2408.zip",
+     "digest": "sha256:43d209d86f8efcef7629951b4f4b591c124cb8c44735421cbe30c4c006d2fac0"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.3",
+   "name": "icm-equipment-card-mda",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360755",
+     "path": "content/icm-equipment-card-mda",
+     "fileName": "icm-equipment-card_mda-2408.zip",
+     "digest": "sha256:7f6737d7ff8f4e17cf5a433f844d1463e202af7d4d260c977048b08de5dc1c80"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.6",
+   "name": "icm-router-network-interface",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "386236",
+     "path": "content/icm-router-network-interface",
+     "fileName": "icm-router-network-interface-2408.zip",
+     "digest": "sha256:fb14a06f84b36526991636c63550b022db1dd0e683a22bb38e000364d0e9f652"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-equipment-port-access-c3794",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "343053",
+     "path": "content/icm-equipment-port-access-c3794",
+     "fileName": "icm-equipment-port-access-c3794-2408.zip",
+     "digest": "sha256:5ff4dbfe0959eca81c52434aa3956927de02f0162bcb15be4dfadb364f4bd37a"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.4",
+   "name": "icm-system-ptp",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357440",
+     "path": "content/icm-system-ptp",
+     "fileName": "icm-system-ptp-2408.zip",
+     "digest": "sha256:9fc03b327d350e7b752c737fecdf534273ad4e49be4f8636386591848a5f6919"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.5",
+   "name": "icm-equipment-port-access-rs232",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "343179",
+     "path": "content/icm-equipment-port-access-rs232",
+     "fileName": "icm-equipment-port-access-rs232-2408.zip",
+     "digest": "sha256:103841cc2cf7b7f615d165457d1cd5f9251559b22b632fefbaaa449b5ad49b8f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.8",
+   "name": "icm-logical-lag-access",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "371329",
+     "path": "content/icm-logical-lag-access",
+     "fileName": "icm-logical-lag-access-2408.zip",
+     "digest": "sha256:54b4aeb21393739a805fdf17dea356598c1dfe262c8390bf581be8bb441d43a4"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "workflow-manager",
+   "applicationCompatibility": "24.0+",
+   "version": "2.0.0",
+   "name": "icm-wf-migrate-on-ne-upgrade",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "1981",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "README.md",
+     "digest": "sha256:e12a7bfd56701dafeb7e1af54ba20e7461066f5758e52ca8db488e2007408c3d"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5867",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-bf.yaml",
+     "digest": "sha256:4312de16868a50d414a07a54b9767165b1e01d7dc6049ba8c2408f22c87213cd"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "1912",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-ne-validation.yaml",
+     "digest": "sha256:1d999dadc2deebafa84a2c40dab6fc5b3d800646d609b38ebffcab406c58782b"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "4635",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-template-validation.yaml",
+     "digest": "sha256:cf3c80b49c2811c3561eb54bc4c6108dd5ff7fdc3384669ad0d610240826f45a"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5393",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.json",
+     "digest": "sha256:f9cc338d955be689b5c026828d8d7e0be78353d5e0e1e586bb4dfd35b4671ea5"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "3183",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.yaml",
+     "digest": "sha256:b40ed2b069fa6821141855d034aeb338dcff07e8a0ff5362e6d9beb20854ebc9"
+    }
+   ],
+   "dependencies": []
+  }
+ ]
+}

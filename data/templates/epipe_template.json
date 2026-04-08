@@ -1,0 +1,65 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "epipe:epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 0,
+          "mtu": 1492,
+          "ne-service-id": 0,
+          "sdp-details": {
+            "sdp": [
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "",
+                "override-vc-id": false,
+                "sdp-id": "",
+                "source-device-id": "",
+                "vc-type": "ether"
+              },
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "",
+                "override-vc-id": false,
+                "sdp-id": "",
+                "source-device-id": "",
+                "vc-type": "ether"
+              }
+            ]
+          },
+          "site-a": {
+            "device-id": "",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 0,
+                "port-id": ""
+              }
+            ]
+          },
+          "site-b": {
+            "device-id": "",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 0,
+                "port-id": ""
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "",
+      "template-name": "ePIPE-Service-Using-SDP"
+    }
+  ]
+}

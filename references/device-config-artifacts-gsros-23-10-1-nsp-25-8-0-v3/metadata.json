@@ -1,0 +1,322 @@
+{
+ "meta-data-header": {
+  "name": "predefined-cam-bundle-md-classic-global",
+  "version": "25.8.0",
+  "buildNumber": "1",
+  "formatVersion": "1.0",
+  "createdBy": "NOKIARND",
+  "creationDate": "Tue, 20 Jan 2026 15:13:40 UTC",
+  "title": "NSP Predefined Intents",
+  "description": "These are the predefined intent artifacts for NSP's Intent Based Configuration application",
+  "selectiveInstall": true
+ },
+ "artifact-meta-data": [
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "port-connector-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358190",
+     "path": "content/port-connector-gsros-23-10-1-23-11",
+     "fileName": "port-connector_gsros_23-10-1_23-11_v5.zip",
+     "digest": "sha256:1f4e8690ca6919bba6e664132fc56e728d51d73500d2b9876f675c1c3959d131"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "security-cpu-protection-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "360328",
+     "path": "content/security-cpu-protection-gsros-23-10-1-23-11",
+     "fileName": "security-cpu-protection_gsros_23-10-1_23-11_v5.zip",
+     "digest": "sha256:bde96720f8c5330b2da109c9ed069877c45b16ff5d2f0147ea39ff12df8c3f79"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "security-dist-cpu-protection-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "369320",
+     "path": "content/security-dist-cpu-protection-gsros-23-10-1-23-11",
+     "fileName": "security-dist-cpu-protection_gsros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:e27ce02fa2a1941327e9fa27b7a9af6a8389695db6552292ccddbef6532dc60c"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.5",
+   "name": "qos-port-policy-gixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "365062",
+     "path": "content/qos-port-policy-gixr-23-10-1-23-11",
+     "fileName": "qos-port-policy_gixr_23-10-1_23-11_v6.zip",
+     "digest": "sha256:3659ea79d9dc7d74f42efa60eae38bcb0ba9e3cc0256a4eec94a8538d67f9e9c"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.5",
+   "name": "filter-mac-filter-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "383613",
+     "path": "content/filter-mac-filter-gsros-23-10-1-23-11",
+     "fileName": "filter-mac-filter_gsros_23-10-1_23-11_v6.zip",
+     "digest": "sha256:677ba0b56d3db10a132e47d228f47eb734174f17f4991b46be93667fd1bc4c4d"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.2",
+   "name": "routing-admin-tags-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357746",
+     "path": "content/routing-admin-tags-gsros-23-10-1-23-11",
+     "fileName": "routing-admin-tags_gsros_23-10-1_23-11_v3.zip",
+     "digest": "sha256:160f463bba087e85b7c5a2c97523d9b33699adf7b324ec89e72fb19104f336ca"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.5",
+   "name": "sync-if-timing-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "369209",
+     "path": "content/sync-if-timing-gsros-23-10-1-23-11",
+     "fileName": "sync-if-timing_gsros_23-10-1_23-11_v6.zip",
+     "digest": "sha256:4b4251cfa8f7107a257aec9ad3d52e9d2d647ccc98135b0922a355ae4a5c5e7c"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.5",
+   "name": "qos-network-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "403549",
+     "path": "content/qos-network-gsros-23-10-1-23-11",
+     "fileName": "qos-network_gsros_23-10-1_23-11_v6.zip",
+     "digest": "sha256:a7dfe5c70f31a9696d6b307eadd71d6840b54f05ef9dec87f560eb089ccc343c"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "file-accounting-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "379625",
+     "path": "content/file-accounting-gsros-23-10-1-23-11",
+     "fileName": "file-accounting_gsros_23-10-1_23-11_v5.zip",
+     "digest": "sha256:b3840de2bd6880445ef5fdb05f16ba646da13e492608f9c76466a0bdef878c4d"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "routing-admin-grp-and-srlg-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "357351",
+     "path": "content/routing-admin-grp-and-srlg-gsros-23-10-1-23-11",
+     "fileName": "routing-admin-grp-and-srlg_gsros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:803dce55450fdaf531d6b6c26040c9c29c7e26db27003373a108ac8dd55c0d65"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.3",
+   "name": "qos-schedulerpolicy-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "363854",
+     "path": "content/qos-schedulerpolicy-gsros-23-10-1-23-11",
+     "fileName": "qos-schedulerpolicy_gsros_23-10-1_23-11_v4.zip",
+     "digest": "sha256:19b9b2f2b5ac430fcf5a721434693f91f5f6659867a9714fa1c2eb3f1ddf8e6d"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.5",
+   "name": "qos-sap-ingress-gixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "383274",
+     "path": "content/qos-sap-ingress-gixr-23-10-1-23-11",
+     "fileName": "qos-sap-ingress_gixr_23-10-1_23-11_v6.zip",
+     "digest": "sha256:0367405f5cf0a0af26ad4ec2773baf7e505fa0826f9968c6552b37b09f45c2c9"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "qos-network-ingress-gixr-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "365352",
+     "path": "content/qos-network-ingress-gixr-23-10-1-23-11",
+     "fileName": "qos-network-ingress_gixr_23-10-1_23-11_v5.zip",
+     "digest": "sha256:1450b9ae024f75125e4c4db86377d4ba813a60c5c64c092fb97844501328db90"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.4",
+   "name": "bfd-bfd-template-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "358446",
+     "path": "content/bfd-bfd-template-gsros-23-10-1-23-11",
+     "fileName": "bfd-bfd-template_gsros_23-10-1_23-11_v5.zip",
+     "digest": "sha256:cbc886400eafad3b903ada2bf65a7f15b145e1653afdc65f10b21635114db79f"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "1.0.7",
+   "name": "filter-ipv6-filter-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "403757",
+     "path": "content/filter-ipv6-filter-gsros-23-10-1-23-11",
+     "fileName": "filter-ipv6-filter_gsros_23-10-1_23-11_v8.zip",
+     "digest": "sha256:eb62ae3d17eaf62f16c11f8d796e9eba945ee16a81d37607f20d9bdf8d0c7f08"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "intent-manager",
+   "applicationCompatibility": "25.8+",
+   "version": "2.0.1",
+   "name": "mc-peer-lag-endpoint-gsros-23-10-1-23-11",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "393715",
+     "path": "content/mc-peer-lag-endpoint-gsros-23-10-1-23-11",
+     "fileName": "mc-peer-lag-endpoint_gsros_23-10-1_23-11_v6.zip",
+     "digest": "sha256:9779eecb8aa2c19f0656c46135fc713e7725d23fcdcc7527ceffb8169e9e5839"
+    }
+   ],
+   "dependencies": []
+  },
+  {
+   "targetApplication": "workflow-manager",
+   "applicationCompatibility": "24.0+",
+   "version": "2.0.0",
+   "name": "icm-wf-migrate-on-ne-upgrade",
+   "artifact-content": [
+    {
+     "type": "application/octet-stream",
+     "size": "1981",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "README.md",
+     "digest": "sha256:e12a7bfd56701dafeb7e1af54ba20e7461066f5758e52ca8db488e2007408c3d"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5867",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-bf.yaml",
+     "digest": "sha256:4312de16868a50d414a07a54b9767165b1e01d7dc6049ba8c2408f22c87213cd"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "1912",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-ne-validation.yaml",
+     "digest": "sha256:1d999dadc2deebafa84a2c40dab6fc5b3d800646d609b38ebffcab406c58782b"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "4635",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-do-template-validation.yaml",
+     "digest": "sha256:cf3c80b49c2811c3561eb54bc4c6108dd5ff7fdc3384669ad0d610240826f45a"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "5393",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.json",
+     "digest": "sha256:f9cc338d955be689b5c026828d8d7e0be78353d5e0e1e586bb4dfd35b4671ea5"
+    },
+    {
+     "type": "application/octet-stream",
+     "size": "3183",
+     "path": "content/icm-wf-migrate-on-ne-upgrade",
+     "fileName": "icm-wf-migrate-on-ne-upgrade-main.yaml",
+     "digest": "sha256:b40ed2b069fa6821141855d034aeb338dcff07e8a0ff5362e6d9beb20854ebc9"
+    }
+   ],
+   "dependencies": []
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+  "nsp-tunnel-intent:intent": [
+    {
+      "source-ne-id": "",
+      "sdp-id": "",
+      "intent-type": "tunnel",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "MPLSTunnelsWithBGP",
+      "intent-specific-data": {
+        "tunnel:tunnel": {
+          "destination-ne-id": "",
+          "admin-state": "unlocked",
+          "transport-type": "mpls",
+          "signaling": "tldp",
+          "mpls": {
+            "mixed-lsp-mode": false,
+            "enable-ldp": false,
+            "enable-bgp-tunnel": true,
+            "sr-isis": false,
+            "sr-ospf": false,
+            "lsp": ""
+          },
+          "hello-parameters": {
+            "keep-alive-enabled": false
+          },
+          "name": ""
+        }
+      }
+    }
+  ]
+}

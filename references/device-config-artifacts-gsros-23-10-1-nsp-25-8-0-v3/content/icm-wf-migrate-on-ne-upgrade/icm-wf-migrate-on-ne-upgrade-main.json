@@ -1,0 +1,202 @@
+{
+  "type": "object",
+  "properties": [
+    {
+      "name": "neIds",
+      "title": "NE IDs",
+      "description": "description for neIds",
+      "columnSpan": 4,
+      "newRow": true,
+      "readOnly": false,
+      "required": true,
+      "type": "list",
+      "displayKey": "ne-id",
+      "component": {
+        "input": "picker"
+      },
+      "componentProps": {
+        "isInfinite": true,
+        "infiniteProps": {
+          "datasource": "nspWebUI.neListPaged"
+        }
+      },
+      "validations": {
+        "message": "Migration is supported only for a single NE and templates will be suggested based on the selected NE.",
+        "length": [
+          {
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "title": "NE ID",
+          "name": "ne-id",
+          "type": "string",
+          "floatingFilter": true
+        }
+      ]
+    },
+    {
+      "description": "Select Source and Target Template pair",
+      "name": "sourceTargetPairList",
+      "type": "list",
+      "showTitle": true,
+      "componentProps": {
+        "addButtonLabel": "Add",
+        "dialogWidth": "500px",
+        "dialogHeight": "600px",
+        "disableAddButton": false,
+        "hideCreateAnotherBtn": false,
+        "clearOnSubmit": true
+      },
+      "typeProps": {
+        "isPagination": true,
+        "height": "400px",
+        "paginationProps": {
+          "pageLabel": "pages"
+        }
+      },
+      "title": "Source And Target Template Pair",
+      "columnSpan": 3,
+      "newRow": true,
+      "disabled": false,
+      "readOnly": false,
+      "properties": [
+        {
+          "name": "sourceTemplate",
+          "title": "Source Template",
+          "description": "description for sourceTemplate",
+          "columnSpan": 4,
+          "newRow": true,
+          "readOnly": false,
+          "required": true,
+          "type": "leafref",
+          "default": "",
+          "displayKey": "name",
+          "suggest": {
+            "action": "nspWebUI.icmNEUpgradeGetTemplates"
+          },
+          "componentProps": {
+            "isObject": false,
+            "isPagination": true,
+            "pagintaionProps": {
+              "pageLabel": "Page"
+            }
+          },
+          "properties": [
+            {
+              "title": "Name",
+              "name": "name",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Description",
+              "name": "description",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Life cycle state",
+              "name": "life-cycle-state",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Intent type",
+              "name": "intent-type",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Intent type version",
+              "name": "intent-type-version",
+              "type": "number",
+              "floatingFilter": true
+            },
+            {
+              "title": "Category",
+              "name": "category",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Role",
+              "name": "role",
+              "type": "string",
+              "floatingFilter": true
+            }
+          ]
+        },
+        {
+          "name": "targetTemplate",
+          "title": "Target Template",
+          "description": "description for targetTemplate",
+          "columnSpan": 4,
+          "newRow": true,
+          "readOnly": false,
+          "required": true,
+          "type": "leafref",
+          "default": "",
+          "displayKey": "name",
+          "suggest": {
+            "action": "nspWebUI.icmNEUpgradeGetTemplates"
+          },
+          "componentProps": {
+            "isObject": false,
+            "isPagination": true,
+            "pagintaionProps": {
+              "pageLabel": "Page"
+            }
+          },
+          "properties": [
+            {
+              "title": "Name",
+              "name": "name",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Description",
+              "name": "description",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Life cycle state",
+              "name": "life-cycle-state",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Intent type",
+              "name": "intent-type",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Intent type version",
+              "name": "intent-type-version",
+              "type": "number",
+              "floatingFilter": true
+            },
+            {
+              "title": "Category",
+              "name": "category",
+              "type": "string",
+              "floatingFilter": true
+            },
+            {
+              "title": "Role",
+              "name": "role",
+              "type": "string",
+              "floatingFilter": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

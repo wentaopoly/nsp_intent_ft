@@ -1,0 +1,21 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "service-name": "",
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "VPRNServiceTemplate",
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 0,
+          "sdp-details": {},
+          "site-details": {
+            "site": []
+          }
+        }
+      }
+    }
+  ]
+}

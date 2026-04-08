@@ -1,0 +1,74 @@
+version: "2.0"
+
+icm-wf-migrate-on-ne-upgrade-do-ne-validation:
+  description: Workflow to check if NE exist in inventory.
+
+  type: direct
+
+  tags:
+    - ICM
+    - NE Upgrade Migration
+  workflow_meta:
+    title: Validate NE
+    author: NOKIA R&D
+    version: "2.0.0"
+    license:
+    package: ICM NE upgrade
+    deprecated: false
+    dependencies:
+    platform:
+    nspOS: ["24.8", "24.11"]
+  input:
+    - neId
+  tasks:
+    get_ne_details:
+      action: nsp.https
+      input:
+        url: "https://restconf-gateway/restconf/operations/nsp-inventory:find"
+        method: POST
+        resultFilter: $.content
+        body: |
+          {
+            "input": {
+              "xpath-filter":  "/nsp-equipment:network/network-element[ne-id='<% $.neId %>']",
+              "depth": "2",
+              "offset": 0,
+              "limit": 1,
+              "fields": "ne-id;ne-name"
+            }
+          }
+      publish:
+        neIdDetails: <% task().result.content %>
+      on-success:
+        validate_data
+    validate_data:
+      action: std.js
+      input:
+        context: <% $ %>
+        script: |
+          ne_id_details = $.neIdDetails
+          ne_id = $.neId
+          if(ne_id_details["nsp-inventory:output"]["data"]){
+            if(ne_id_details["nsp-inventory:output"]["data"].length !== 1){
+              return `NE ${ne_id} does not exist in inventory`
+            }
+          } else{
+            return `NE ${ne_id} does not exist in inventory` 
+          }
+          return "NE is present in inventory"
+      publish:
+        isValidNE: <% task().result %>
+      on-success:
+        - check_if_valid_NE
+    check_if_valid_NE:
+      action: nsp.assert
+      input:
+        input: <% $.isValidNE %>
+        expected: "NE is present in inventory"
+        shouldFail: true
+      on-success:
+        continue
+      on-error:
+        error_data:  <% $.isValidNE %>
+    continue:
+      action: std.noop

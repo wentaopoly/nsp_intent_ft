@@ -1,0 +1,171 @@
+version: "2.0"
+
+icm-wf-migrate-on-ne-upgrade-do-bf:
+  description: Workflow for NE Upgrade scenario to migrate deployments from one template to another.
+
+  type: direct
+
+  tags:
+    - ICM
+    - NE Upgrade Migration
+  workflow_meta:
+    title: NE migrate icm workflow
+    author: NOKIA R&D
+    version: "2.0.0"
+    license:
+    package: ICM NE upgrade
+    deprecated: false
+    dependencies:
+    platform:
+    nspOS: ["24.8", "24.11"]
+  input:
+    - sourceTemplate
+    - targetTemplate
+    - neId
+  tasks:
+    check_templates:
+      action: std.noop
+      publish:
+        are_templates_equal: <% $.sourceTemplate = $.targetTemplate %>
+        batch_limit: 300
+      on-success:
+        - fail_if_equal: <% $.are_templates_equal %>
+        - inventory_find_action: <% not $.are_templates_equal %>
+    fail_if_equal:
+      action: std.fail
+      input:
+        error_data: "sourceTemplate and targetTemplate cannot be the same."
+    inventory_find_action:
+      action: nsp.https
+      input:
+        url: "https://restconf-gateway/restconf/operations/nsp-inventory:find"
+        method: POST
+        resultFilter: $.content
+        body: |
+          {
+              "input": {
+                "xpath-filter": "/nsp-icm:icm/deployments/deployment[ne-id='<% $.neId %>' and template-name='<% $.sourceTemplate %>' and (deployment-status='deployed-aligned' or deployment-status='deployed-misaligned')]",
+                "depth": "3",
+                "offset": 0,
+                "limit": 1,
+                "fields": "target;target-identifier-value"
+              }
+          }
+      publish:
+        num_batches: <% ((task().result.content["nsp-inventory:output"]["total-count"] + ($.batch_limit-1)) / $.batch_limit) %>
+        batch_num: 0
+        deploymentsList: []      # Accumulated list for all deployments
+        allDepIden: []           # Accumulated list for all deployment identifiers
+      on-success:
+        fetch_inventory_batch
+    fetch_inventory_batch:
+      action: nsp.https
+      input:
+        url: "https://restconf-gateway/restconf/operations/nsp-inventory:find"
+        method: POST
+        body: |
+          {
+              "input": {
+                "xpath-filter": "/nsp-icm:icm/deployments/deployment[ne-id='<% $.neId %>' and template-name='<% $.sourceTemplate %>' and (deployment-status='deployed-aligned' or deployment-status='deployed-misaligned')]",
+                "depth": "3",
+                "offset": <% $.batch_num * $.batch_limit %>,
+                "limit": <% $.batch_limit %>,
+                "fields": "target;target-identifier-value"
+              }
+          }
+      publish:
+        inventoryOp: <% task().result.content %>
+      on-success:
+        - extract_batch_data
+    
+    extract_batch_data:
+      action: std.javascript
+      input:
+        script: |
+          function extractTargetInfo(jsonData) {
+            const data = jsonData["nsp-inventory:output"]["data"];
+            const extractedTargetList = [];
+            const extractedDepIden = [];
+
+            data.forEach(item => {
+              const target = item.target;
+              const targetIdentifierValue = item["target-identifier-value"];
+
+              extractedTargetList.push({
+                target: target,
+                "target-identifier-value": targetIdentifierValue
+              });
+              extractedDepIden.push({deployment: item["@"]["nsp-model:identifier"]})
+            });
+
+            return {extractedTargetList, extractedDepIden};
+          }
+          return extractTargetInfo(<% $.inventoryOp %>);
+      publish:
+        currentBatchDeployments: <% task().result.extractedTargetList %>
+        currentBatchIdentifiers: <% task().result.extractedDepIden %>
+      on-success:
+        - accumulate_data
+
+    accumulate_data:
+      action: std.noop
+      publish:
+        deploymentsList: <% $.deploymentsList + $.currentBatchDeployments %>  # Concatenate current batch to the full list
+        allDepIden: <% $.allDepIden + $.currentBatchIdentifiers %>            # Concatenate deployment identifiers
+        batch_num: <% $.batch_num + 1 %>  # Increment the batch number
+      on-success:
+        - check_if_more_batches
+
+    check_if_more_batches:
+      action: std.noop
+      publish:
+        continue_loop: <% $.batch_num < $.num_batches %>  # Boolean indicating if we should loop
+      on-success:
+        - fetch_inventory_batch: <% $.continue_loop %>   # Continue fetching batches if `batch_num < num_batches`
+        - justEcho: <% not $.continue_loop %>            # Otherwise, move to finalize
+
+    justEcho:
+      action: std.noop
+      publish:
+        finalDeploymentsList: <% $.deploymentsList %>
+        finalDepIdenList: <% $.allDepIden %>
+      on-success:
+        - doBrownFieldDiscovery
+    doBrownFieldDiscovery:
+      action: nsp.https
+      input:
+        method: POST
+        url: "https://restconf-gateway/restconf/operations/nsp-icm:discover-deployments"
+        body:
+          {
+            "input": {
+              "template-name": <% $.targetTemplate %>,
+              "targets": <% $.deploymentsList %>
+            }
+          }
+      publish:
+        discoveryOutput: <% task().result.content %>
+      on-success:
+        delay_before_deletion
+    delay_before_deletion:
+      action: std.sleep       # Added delay, so that ICM BE completes BF discovery before delete
+      input:
+        seconds: 10  # Adjust the delay time in seconds
+      on-success:
+        deleteDeploymentsFromNsp
+
+    deleteDeploymentsFromNsp:
+      action: nsp.https
+      input:
+        method: POST
+        url: "https://restconf-gateway/restconf/operations/nsp-icm:delete-deployments"
+        body:
+          {
+            "input": {
+              "delete-option": "nsp",
+              "deployments": <% $.allDepIden %>
+            }
+          }
+      publish:
+        deleteOutput: <% task().result.content %>
+

@@ -1,0 +1,109 @@
+version: "2.0"
+
+icm-wf-migrate-on-ne-upgrade-main:
+  description: Workflow for NE Upgrade scenario to migrate deployments from multiple source templates to multiple target templates.
+
+  type: direct
+
+  tags:
+    - ICM
+    - NE Upgrade Migration
+  workflow_meta:
+    title: NE migrate icm workflow
+    author: NOKIA R&D
+    version: "2.0.0"
+    license:
+    package: ICM NE upgrade
+    deprecated: false
+    dependencies:
+    platform:
+    nspOS: ["24.8", "24.11"]
+  input:
+    - sourceTargetPairList
+    - neIds
+  output:
+    sourceTargetPairList: <% $.sourceTargetPairList %>
+  tasks:
+    validate_num_nes:
+      action: nsp.assert
+      input:
+        input: <% $.neIds.where(true).count() %>
+        expected: 1
+        shouldFail: true
+      on-success:
+        extract_ne_id
+      publish-on-error:
+        error_data: "Workflow only accepts single NE"
+    extract_ne_id:
+      action: std.noop
+      publish:
+        neId: <% $.neIds[0]['ne-id'] %>
+      on-success:
+        validate_ne
+    validate_ne:
+      workflow: icm-wf-migrate-on-ne-upgrade-do-ne-validation
+      input:
+        neId: <% $.neId %>
+      publish-on-error:
+        error: <% task().result %>
+      on-success:
+        check_for_duplicate_pairs
+    check_for_duplicate_pairs:
+      action: std.js
+      input:
+        context: <% $ %>
+        script: |
+          function hasDuplicates(pairList) {
+            const seenPairs = new Set();
+
+            for (const pair of pairList) {
+              const pairString = `${pair.sourceTemplate}-${pair.targetTemplate}`;
+              if (seenPairs.has(pairString)) {
+                return true;
+              }
+              seenPairs.add(pairString);
+            }
+
+            return false;
+          }
+          return hasDuplicates($.sourceTargetPairList) ? 'Duplicate Pair of source and target templates pair found' : 'Validation passed'
+      publish:
+        areValidPairs: <% task().result %>
+      on-success:
+        - check_for_duplicate_pairs_res
+    check_for_duplicate_pairs_res:
+      action: nsp.assert
+      input:
+        input: <% $.areValidPairs %>
+        expected: "Validation passed"
+        shouldFail: true
+      on-success:
+        validate_source_target_pairs
+      on-error:
+        error_data: <% $.areValidPairs %>
+    validate_source_target_pairs:
+      with-items: sourceTargetPair in <% $.sourceTargetPairList %>
+      workflow: icm-wf-migrate-on-ne-upgrade-do-template-validation
+      input:
+        sourceTemplate: <% $.sourceTargetPair.sourceTemplate %>
+        targetTemplate: <% $.sourceTargetPair.targetTemplate %>
+      publish-on-error:
+        error: <% task().result %>
+      on-success:
+        - continue
+    continue:
+      action: std.noop
+      on-success:
+        - loop_on_source_template_pair
+    loop_on_source_template_pair:
+      with-items: sourceTargetPair in <% $.sourceTargetPairList %>
+      concurrency: 1
+      workflow: icm-wf-migrate-on-ne-upgrade-do-bf
+      input:
+        sourceTemplate: <% $.sourceTargetPair.sourceTemplate %>
+        targetTemplate: <% $.sourceTargetPair.targetTemplate %>
+        neId: <% $.neId %>
+      on-success:
+        - finalize
+    finalize:
+      action: std.noop

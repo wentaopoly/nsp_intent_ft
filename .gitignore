@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Claude
+.claude/
+
+# Large model checkpoints (exceed GitHub 100MB limit)
+output/qwen3-nsp-intent-ft/checkpoint-*/
+output/qwen3-nsp-intent-adapter/adapter_model.safetensors
+
+# OS
+.DS_Store
+Thumbs.db

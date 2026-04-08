@@ -16,6 +16,10 @@ env/
 output/qwen3-nsp-intent-ft/checkpoint-*/
 output/qwen3-nsp-intent-adapter/adapter_model.safetensors
 
+# Evaluation logs and per-sample checkpoints
+logs/
+data/generated/_eval_checkpoint_*.jsonl
+
 # OS
 .DS_Store
 Thumbs.db

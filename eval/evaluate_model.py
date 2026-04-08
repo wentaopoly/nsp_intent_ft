@@ -111,16 +111,19 @@ def check_sdp_bidirectional(fv):
         s0_dst = fv.get("sdp[0].destination-device-id", "")
         s1_src = fv.get("sdp[1].source-device-id", "")
         s1_dst = fv.get("sdp[1].destination-device-id", "")
-        return (s0_src == s1_dst and s0_dst == s1_src and s0_src and s0_dst)
+        # Cast to bool explicitly: Python's `and` short-circuits to the
+        # last operand, so without bool() this can return a string and
+        # break sum() in the metric aggregation step.
+        return bool(s0_src and s0_dst and s0_src == s1_dst and s0_dst == s1_src)
     except Exception:
         return False
 
 
 def run_evaluation(model, tokenizer, test_file, label="Test"):
     """Run evaluation on a JSONL test file."""
-    print(f"\n{'='*60}")
-    print(f"Evaluating on: {label} ({test_file})")
-    print(f"{'='*60}")
+    print(f"\n{'='*60}", flush=True)
+    print(f"Evaluating on: {label} ({test_file})", flush=True)
+    print(f"{'='*60}", flush=True)
 
     with open(test_file, "r") as f:
         samples = [json.loads(line) for line in f]
@@ -129,12 +132,20 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
     intent_counts = {"epipe": 0, "tunnel": 0, "vprn": 0}
     intent_scores = {"epipe": [], "tunnel": [], "vprn": []}
 
+    # Per-sample checkpoint file: written incrementally so a crash in the
+    # final aggregation step doesn't lose all the inference work.
+    checkpoint_path = os.path.join(
+        os.path.dirname(test_file) if os.path.dirname(test_file) else ".",
+        f"_eval_checkpoint_{label.replace(' ', '_').lower()}.jsonl",
+    )
+    checkpoint_f = open(checkpoint_path, "w")
+
     for i, sample in enumerate(samples):
         instruction = sample["messages"][1]["content"]
         gt_output = json.loads(sample["messages"][2]["content"])
         gt_type = gt_output.get("intent_type", "unknown")
 
-        print(f"  [{i+1}/{len(samples)}] {gt_type}: {instruction[:60]}...", end=" ")
+        print(f"  [{i+1}/{len(samples)}] {gt_type}: {instruction[:60]}...", end=" ", flush=True)
 
         prediction_text = predict(model, tokenizer, instruction)
         scores = evaluate_single(prediction_text, gt_output)
@@ -143,8 +154,14 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
         intent_counts[gt_type] = intent_counts.get(gt_type, 0) + 1
         intent_scores.setdefault(gt_type, []).append(scores)
 
+        # Write checkpoint row (intent_type + scores) immediately.
+        checkpoint_f.write(json.dumps({"i": i, "gt_type": gt_type, "scores": scores}) + "\n")
+        checkpoint_f.flush()
+
         status = "OK" if scores["json_valid"] and scores["value_accuracy"] > 0.8 else "FAIL"
-        print(f"[{status}] val_acc={scores['value_accuracy']:.2f}")
+        print(f"[{status}] val_acc={scores['value_accuracy']:.2f}", flush=True)
+
+    checkpoint_f.close()
 
     # Aggregate metrics
     print(f"\n--- {label} Results ---")

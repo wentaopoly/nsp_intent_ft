@@ -14,6 +14,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "data"))
 from predict import load_model, predict, extract_json
 from validate_sample import validate_epipe_sample, validate_tunnel_sample, validate_vprn_sample
 
+# YANG-based validator (Milestone 1). Imported from data/intent_validator.py.
+# Provides Tier 1 (path validity) + Tier 2 (type/range/enum/pattern/length)
+# checks against the official Nokia NSP YANG schema. Reported as a separate
+# `yang_valid` metric alongside the existing regex-based `schema_valid`.
+from intent_validator import validate_fill_values as validate_fill_values_yang
+
 
 def evaluate_single(prediction_text, ground_truth):
     """Evaluate a single prediction against ground truth."""
@@ -24,7 +30,9 @@ def evaluate_single(prediction_text, ground_truth):
         "field_precision": 0.0,
         "value_accuracy": 0.0,
         "sdp_bidirectional": None,
-        "schema_valid": False,
+        "schema_valid": False,    # legacy regex-based validator (validate_sample.py)
+        "yang_valid": False,      # YANG-based validator (intent_validator.py)
+        "yang_errors": [],        # detailed errors when yang_valid is False
     }
 
     # 1. JSON validity
@@ -70,7 +78,7 @@ def evaluate_single(prediction_text, ground_truth):
     if gt_type == "epipe":
         scores["sdp_bidirectional"] = check_sdp_bidirectional(pred_fv)
 
-    # 6. Schema validation
+    # 6. Schema validation (legacy regex-based)
     if pred_type == "epipe":
         valid, _ = validate_epipe_sample(pred_fv)
     elif pred_type == "tunnel":
@@ -80,6 +88,18 @@ def evaluate_single(prediction_text, ground_truth):
     else:
         valid = False
     scores["schema_valid"] = valid
+
+    # 7. YANG-based validation (Milestone 1).
+    # Tier 1 (path validity) + Tier 2 (type/range/enum/pattern/length) against
+    # the official Nokia NSP YANG schema in data/yang/<intent>/.
+    if pred_type in ("epipe", "tunnel", "vprn"):
+        try:
+            yang_ok, yang_errs = validate_fill_values_yang(pred_type, pred_fv)
+            scores["yang_valid"] = yang_ok
+            scores["yang_errors"] = yang_errs
+        except Exception as exc:
+            scores["yang_valid"] = False
+            scores["yang_errors"] = [f"validator crashed: {exc}"]
 
     return scores
 
@@ -136,7 +156,8 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
         "Field Recall": sum(s["field_recall"] for s in all_scores) / n,
         "Field Precision": sum(s["field_precision"] for s in all_scores) / n,
         "Value Accuracy": sum(s["value_accuracy"] for s in all_scores) / n,
-        "Schema Valid Rate": sum(s["schema_valid"] for s in all_scores) / n,
+        "Schema Valid Rate (regex)": sum(s["schema_valid"] for s in all_scores) / n,
+        "YANG Valid Rate": sum(s["yang_valid"] for s in all_scores) / n,
     }
 
     # SDP check (epipe only)

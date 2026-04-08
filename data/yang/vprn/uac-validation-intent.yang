@@ -1,0 +1,52 @@
+module uac-validation-intent {
+    yang-version 1.1;
+    namespace "http://www.nokia.com/management-solutions/uac-validation-intent";
+    prefix "ibsf-intent-uac-validation";
+    import webfwk-ui-metadata { prefix "ui"; }
+    organization "NOKIA Corp";
+    contact "";
+    description "This module defines the RPC to return the objects for intent UAC network span validation";
+
+    revision "2024-09-16" {
+      description "rpc uac-validation-objects";
+    }
+
+    container uac-validation-intent {
+        config false;
+    }
+
+    rpc uac-validation-objects {
+        description "This RPC will return the objects for intent UAC network span validation";
+        ui:action {
+            ui:order 1;
+            ui:i18n-text "Local Action with output";
+            ui:separator-before false;
+            ui:function "getUacValidationObjects";
+        }
+        input {
+            leaf action-name {
+                type string;
+                ui:i18n-text "Action Name";
+                ui:order 1;
+            }
+
+            leaf action-url {
+                type string;
+                ui:i18n-text "Action URL";
+                ui:order 2;
+            }
+
+            leaf intent-config {
+                type string;
+                ui:i18n-text "Intent Configuration";
+                ui:order 3;
+            }
+        }
+        output {
+            leaf-list ne-id {
+                type string;
+                description "List of NE ID";
+            }
+        }
+    }
+}

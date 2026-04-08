@@ -1,0 +1,192 @@
+module epipe {
+    namespace "urn:nokia:nsp:model:nsp-service-intent:services:epipe";
+    yang-version 1.1;
+    prefix "epipe";
+    import qos-filter-common { prefix "qos-filter-common"; }
+    import sdp-binding-common { prefix "sdp-binding-common"; }
+    import sap-common { prefix "sap-common"; }
+    import svc-common { prefix "svc-common"; }
+    organization "NOKIA Corp";
+    contact "";
+    description "";
+
+    revision "2026-01-15" {
+        description
+                "Adding 7210 statistics support.";
+    }
+
+    revision "2025-05-26" {
+        description
+                "25.8 changes - Adding PBB support";
+    }
+
+    revision "2022-04-29" {
+        description
+                "22.6 changes - Remove pw-switching";
+    }
+    revision "2021-08-25" {
+        description
+                "21.11 changes";
+    }
+    revision "2021-06-15" {
+        description
+                "Initial revision.";
+    }
+    typedef ieee-address {
+        type string {
+            pattern "([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|([0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5})";
+        }
+        description "The ieee-address type represents an IEEE 802 MAC address.";
+    }
+
+    grouping pbb-details {
+        container pbb {
+            description "Enter the pbb context";
+
+            leaf force-qtag-forwarding {
+                type boolean;
+                description "Add an IEEE 802.1q tag after CMAC addresses PBB header";
+            }
+
+            leaf local-switch-service-state {
+                type enumeration {
+                    enum sap                            { value 0; }
+                    enum pbb-tunnel                     { value 1; }
+                }
+                description "Endpoint state used to determine PBB-Epipe state";
+            }
+
+            container tunnel {
+                presence "Enable the tunnel context";
+                description "Enable the tunnel context";
+
+                leaf backbone-vpls-service-name {
+                    type string;
+                    description "Backbone VPLS service";
+                }
+
+                leaf isid {
+                     type int32 {
+                        range "0..16777215";
+                    }
+                    description "Service instance ID";
+                }
+
+                choice backbone-mac {
+                    case backbone-dest-mac {
+                        leaf backbone-dest-mac {
+                            type ieee-address;
+                            description "Backbone Destination MAC address";
+                        }
+                    }
+                    case backbone-dest-mac-name {
+                        leaf backbone-dest-mac-name {
+                            type string;
+                            description "Backbone destination MAC name for PBB packets";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    grouping configuration-details {
+        container epipe {
+            leaf ne-service-id {
+                type uint32 {
+                    range "1..2147483647";
+                }
+                description "Specify NE Service Id";
+            }
+
+            leaf mtu {
+                type uint16;
+                description "Service MTU";
+            }
+
+            uses svc-common:svc-details;
+
+            container site-a {
+
+                uses svc-common:site-details;
+                uses pbb-details;
+
+                list endpoint {
+                    key "port-id inner-vlan-tag outer-vlan-tag";
+                    max-elements 2;
+
+                    uses sap-common:sap-details;
+                    uses sap-common:sap-statistics;
+                    uses qos-filter-common:access-configuration-details;
+                }
+
+            }
+
+            container site-b{
+
+                uses svc-common:site-details;
+                uses pbb-details;
+
+                list endpoint {
+                    key "port-id inner-vlan-tag outer-vlan-tag";
+                    max-elements 2;
+                    
+                    uses sap-common:sap-details;
+                    uses sap-common:sap-statistics;
+                    uses qos-filter-common:access-configuration-details;
+                }  
+
+
+            }
+
+            container sdp-details{
+                list sdp {
+                    key "source-device-id sdp-id";
+                    max-elements 12;
+                    description "EPIPE spoke SDP information";
+
+                    uses sdp-binding-common:sdp-binding-details;
+
+                    leaf vc-type {
+                        type enumeration {
+                            enum "ether"                        { value 2; }
+                            enum "vlan"                         { value 4; }
+                        }
+                        default "ether";
+                        description "Type of virtual circuit (VC) associated with the SDP binding";
+                    }
+                    leaf control-word {
+                        type boolean;
+                        default "false";
+                        description "Use the control word as preferred";
+                    }
+                    container pw-status {
+                        description "Enter the pw-status context";
+                        leaf signaling {
+                            type boolean;
+                            default "true";
+                            description "Allow SDP binding to support pseudowire status signaling";
+                        }
+                        choice sdp-bind-pw-status {
+                            case block-on-peer-fault {
+                                leaf block-on-peer-fault {
+                                    type boolean;
+                                    default "false";
+                                    description "Block transmit direction of PW based on status code";
+                                }
+                            }
+                            case standby-signaling-slave {
+                                leaf standby-signaling-slave {
+                                    type boolean;
+                                    default "false";
+                                    description "Block spoke transmission based on PW standby status";
+                                }
+                            }
+                        }
+                    }
+                } // list spoke-sdp
+            }
+        }
+   }
+   uses epipe:configuration-details;
+}

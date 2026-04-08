@@ -1,0 +1,190 @@
+module tunnel {
+    namespace "urn:nokia:nsp:model:nsp-tunnel-intent:tunnels:tunnel";
+    yang-version 1.1;
+    prefix "tunnel";
+    organization "NOKIA Corp";
+    contact "";
+    description "";
+    revision "2023-12-06" {
+        description
+                "24.4 bgp signaling changes";
+    }
+    revision "2021-10-01" {
+        description
+                "Initial revision.";
+    }
+    
+    grouping configuration-details {
+        container tunnel {
+            /* leaf device-id {
+                type string;
+                description "Network Element identifier";
+                mandatory true;
+            } */
+            leaf name {
+                type string;
+                description "Specify Tunnel Name";
+                mandatory true;
+            }
+            /* leaf sdp-id {
+                type uint32 {
+                    range "1..2147483647";
+                }
+                description "Specify Sdp Id";
+                mandatory true;
+            }
+            leaf source-ne-id {
+                type string;
+                description "Source Network Element identifier";
+                mandatory true;
+            } */
+            leaf destination-ne-id {
+                type string;
+                description "Destination Network Element identifier";
+                mandatory true;
+            }
+            leaf description {
+                type string;
+                description "Specify Tunnel Description";
+            }
+            leaf admin-state {
+                type enumeration {
+                     enum unlocked;
+                     enum locked;
+                }
+                description "Tunnel Administrative State";
+                default unlocked;
+            }
+
+            leaf transport-type {
+                type enumeration {
+                     enum mpls;
+                     enum gre;
+                }
+                description "Tunnel Transport Type";
+                default mpls;
+            }
+            leaf signaling {
+                type enumeration {
+                     enum none;
+                     enum tldp;
+                     enum bgp;
+                }
+                description "Tunnel Signalling";
+                default tldp;
+            }
+
+            container mpls {
+                when "../transport-type='mpls'";
+                leaf mixed-lsp-mode {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel Mixed Lsp Mode";
+                }
+                leaf revert-time {
+                    type int32 {
+                        range "-1..600";
+                    }
+                    description "Specify Revert Time";
+                    //when "../mixed-lsp-mode='true'";
+                }
+                leaf enable-ldp {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel enable LDP";
+                }
+                leaf enable-bgp-tunnel {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel enable BGP tunnel";
+                }
+                leaf sr-isis {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel SR-ISIS";
+                }
+                leaf sr-ospf {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel SR-OSPF";
+                }
+
+                // This only applies if Enable LDP is not enabled or Mixed LSP is enabled regardless of LDP enable state or Enable BGP-Tunnel is not enabled.
+                // (enable-bgp-tunnel==false) && ((enable-ldp==false) ||  (enable-bgp-tunnel==false && mixed-lsp-mode==true))
+
+                leaf lsp {
+                    type string;
+                    //when "(../enable-bgp-tunnel!='true') and ((../enable-ldp!='true') or (../enable-ldp='true' and ../mixed-lsp-mode='true'))";
+                    description "LSP associated to Tunnel";
+                }
+            }
+
+            leaf mtu {
+                type int32 {
+                    range "0|576..9792";
+                }
+                description "Specify Tunnel MTU";
+            }
+            leaf metric {
+                type int32 {
+                    range "1..65535";
+                }
+                description "Specify Tunnel Metric";
+            }
+
+            container hello-parameters {
+                leaf keep-alive-enabled {
+                    type boolean;
+                    default "false";
+                    description "Specify Tunnel hello parameter keep alive enabled";
+                }
+                leaf hello-time {
+                    type int32 {
+                        range "1..3600";
+                    }
+                    description "Specify Tunnel hello parameter hello time";
+                }
+                leaf hello-message-length {
+                    type int32 {
+                        range "0|40..9198";
+                    }
+                    description "Specify Tunnel hello parameter hello message length";
+                }
+                leaf hello-request-timeout {
+                    type int32 {
+                        range "1..10";
+                    }
+                    description "Specify Tunnel hello parameter hello request timeout";
+                }
+                leaf hold-down-time {
+                    type int32 {
+                        range "0..3600";
+                    }
+                    description "Specify Tunnel hello parameter hold down time";
+                }
+                leaf max-drop-count {
+                    type int32 {
+                        range "1..5";
+                    }
+                    description "Specify Tunnel hello parameter max drop count";
+                }
+            }
+
+            leaf allow-fragmentation {
+                type boolean;
+                default "false";
+                description "Specify Tunnel allow fragmentation";
+                //when "../transport-type='gre'";
+            }
+            leaf-list steering-parameters {
+                type string;
+                description "IBSF parameter to control tunnel selection";
+            }
+            leaf-list tunnel-admin-group {
+                type string;
+                description "Specify Tunnel admin group";
+            }
+        }
+   }
+   uses tunnel:configuration-details;
+}

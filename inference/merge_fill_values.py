@@ -34,7 +34,7 @@ _DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 if _DATA_DIR not in sys.path:
     sys.path.insert(0, _DATA_DIR)
 
-from yang_schema import resolve_path  # noqa: E402
+from yang_schema import resolve_path, intent_body_info  # noqa: E402
 
 # VPRN site skeleton used when dynamically adding sites
 VPRN_SITE_SKELETON = {
@@ -112,13 +112,44 @@ VPRN_INTERFACE_SKELETON = {
 
 
 def load_template(intent_type):
-    """Load and return a deep copy of the template for the given intent type."""
+    """Load a deep copy of the template for the given intent type.
+
+    For the 3 original intent types (epipe / tunnel / vprn) we have
+    hand-curated JSON templates with NSP API defaults captured from real
+    network responses. For all other intent types added in M3+, we
+    synthesize a minimal envelope from `_INTENT_BODY_INFO` so that
+    set_nested() has somewhere to write the user-provided fields.
+    """
     filename = TEMPLATES.get(intent_type)
-    if not filename:
-        raise ValueError(f"Unknown intent type: {intent_type}")
-    path = os.path.join(TEMPLATE_DIR, filename)
-    with open(path, "r") as f:
-        return json.load(f)
+    if filename:
+        path = os.path.join(TEMPLATE_DIR, filename)
+        with open(path, "r") as f:
+            return json.load(f)
+    return _build_minimal_envelope(intent_type)
+
+
+def _build_minimal_envelope(intent_type):
+    """Synthesize the minimal NSP intent envelope around an empty body.
+
+    Used by `load_template()` for any intent type that doesn't have a
+    hand-curated JSON template file. The envelope shape is determined by
+    `intent_body_info()` which knows whether to use `nsp-service-intent:intent`
+    or `nsp-tunnel-intent:intent` and what the body container key is.
+    """
+    info = intent_body_info(intent_type)
+    return {
+        info["intent_key"]: [
+            {
+                "intent-type": intent_type,
+                "intent-type-version": "1",
+                "olc-state": "deployed",
+                "template-name": f"{intent_type}-default",
+                "intent-specific-data": {
+                    info["body_key"]: {},
+                },
+            }
+        ]
+    }
 
 
 def parse_path(dot_path):

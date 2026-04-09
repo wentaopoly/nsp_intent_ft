@@ -48,15 +48,21 @@ def validate_vprn_sample(fill_values):
 
 
 def validate_sample(sample):
-    """Validate a complete training sample dict (output is a JSON string)."""
+    """Validate a complete training sample dict (output is a JSON string).
+
+    Accepts ANY intent type that the YANG schema loader knows about
+    (currently 9: epipe / tunnel / vprn / vpls / ies / etree / cpipe /
+    evpn-epipe / evpn-vpls). If load_schema fails for an unknown intent
+    type, _combined will surface a descriptive error.
+    """
     try:
         output = json.loads(sample["output"]) if isinstance(sample["output"], str) else sample["output"]
     except (json.JSONDecodeError, KeyError):
         return False, ["Output is not valid JSON"]
 
     intent_type = output.get("intent_type")
-    fill_values = output.get("fill_values", {})
+    if not intent_type:
+        return False, ["Missing intent_type"]
 
-    if intent_type in ("epipe", "tunnel", "vprn"):
-        return _combined(intent_type, fill_values)
-    return False, [f"Unknown intent type: {intent_type}"]
+    fill_values = output.get("fill_values", {})
+    return _combined(intent_type, fill_values)

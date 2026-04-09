@@ -72,8 +72,17 @@ def diff_dicts(a, b, path=""):
             yield (path, a, b)
 
 
+_LEGACY_TYPES = {"epipe", "tunnel", "vprn"}
+
+
 def run_one(sample, source_label):
-    """Extract fill_values from a JSONL sample, merge with both versions, compare."""
+    """Extract fill_values from a JSONL sample, merge with both versions, compare.
+
+    Skips intent types not supported by the legacy implementation. The legacy
+    `inference/merge_fill_values.py` snapshot only knows epipe / tunnel / vprn,
+    so M3-introduced types (vpls / ies / etree / cpipe / evpn-epipe / evpn-vpls)
+    have nothing to compare against and are filtered out by the caller.
+    """
     out = json.loads(sample["messages"][2]["content"])
     intent_type = out["intent_type"]
     fv = out["fill_values"]
@@ -90,18 +99,23 @@ def main():
 
     test_inputs = []
 
-    # ALL golden tests
+    def _is_legacy_type(s):
+        out = json.loads(s["messages"][2]["content"])
+        return out.get("intent_type") in _LEGACY_TYPES
+
+    # ALL golden tests for the 3 legacy types
     golden_path = os.path.join(DATA_DIR, "golden_tests.jsonl")
     for s in load_jsonl(golden_path):
-        test_inputs.append(("golden", s))
+        if _is_legacy_type(s):
+            test_inputs.append(("golden", s))
 
-    # ALL test set samples (the ones the model was actually evaluated on)
+    # ALL test set samples for the 3 legacy types
     test_path = os.path.join(DATA_DIR, "test.jsonl")
-    test_samples = load_jsonl(test_path)
+    test_samples = [s for s in load_jsonl(test_path) if _is_legacy_type(s)]
     for s in test_samples:
         test_inputs.append(("test", s))
 
-    # Random sample of 50 train samples per intent type for breadth
+    # Random sample of 50 train samples per legacy intent type for breadth
     train_path = os.path.join(DATA_DIR, "train.jsonl")
     train_samples = load_jsonl(train_path)
     by_type = {"epipe": [], "tunnel": [], "vprn": []}
@@ -115,9 +129,10 @@ def main():
         for s in items[:50]:
             test_inputs.append((f"train-{it}", s))
 
+    n_golden = sum(1 for label, _ in test_inputs if label == "golden")
     print(f"Running {len(test_inputs)} samples through legacy and new merge...")
-    print(f"  golden:      5")
-    print(f"  test:        {len(test_samples)}")
+    print(f"  golden (legacy types only): {n_golden}")
+    print(f"  test (legacy types only):   {len(test_samples)}")
     print(f"  train-epipe: 50")
     print(f"  train-tunnel: 50")
     print(f"  train-vprn:  50")

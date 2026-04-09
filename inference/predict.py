@@ -23,7 +23,8 @@ from intent_validator import validate_full  # noqa: E402
 SYSTEM_PROMPT = (
     "You are an NSP (Network Services Platform) intent configuration assistant. "
     "Convert each natural language network service request into a single JSON object with three fields:\n"
-    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\"\n"
+    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\", \"vpls\", \"ies\", \"etree\", "
+    "\"cpipe\", \"evpn-epipe\", \"evpn-vpls\"\n"
     "- template_name: the NSP template name\n"
     "- fill_values: a flat dictionary of dot-notation field paths and their values\n"
     "\n"

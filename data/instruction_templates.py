@@ -269,3 +269,355 @@ def format_interfaces_desc(values, site_idx, num_interfaces):
         pfx = values.get(f"{prefix}.ipv4.primary.prefix-length", 31)
         parts.append(f"{name} on port {port} with IP {ip}/{pfx}")
     return "; ".join(parts)
+
+
+# ===========================================================================
+# M3 NEW INTENT TYPES
+# ===========================================================================
+#
+# Wording rules to keep the model from cross-pollinating with epipe/vprn
+# (lessons learned from the M2.5 failure analysis):
+#
+#   1. For multi-site VPLS / EVPN-VPLS / E-Tree, never say "Site A / Site B".
+#      Use "site 1 / site 2", "first site / second site", or just enumerate
+#      device IDs. The vprn YANG path is `site[N].*` and we want the model
+#      to map "site 1" -> `site[0]`, NOT "site A" -> `site-a` (which is the
+#      epipe / cpipe / evpn-epipe namespace).
+#
+#   2. For cpipe and evpn-epipe (which DO use site-a/site-b containers),
+#      "Site A / Site B" is appropriate and reinforces the right namespace.
+#
+#   3. For tunnel terse format, never abbreviate transport-type to
+#      "transport" — that is exactly the M2.5 hallucination.
+#
+#   4. Use the canonical YANG field name in any "key=value" rendering, e.g.
+#      `vc-type=cesopsn` (cpipe), `etree-leaf=true` (etree). The model will
+#      learn that the natural-language label maps to that exact key.
+
+# ---------- VPLS templates (multi-site, broadcast L2 domain) ------------
+
+VPLS_TEMPLATES_2SITE = [
+    # Formal
+    "Create a VPLS service named '{service_name}' for customer {customer_id} "
+    "with NE service ID {ne_service_id} and MTU {mtu}. "
+    "Site 1 is on device {site0_device} using port {site0_port} with VLAN {vlan}. "
+    "Site 2 is on device {site1_device} using port {site1_port} with VLAN {vlan}.",
+
+    "Provision VPLS '{service_name}' for customer {customer_id}. NE service ID {ne_service_id}, "
+    "MTU {mtu}. The two sites are: {site0_device} (port {site0_port}) and "
+    "{site1_device} (port {site1_port}), both tagged with VLAN {vlan}.",
+
+    "Deploy a multipoint VPLS L2 broadcast domain. Service name: '{service_name}'. "
+    "Customer: {customer_id}. NE service ID: {ne_service_id}. MTU: {mtu}. "
+    "Sites: {site0_device}/{site0_port} and {site1_device}/{site1_port}. VLAN: {vlan}.",
+
+    # Conversational
+    "I need a VPLS multi-site bridging domain. Customer is {customer_id}, "
+    "name it '{service_name}' with service ID {ne_service_id} and MTU {mtu}. "
+    "First site at {site0_device} on port {site0_port}, second site at "
+    "{site1_device} on port {site1_port}, both using VLAN {vlan}.",
+
+    "We need to set up a VPLS for customer {customer_id}. Call it '{service_name}', "
+    "use service ID {ne_service_id} and MTU {mtu}. The two participating sites are "
+    "{site0_device} (port {site0_port}) and {site1_device} (port {site1_port}). "
+    "VLAN tag is {vlan} on both ports.",
+
+    "Can you create a VPLS service '{service_name}' connecting two customer sites? "
+    "Customer ID: {customer_id}. Service ID: {ne_service_id}. MTU: {mtu}. "
+    "First site: {site0_device}/{site0_port}. Second site: {site1_device}/{site1_port}. "
+    "VLAN tag: {vlan}.",
+
+    # Terse
+    "vpls '{service_name}' cust={customer_id} svc-id={ne_service_id} mtu={mtu} "
+    "sites: {site0_device}:{site0_port} {site1_device}:{site1_port} vlan={vlan}",
+
+    "Deploy VPLS: {service_name} | Customer: {customer_id} | SvcID: {ne_service_id} | "
+    "MTU: {mtu} | Site1: {site0_device} {site0_port} | Site2: {site1_device} {site1_port} | VLAN: {vlan}",
+
+    # With context
+    "For the network upgrade, provision a VPLS service '{service_name}'. "
+    "Customer {customer_id} needs Layer 2 multi-point bridging between two sites. "
+    "Service ID {ne_service_id}, MTU {mtu}. Site 1: device {site0_device} port {site0_port}. "
+    "Site 2: device {site1_device} port {site1_port}. Both ports use VLAN {vlan}.",
+
+    "Provision a multipoint Ethernet VPLS for the new deployment. "
+    "Service name '{service_name}', customer {customer_id}, NE service ID {ne_service_id}, MTU {mtu}. "
+    "The two sites are {site0_device} on port {site0_port} and {site1_device} on port {site1_port}, "
+    "tagged with VLAN {vlan}.",
+
+    "Set up a VPLS L2 VPN named '{service_name}'. "
+    "Customer ID is {customer_id}, service ID is {ne_service_id}, MTU should be {mtu}. "
+    "Connect site 1 ({site0_device} port {site0_port}) and site 2 ({site1_device} port {site1_port}) "
+    "with VLAN {vlan}.",
+]
+
+
+# ---------- IES templates (single-site routed access) ------------
+
+IES_TEMPLATES = [
+    # Formal
+    "Create an IES (Internet Enhanced Service) named '{service_name}' for customer {customer_id}. "
+    "NE service ID {ne_service_id}. Provision the service on device {site_device}. "
+    "Configure these interfaces: {interfaces_desc}.",
+
+    "Deploy an IES routed access service '{service_name}' for customer {customer_id}, "
+    "service ID {ne_service_id}, on device {site_device}. Interfaces: {interfaces_desc}.",
+
+    "Provision an Internet Enhanced Service. Name: '{service_name}'. "
+    "Customer: {customer_id}. Service ID: {ne_service_id}. Device: {site_device}. "
+    "L3 interfaces: {interfaces_desc}.",
+
+    # Conversational
+    "I need an IES service for customer {customer_id} called '{service_name}'. "
+    "Use service ID {ne_service_id} on device {site_device}. The interfaces are: {interfaces_desc}.",
+
+    "Can you set up an IES on {site_device} for customer {customer_id}? "
+    "Name it '{service_name}', service ID {ne_service_id}. Interfaces: {interfaces_desc}.",
+
+    "We need a routed access (IES) service. Customer ID {customer_id}, "
+    "service name '{service_name}', NE service ID {ne_service_id}. "
+    "PE device: {site_device}. The L3 interfaces to configure: {interfaces_desc}.",
+
+    # Terse
+    "ies '{service_name}' cust={customer_id} svc-id={ne_service_id} device={site_device} ifaces: {interfaces_desc}",
+
+    "Deploy IES: {service_name} | Customer: {customer_id} | SvcID: {ne_service_id} | "
+    "Device: {site_device} | {interfaces_desc}",
+
+    # With context
+    "For the {project_name} project, create an IES named '{service_name}'. "
+    "Customer {customer_id} requires routed Internet access on device {site_device} "
+    "with service ID {ne_service_id}. Interfaces: {interfaces_desc}.",
+
+    "Provision Internet Enhanced Service '{service_name}' for direct L3 access. "
+    "Customer: {customer_id}, NE service ID: {ne_service_id}, device: {site_device}. "
+    "Configure: {interfaces_desc}.",
+]
+
+
+# ---------- E-Tree templates (root + leaf VPLS variant) ------------
+
+ETREE_TEMPLATES = [
+    # Formal
+    "Create an E-Tree service named '{service_name}' for customer {customer_id} "
+    "with NE service ID {ne_service_id}, MTU {mtu}. "
+    "Root site: {root0_device} on port {root0_port}. "
+    "Leaf sites: {leaves_desc}. All SAPs use VLAN {vlan}.",
+
+    "Provision E-Tree '{service_name}' for customer {customer_id}, service ID {ne_service_id}, "
+    "MTU {mtu}. Root: {root0_device}/{root0_port}. Leaves: {leaves_desc}. VLAN: {vlan}.",
+
+    "Deploy a rooted multipoint E-Tree service. Name: '{service_name}'. "
+    "Customer: {customer_id}. NE service ID: {ne_service_id}. MTU: {mtu}. "
+    "Root SAP at {root0_device} port {root0_port}. Leaf SAPs: {leaves_desc}. VLAN: {vlan}.",
+
+    # Conversational
+    "I need an E-Tree service '{service_name}' for customer {customer_id}. "
+    "Service ID {ne_service_id}, MTU {mtu}. The root device is {root0_device} (port {root0_port}). "
+    "Leaf sites are: {leaves_desc}. VLAN tag {vlan}.",
+
+    "Can you set up an E-Tree for customer {customer_id}? Call it '{service_name}', "
+    "service ID {ne_service_id}, MTU {mtu}. One root at {root0_device}/{root0_port}, "
+    "leaves at {leaves_desc}, all on VLAN {vlan}.",
+
+    "We need a tree-shaped L2 VPN: one root, multiple leaves. "
+    "Service name: '{service_name}', customer {customer_id}, NE service ID {ne_service_id}, MTU {mtu}. "
+    "Root: {root0_device} port {root0_port}. Leaves: {leaves_desc}. VLAN: {vlan}.",
+
+    # Terse
+    "etree '{service_name}' cust={customer_id} svc-id={ne_service_id} mtu={mtu} "
+    "root={root0_device}:{root0_port} leaves: {leaves_desc} vlan={vlan}",
+
+    "Deploy E-Tree: {service_name} | Customer: {customer_id} | SvcID: {ne_service_id} | MTU: {mtu} | "
+    "Root: {root0_device}/{root0_port} | Leaves: {leaves_desc} | VLAN: {vlan}",
+
+    # With context
+    "For a hub-and-spoke L2 deployment, provision an E-Tree service '{service_name}'. "
+    "Customer {customer_id}, service ID {ne_service_id}, MTU {mtu}. "
+    "The hub (root) is at {root0_device} port {root0_port}. "
+    "Spoke (leaf) sites: {leaves_desc}. All on VLAN {vlan}.",
+
+    "Provision an E-Tree where leaf SAPs cannot communicate with each other. "
+    "Service '{service_name}', customer {customer_id}, service ID {ne_service_id}, MTU {mtu}. "
+    "Root: {root0_device}/{root0_port}. Leaves: {leaves_desc}. VLAN: {vlan}.",
+]
+
+
+# ---------- Cpipe templates (TDM circuit emulation) ------------
+
+CPIPE_TEMPLATES = [
+    # Formal
+    "Create a Cpipe TDM circuit emulation service '{service_name}' for customer {customer_id} "
+    "with NE service ID {ne_service_id}. Encapsulation type vc-type {vc_type}. "
+    "Site A: device {site_a_device}, port {site_a_port}, time-slots {time_slots}. "
+    "Site B: device {site_b_device}, port {site_b_port}, time-slots {time_slots}.",
+
+    "Provision Cpipe '{service_name}' for customer {customer_id}, NE service ID {ne_service_id}, "
+    "vc-type {vc_type}. Site A endpoint: {site_a_device}/{site_a_port} time-slots {time_slots}. "
+    "Site B endpoint: {site_b_device}/{site_b_port} time-slots {time_slots}.",
+
+    "Deploy a TDM pseudowire (Cpipe). Service name: '{service_name}'. "
+    "Customer: {customer_id}. NE service ID: {ne_service_id}. vc-type: {vc_type}. "
+    "Site A: {site_a_device} port {site_a_port}. Site B: {site_b_device} port {site_b_port}. "
+    "Time-slots on both ends: {time_slots}.",
+
+    # Conversational
+    "I need a TDM circuit emulation service for customer {customer_id}. "
+    "Call it '{service_name}', service ID {ne_service_id}. The encapsulation vc-type is {vc_type}. "
+    "Site A is at {site_a_device} on port {site_a_port}, Site B is at {site_b_device} on port {site_b_port}. "
+    "Both ends use time-slots {time_slots}.",
+
+    "Can you set up a Cpipe between {site_a_device} and {site_b_device}? "
+    "Customer {customer_id}, name '{service_name}', service ID {ne_service_id}. "
+    "vc-type is {vc_type}, time-slots {time_slots}. Ports are {site_a_port} on Site A and {site_b_port} on Site B.",
+
+    "We need a TDM pseudo-wire (Cpipe service) for customer {customer_id}. "
+    "Service name: '{service_name}'. NE service ID: {ne_service_id}. vc-type: {vc_type}. "
+    "Site A: {site_a_device}/{site_a_port}, Site B: {site_b_device}/{site_b_port}. "
+    "Time-slots: {time_slots}.",
+
+    # Terse
+    "cpipe '{service_name}' cust={customer_id} svc-id={ne_service_id} vc-type={vc_type} "
+    "site-a {site_a_device}:{site_a_port} ts={time_slots} site-b {site_b_device}:{site_b_port} ts={time_slots}",
+
+    "Deploy Cpipe: {service_name} | Cust: {customer_id} | SvcID: {ne_service_id} | "
+    "vc-type: {vc_type} | A: {site_a_device}/{site_a_port} | B: {site_b_device}/{site_b_port} | "
+    "time-slots: {time_slots}",
+
+    # With context
+    "For the TDM-over-MPLS migration, provision a Cpipe service '{service_name}'. "
+    "Customer {customer_id} requires circuit emulation between two sites. "
+    "Service ID {ne_service_id}, vc-type {vc_type}, time-slots {time_slots}. "
+    "Site A at {site_a_device} port {site_a_port}, Site B at {site_b_device} port {site_b_port}.",
+
+    "Provision a structured TDM emulation service. Name '{service_name}', customer {customer_id}, "
+    "NE service ID {ne_service_id}. Use vc-type {vc_type} encapsulation with time-slots {time_slots}. "
+    "Site A: {site_a_device}/{site_a_port}. Site B: {site_b_device}/{site_b_port}.",
+]
+
+
+# ---------- EVPN-Epipe templates (BGP-EVPN-signalled E-Line) ------------
+
+EVPN_EPIPE_TEMPLATES = [
+    # Formal
+    "Create an EVPN-Epipe service '{service_name}' for customer {customer_id} "
+    "with NE service ID {ne_service_id} and EVI {evi}. "
+    "Site A: device {site_a_device}, port {site_a_port}, VLAN {vlan}. "
+    "Site B: device {site_b_device}, port {site_b_port}, VLAN {vlan}.",
+
+    "Provision EVPN-Epipe '{service_name}' for customer {customer_id}, "
+    "service ID {ne_service_id}, EVI {evi}. "
+    "Site A {site_a_device}/{site_a_port}, Site B {site_b_device}/{site_b_port}, VLAN {vlan}.",
+
+    "Deploy a BGP-EVPN-signalled E-Line. Service name: '{service_name}'. "
+    "Customer: {customer_id}. NE service ID: {ne_service_id}. EVI: {evi}. "
+    "Site A: {site_a_device} port {site_a_port}. Site B: {site_b_device} port {site_b_port}. VLAN: {vlan}.",
+
+    # Conversational
+    "I need an EVPN-Epipe service for customer {customer_id}. "
+    "Call it '{service_name}', service ID {ne_service_id}, EVI {evi}. "
+    "Connect Site A at {site_a_device} (port {site_a_port}) to Site B at {site_b_device} (port {site_b_port}) "
+    "using VLAN {vlan}.",
+
+    "Can you set up an EVPN E-Line between {site_a_device} and {site_b_device}? "
+    "Customer {customer_id}, name '{service_name}', service ID {ne_service_id}, EVI {evi}. "
+    "Site A port {site_a_port}, Site B port {site_b_port}, both on VLAN {vlan}.",
+
+    "We need a BGP-EVPN E-Line for customer {customer_id}. "
+    "Service name '{service_name}', NE service ID {ne_service_id}, EVI {evi}. "
+    "Site A is {site_a_device}/{site_a_port}, Site B is {site_b_device}/{site_b_port}. VLAN tag {vlan}.",
+
+    # Terse
+    "evpn-epipe '{service_name}' cust={customer_id} svc-id={ne_service_id} evi={evi} "
+    "site-a {site_a_device}:{site_a_port} site-b {site_b_device}:{site_b_port} vlan={vlan}",
+
+    "Deploy EVPN-Epipe: {service_name} | Cust: {customer_id} | SvcID: {ne_service_id} | "
+    "EVI: {evi} | A: {site_a_device}/{site_a_port} | B: {site_b_device}/{site_b_port} | VLAN: {vlan}",
+
+    # With context
+    "For the new EVPN deployment, provision an EVPN-Epipe '{service_name}'. "
+    "Customer {customer_id} requires BGP-signalled E-Line between two sites. "
+    "Service ID {ne_service_id}, EVI {evi}. "
+    "Site A: {site_a_device} port {site_a_port}. Site B: {site_b_device} port {site_b_port}. VLAN: {vlan}.",
+
+    "Provision an EVPN-based point-to-point Ethernet service. "
+    "Name '{service_name}', customer {customer_id}, NE service ID {ne_service_id}, EVI {evi}. "
+    "Site A {site_a_device}/{site_a_port} and Site B {site_b_device}/{site_b_port}, VLAN {vlan}.",
+]
+
+
+# ---------- EVPN-VPLS templates (BGP-EVPN-signalled VPLS) ------------
+
+EVPN_VPLS_TEMPLATES_2SITE = [
+    # Formal
+    "Create an EVPN-VPLS service '{service_name}' for customer {customer_id} "
+    "with NE service ID {ne_service_id} and MTU {mtu}. "
+    "Site 1: {site0_device} on port {site0_port} with VLAN {vlan}. "
+    "Site 2: {site1_device} on port {site1_port} with VLAN {vlan}.",
+
+    "Provision EVPN-VPLS '{service_name}' for customer {customer_id}, "
+    "service ID {ne_service_id}, MTU {mtu}. "
+    "First site {site0_device}/{site0_port}, second site {site1_device}/{site1_port}, VLAN {vlan}.",
+
+    "Deploy a BGP-EVPN-signalled multi-point bridging service. "
+    "Service name: '{service_name}'. Customer: {customer_id}. NE service ID: {ne_service_id}. MTU: {mtu}. "
+    "Site 1: {site0_device}/{site0_port}. Site 2: {site1_device}/{site1_port}. VLAN: {vlan}.",
+
+    # Conversational
+    "I need an EVPN-VPLS service for customer {customer_id} called '{service_name}'. "
+    "Service ID {ne_service_id}, MTU {mtu}. The first site is {site0_device} on port {site0_port}, "
+    "the second site is {site1_device} on port {site1_port}. Both on VLAN {vlan}.",
+
+    "Can you set up an EVPN-VPLS connecting two customer sites? "
+    "Customer {customer_id}, service name '{service_name}', service ID {ne_service_id}, MTU {mtu}. "
+    "Site 1: {site0_device} port {site0_port}. Site 2: {site1_device} port {site1_port}. VLAN: {vlan}.",
+
+    "We need a BGP-EVPN VPLS for customer {customer_id}. "
+    "Name it '{service_name}', NE service ID {ne_service_id}, MTU {mtu}. "
+    "First site at {site0_device}/{site0_port}, second site at {site1_device}/{site1_port}. VLAN tag {vlan}.",
+
+    # Terse
+    "evpn-vpls '{service_name}' cust={customer_id} svc-id={ne_service_id} mtu={mtu} "
+    "site1 {site0_device}:{site0_port} site2 {site1_device}:{site1_port} vlan={vlan}",
+
+    "Deploy EVPN-VPLS: {service_name} | Cust: {customer_id} | SvcID: {ne_service_id} | MTU: {mtu} | "
+    "Site1: {site0_device}/{site0_port} | Site2: {site1_device}/{site1_port} | VLAN: {vlan}",
+
+    # With context
+    "For the EVPN multi-point deployment, provision an EVPN-VPLS '{service_name}'. "
+    "Customer {customer_id} needs BGP-signalled L2 bridging between two sites. "
+    "NE service ID {ne_service_id}, MTU {mtu}. "
+    "Site 1: {site0_device} port {site0_port}. Site 2: {site1_device} port {site1_port}. VLAN {vlan}.",
+
+    "Provision a BGP-EVPN-based multipoint Ethernet domain. "
+    "Service '{service_name}', customer {customer_id}, NE service ID {ne_service_id}, MTU {mtu}. "
+    "Connect site 1 ({site0_device}/{site0_port}) and site 2 ({site1_device}/{site1_port}) on VLAN {vlan}.",
+]
+
+
+# ---------- helpers used by the new templates ------------
+
+
+def format_etree_leaves_desc(values, num_root_sites, num_leaf_sites):
+    """Render the leaf-site portion of an E-Tree instruction template."""
+    parts = []
+    for k in range(num_leaf_sites):
+        site_idx = num_root_sites + k
+        prefix = f"site[{site_idx}]"
+        dev = values.get(f"{prefix}.device-id", "")
+        port = values.get(f"{prefix}.sap[0].port-id", "")
+        parts.append(f"{dev}/{port}")
+    return ", ".join(parts)
+
+
+def format_ies_interfaces_desc(values, num_interfaces):
+    """Render the IES interface list (single-site, prefix is fixed)."""
+    parts = []
+    for i in range(num_interfaces):
+        prefix = f"site[0].interface[{i}]"
+        name = values.get(f"{prefix}.interface-name", "")
+        port = values.get(f"{prefix}.sap.port-id", "")
+        ip = values.get(f"{prefix}.ipv4.primary.address", "")
+        pfx = values.get(f"{prefix}.ipv4.primary.prefix-length", 31)
+        parts.append(f"{name} on port {port} with IP {ip}/{pfx}")
+    return "; ".join(parts)

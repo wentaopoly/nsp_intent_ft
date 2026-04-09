@@ -10,19 +10,24 @@ import sys
 
 from field_definitions import (
     generate_epipe_values, generate_tunnel_values, generate_vprn_values,
-    random_project_name,
+    generate_vpls_values, generate_ies_values, generate_etree_values,
+    generate_cpipe_values, generate_evpn_epipe_values, generate_evpn_vpls_values,
 )
+from value_generators import random_project_name
 from instruction_templates import (
     EPIPE_TEMPLATES, TUNNEL_TEMPLATES,
     VPRN_TEMPLATES_1SITE, VPRN_TEMPLATES_2SITE,
-    format_interfaces_desc,
+    VPLS_TEMPLATES_2SITE, IES_TEMPLATES, ETREE_TEMPLATES,
+    CPIPE_TEMPLATES, EVPN_EPIPE_TEMPLATES, EVPN_VPLS_TEMPLATES_2SITE,
+    format_interfaces_desc, format_ies_interfaces_desc, format_etree_leaves_desc,
 )
 from validate_sample import validate_sample
 
 SYSTEM_PROMPT = (
     "You are an NSP (Network Services Platform) intent configuration assistant. "
     "Convert each natural language network service request into a single JSON object with three fields:\n"
-    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\"\n"
+    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\", \"vpls\", \"ies\", \"etree\", "
+    "\"cpipe\", \"evpn-epipe\", \"evpn-vpls\"\n"
     "- template_name: the NSP template name\n"
     "- fill_values: a flat dictionary of dot-notation field paths and their values\n"
     "\n"
@@ -146,6 +151,153 @@ def build_vprn_sample(num_sites, interfaces_per_site):
     return instruction, output
 
 
+def build_vpls_sample(num_sites=2):
+    """Generate one VPLS training sample."""
+    values = generate_vpls_values(num_sites=num_sites)
+    template = random.choice(VPLS_TEMPLATES_2SITE)
+
+    args = {
+        "service_name":  values["service-name"],
+        "customer_id":   values["customer-id"],
+        "ne_service_id": values["ne-service-id"],
+        "mtu":           values["mtu"],
+        "site0_device":  values["site[0].device-id"],
+        "site0_port":    values["site[0].sap[0].port-id"],
+        "site1_device":  values["site[1].device-id"],
+        "site1_port":    values["site[1].sap[0].port-id"],
+        "vlan":          values["site[0].sap[0].outer-vlan-tag"],
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "vpls",
+        "template_name": "VPLSServiceTemplate",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
+def build_ies_sample(interfaces_per_site=2):
+    """Generate one IES training sample."""
+    values = generate_ies_values(interfaces_per_site=interfaces_per_site)
+    template = random.choice(IES_TEMPLATES)
+
+    args = {
+        "service_name":   values["service-name"],
+        "customer_id":    values["customer-id"],
+        "ne_service_id":  values["ne-service-id"],
+        "site_device":    values["site[0].device-id"],
+        "interfaces_desc": format_ies_interfaces_desc(values, interfaces_per_site),
+        "project_name":   random_project_name(),
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "ies",
+        "template_name": "IESServiceTemplate",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
+def build_etree_sample(num_root_sites=1, num_leaf_sites=2):
+    """Generate one E-Tree training sample."""
+    values = generate_etree_values(num_root_sites=num_root_sites,
+                                    num_leaf_sites=num_leaf_sites)
+    template = random.choice(ETREE_TEMPLATES)
+
+    args = {
+        "service_name":  values["service-name"],
+        "customer_id":   values["customer-id"],
+        "ne_service_id": values["ne-service-id"],
+        "mtu":           values["mtu"],
+        "vlan":          values["site[0].sap[0].outer-vlan-tag"],
+        "root0_device":  values["site[0].device-id"],
+        "root0_port":    values["site[0].sap[0].port-id"],
+        "leaves_desc":   format_etree_leaves_desc(values, num_root_sites, num_leaf_sites),
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "etree",
+        "template_name": "ETreeServiceTemplate",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
+def build_cpipe_sample():
+    """Generate one Cpipe training sample."""
+    values = generate_cpipe_values()
+    template = random.choice(CPIPE_TEMPLATES)
+
+    args = {
+        "service_name":  values["service-name"],
+        "customer_id":   values["customer-id"],
+        "ne_service_id": values["ne-service-id"],
+        "vc_type":       values["vc-type"],
+        "site_a_device": values["site-a.device-id"],
+        "site_a_port":   values["site-a.endpoint[0].port-id"],
+        "site_b_device": values["site-b.device-id"],
+        "site_b_port":   values["site-b.endpoint[0].port-id"],
+        "time_slots":    values["site-a.endpoint[0].time-slots"],
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "cpipe",
+        "template_name": "CpipeTDMService",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
+def build_evpn_epipe_sample():
+    """Generate one EVPN-Epipe training sample."""
+    values = generate_evpn_epipe_values()
+    template = random.choice(EVPN_EPIPE_TEMPLATES)
+
+    args = {
+        "service_name":  values["service-name"],
+        "customer_id":   values["customer-id"],
+        "ne_service_id": values["ne-service-id"],
+        "evi":           values["site-a.evi"],
+        "vlan":          values["site-a.sap[0].outer-vlan-tag"],
+        "site_a_device": values["site-a.device-id"],
+        "site_a_port":   values["site-a.sap[0].port-id"],
+        "site_b_device": values["site-b.device-id"],
+        "site_b_port":   values["site-b.sap[0].port-id"],
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "evpn-epipe",
+        "template_name": "EVPNEpipeService",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
+def build_evpn_vpls_sample(num_sites=2):
+    """Generate one EVPN-VPLS training sample."""
+    values = generate_evpn_vpls_values(num_sites=num_sites)
+    template = random.choice(EVPN_VPLS_TEMPLATES_2SITE)
+
+    args = {
+        "service_name":  values["service-name"],
+        "customer_id":   values["customer-id"],
+        "ne_service_id": values["ne-service-id"],
+        "mtu":           values["mtu"],
+        "vlan":          values["site[0].sap[0].outer-vlan-tag"],
+        "site0_device":  values["site[0].device-id"],
+        "site0_port":    values["site[0].sap[0].port-id"],
+        "site1_device":  values["site[1].device-id"],
+        "site1_port":    values["site[1].sap[0].port-id"],
+    }
+    instruction = template.format(**args)
+    output = {
+        "intent_type": "evpn-vpls",
+        "template_name": "EVPNVPLSService",
+        "fill_values": values,
+    }
+    return instruction, output
+
+
 def make_chat_sample(instruction, output):
     """Wrap instruction and output into chat message format."""
     return {
@@ -159,9 +311,11 @@ def make_chat_sample(instruction, output):
 
 def generate_all_samples(
     n_epipe=600, n_tunnel=400, n_vprn_1site=300, n_vprn_2site=200,
-    seed=42
+    n_vpls=400, n_ies=300, n_etree=300, n_cpipe=200,
+    n_evpn_epipe=300, n_evpn_vpls=300,
+    seed=42,
 ):
-    """Generate all training samples."""
+    """Generate all training samples across the 9 intent types."""
     random.seed(seed)
     samples = []
 
@@ -185,6 +339,39 @@ def generate_all_samples(
     for _ in range(n_vprn_2site):
         n_ifaces = random.choice([1, 2, 2, 3])
         instruction, output = build_vprn_sample(num_sites=2, interfaces_per_site=n_ifaces)
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_vpls} VPLS samples...")
+    for _ in range(n_vpls):
+        instruction, output = build_vpls_sample(num_sites=2)
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_ies} IES samples...")
+    for _ in range(n_ies):
+        n_ifaces = random.choice([1, 2, 2, 3])
+        instruction, output = build_ies_sample(interfaces_per_site=n_ifaces)
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_etree} E-Tree samples...")
+    for _ in range(n_etree):
+        n_root = random.choice([1, 1, 2])
+        n_leaf = random.choice([2, 2, 3])
+        instruction, output = build_etree_sample(num_root_sites=n_root, num_leaf_sites=n_leaf)
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_cpipe} Cpipe samples...")
+    for _ in range(n_cpipe):
+        instruction, output = build_cpipe_sample()
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_evpn_epipe} EVPN-Epipe samples...")
+    for _ in range(n_evpn_epipe):
+        instruction, output = build_evpn_epipe_sample()
+        samples.append(make_chat_sample(instruction, output))
+
+    print(f"Generating {n_evpn_vpls} EVPN-VPLS samples...")
+    for _ in range(n_evpn_vpls):
+        instruction, output = build_evpn_vpls_sample(num_sites=2)
         samples.append(make_chat_sample(instruction, output))
 
     return samples
@@ -358,6 +545,201 @@ def build_golden_tests():
         }
     ))
 
+    # ----- M3 NEW intent type golden tests -----
+    # Each new type gets 1-2 hand-curated samples to act as a regression
+    # baseline for the retrained model. The values follow the same naming
+    # conventions Sarvesh uses for the existing 3 types so that the goldens
+    # are consistent across the corpus.
+
+    # Golden 6: VPLS 2-site
+    golden.append(make_chat_sample(
+        "Create a VPLS service named 'VPLS-3001-OurAI' for customer 30 with NE service ID 3001 "
+        "and MTU 1500. Site 1 is on device 192.168.0.16 using port 1/2/c4/1 with VLAN 100. "
+        "Site 2 is on device 192.168.0.37 using port 1/2/c5/1 with VLAN 100.",
+        {
+            "intent_type": "vpls",
+            "template_name": "VPLSServiceTemplate",
+            "fill_values": {
+                "service-name": "VPLS-3001-OurAI",
+                "customer-id": 30,
+                "ne-service-id": 3001,
+                "mtu": 1500,
+                "site[0].device-id": "192.168.0.16",
+                "site[0].sap[0].port-id": "1/2/c4/1",
+                "site[0].sap[0].inner-vlan-tag": -1,
+                "site[0].sap[0].outer-vlan-tag": 100,
+                "site[1].device-id": "192.168.0.37",
+                "site[1].sap[0].port-id": "1/2/c5/1",
+                "site[1].sap[0].inner-vlan-tag": -1,
+                "site[1].sap[0].outer-vlan-tag": 100,
+                "sdp[0].sdp-id": "1637",
+                "sdp[0].source-device-id": "192.168.0.16",
+                "sdp[0].destination-device-id": "192.168.0.37",
+                "sdp[1].sdp-id": "3716",
+                "sdp[1].source-device-id": "192.168.0.37",
+                "sdp[1].destination-device-id": "192.168.0.16",
+            },
+        },
+    ))
+
+    # Golden 7: IES single site
+    golden.append(make_chat_sample(
+        "Create an IES (Internet Enhanced Service) named 'IES-4001-OurAI' for customer 40. "
+        "NE service ID 4001. Provision the service on device 192.168.0.16. "
+        "Configure these interfaces: Delta-Cluster-Master on port 1/2/c4/1 with IP 100.71.108.197/31; "
+        "Delta-Cluster-Worker-1 on port lag-AFOR3-4x10GE with IP 100.71.108.195/31.",
+        {
+            "intent_type": "ies",
+            "template_name": "IESServiceTemplate",
+            "fill_values": {
+                "service-name": "IES-4001-OurAI",
+                "customer-id": 40,
+                "ne-service-id": 4001,
+                "site[0].device-id": "192.168.0.16",
+                "site[0].site-name": "IES-4001-OurAI",
+                "site[0].interface[0].interface-name": "Delta-Cluster-Master",
+                "site[0].interface[0].sap.port-id": "1/2/c4/1",
+                "site[0].interface[0].ipv4.primary.address": "100.71.108.197",
+                "site[0].interface[0].ipv4.primary.prefix-length": 31,
+                "site[0].interface[1].interface-name": "Delta-Cluster-Worker-1",
+                "site[0].interface[1].sap.port-id": "lag-AFOR3-4x10GE",
+                "site[0].interface[1].ipv4.primary.address": "100.71.108.195",
+                "site[0].interface[1].ipv4.primary.prefix-length": 31,
+            },
+        },
+    ))
+
+    # Golden 8: E-Tree (1 root, 2 leaves)
+    golden.append(make_chat_sample(
+        "Create an E-Tree service named 'ETree-5001-OurAI' for customer 50 with NE service ID 5001, "
+        "MTU 1500. Root site: 192.168.0.16 on port 1/2/c4/1. "
+        "Leaf sites: 192.168.0.37/1/2/c5/1, 192.168.0.38/1/2/c6/1. All SAPs use VLAN 200.",
+        {
+            "intent_type": "etree",
+            "template_name": "ETreeServiceTemplate",
+            "fill_values": {
+                "service-name": "ETree-5001-OurAI",
+                "customer-id": 50,
+                "ne-service-id": 5001,
+                "mtu": 1500,
+                "site[0].device-id": "192.168.0.16",
+                "site[0].sap[0].port-id": "1/2/c4/1",
+                "site[0].sap[0].inner-vlan-tag": -1,
+                "site[0].sap[0].outer-vlan-tag": 200,
+                "site[0].sap[0].etree-leaf": False,
+                "site[1].device-id": "192.168.0.37",
+                "site[1].sap[0].port-id": "1/2/c5/1",
+                "site[1].sap[0].inner-vlan-tag": -1,
+                "site[1].sap[0].outer-vlan-tag": 200,
+                "site[1].sap[0].etree-leaf": True,
+                "site[2].device-id": "192.168.0.38",
+                "site[2].sap[0].port-id": "1/2/c6/1",
+                "site[2].sap[0].inner-vlan-tag": -1,
+                "site[2].sap[0].outer-vlan-tag": 200,
+                "site[2].sap[0].etree-leaf": True,
+                "sdp[0].sdp-id": "1637",
+                "sdp[0].source-device-id": "192.168.0.16",
+                "sdp[0].destination-device-id": "192.168.0.37",
+                "sdp[1].sdp-id": "1638",
+                "sdp[1].source-device-id": "192.168.0.16",
+                "sdp[1].destination-device-id": "192.168.0.38",
+                "sdp[2].sdp-id": "3716",
+                "sdp[2].source-device-id": "192.168.0.37",
+                "sdp[2].destination-device-id": "192.168.0.16",
+                "sdp[3].sdp-id": "3738",
+                "sdp[3].source-device-id": "192.168.0.37",
+                "sdp[3].destination-device-id": "192.168.0.38",
+                "sdp[4].sdp-id": "3816",
+                "sdp[4].source-device-id": "192.168.0.38",
+                "sdp[4].destination-device-id": "192.168.0.16",
+                "sdp[5].sdp-id": "3837",
+                "sdp[5].source-device-id": "192.168.0.38",
+                "sdp[5].destination-device-id": "192.168.0.37",
+            },
+        },
+    ))
+
+    # Golden 9: Cpipe TDM circuit
+    golden.append(make_chat_sample(
+        "Create a Cpipe TDM circuit emulation service 'Cpipe-6001-OurAI' for customer 60 "
+        "with NE service ID 6001. Encapsulation type vc-type cesopsn. "
+        "Site A: device 192.168.0.16, port 1/2/c4/1, time-slots 1-32. "
+        "Site B: device 192.168.0.37, port 1/2/c5/1, time-slots 1-32.",
+        {
+            "intent_type": "cpipe",
+            "template_name": "CpipeTDMService",
+            "fill_values": {
+                "service-name": "Cpipe-6001-OurAI",
+                "customer-id": 60,
+                "ne-service-id": 6001,
+                "vc-type": "cesopsn",
+                "site-a.device-id": "192.168.0.16",
+                "site-a.endpoint[0].port-id": "1/2/c4/1",
+                "site-a.endpoint[0].time-slots": "1-32",
+                "site-b.device-id": "192.168.0.37",
+                "site-b.endpoint[0].port-id": "1/2/c5/1",
+                "site-b.endpoint[0].time-slots": "1-32",
+                "sdp[0].sdp-id": "1637",
+                "sdp[0].source-device-id": "192.168.0.16",
+                "sdp[0].destination-device-id": "192.168.0.37",
+                "sdp[1].sdp-id": "3716",
+                "sdp[1].source-device-id": "192.168.0.37",
+                "sdp[1].destination-device-id": "192.168.0.16",
+            },
+        },
+    ))
+
+    # Golden 10: EVPN-Epipe
+    golden.append(make_chat_sample(
+        "Create an EVPN-Epipe service 'EVPN-Epipe-7001-OurAI' for customer 70 with NE service ID 7001 "
+        "and EVI 7001. Site A: device 192.168.0.16, port 1/2/c4/1, VLAN 300. "
+        "Site B: device 192.168.0.37, port 1/2/c5/1, VLAN 300.",
+        {
+            "intent_type": "evpn-epipe",
+            "template_name": "EVPNEpipeService",
+            "fill_values": {
+                "service-name": "EVPN-Epipe-7001-OurAI",
+                "customer-id": 70,
+                "ne-service-id": 7001,
+                "site-a.device-id": "192.168.0.16",
+                "site-a.evi": 7001,
+                "site-a.sap[0].port-id": "1/2/c4/1",
+                "site-a.sap[0].inner-vlan-tag": -1,
+                "site-a.sap[0].outer-vlan-tag": 300,
+                "site-b.device-id": "192.168.0.37",
+                "site-b.evi": 7001,
+                "site-b.sap[0].port-id": "1/2/c5/1",
+                "site-b.sap[0].inner-vlan-tag": -1,
+                "site-b.sap[0].outer-vlan-tag": 300,
+            },
+        },
+    ))
+
+    # Golden 11: EVPN-VPLS
+    golden.append(make_chat_sample(
+        "Create an EVPN-VPLS service 'EVPN-VPLS-8001-OurAI' for customer 80 "
+        "with NE service ID 8001 and MTU 1500. Site 1: 192.168.0.16 on port 1/2/c4/1 with VLAN 400. "
+        "Site 2: 192.168.0.37 on port 1/2/c5/1 with VLAN 400.",
+        {
+            "intent_type": "evpn-vpls",
+            "template_name": "EVPNVPLSService",
+            "fill_values": {
+                "service-name": "EVPN-VPLS-8001-OurAI",
+                "customer-id": 80,
+                "ne-service-id": 8001,
+                "mtu": 1500,
+                "site[0].device-id": "192.168.0.16",
+                "site[0].sap[0].port-id": "1/2/c4/1",
+                "site[0].sap[0].inner-vlan-tag": -1,
+                "site[0].sap[0].outer-vlan-tag": 400,
+                "site[1].device-id": "192.168.0.37",
+                "site[1].sap[0].port-id": "1/2/c5/1",
+                "site[1].sap[0].inner-vlan-tag": -1,
+                "site[1].sap[0].outer-vlan-tag": 400,
+            },
+        },
+    ))
+
     return golden
 
 
@@ -367,7 +749,10 @@ if __name__ == "__main__":
 
     print("=== Generating NSP Intent Training Data ===\n")
     samples = generate_all_samples(
-        n_epipe=600, n_tunnel=400, n_vprn_1site=300, n_vprn_2site=200, seed=42
+        n_epipe=600, n_tunnel=400, n_vprn_1site=300, n_vprn_2site=200,
+        n_vpls=400, n_ies=300, n_etree=300, n_cpipe=200,
+        n_evpn_epipe=300, n_evpn_vpls=300,
+        seed=42,
     )
     print(f"\nTotal samples generated: {len(samples)}")
 

@@ -449,7 +449,18 @@ def validate_semantic(intent_type: str, fill_values: dict) -> Tuple[bool, List[s
         return _semantic_tunnel(fill_values)
     if intent_type == "vprn":
         return _semantic_vprn(fill_values)
-    # New intent types added in Milestone 3 will register their own rule sets here.
+    if intent_type == "vpls":
+        return _semantic_multisite_l2("vpls", fill_values, single_key=True)
+    if intent_type == "evpn-vpls":
+        return _semantic_multisite_l2("evpn-vpls", fill_values, single_key=True)
+    if intent_type == "etree":
+        return _semantic_etree(fill_values)
+    if intent_type == "ies":
+        return _semantic_ies(fill_values)
+    if intent_type == "cpipe":
+        return _semantic_cpipe(fill_values)
+    if intent_type == "evpn-epipe":
+        return _semantic_evpn_epipe(fill_values)
     return True, []
 
 
@@ -521,6 +532,126 @@ def _semantic_vprn(fv: dict) -> Tuple[bool, List[str]]:
         rd = fv.get(f"site[{s}].route-distinguisher")
         if rd and not _RD_RE.match(str(rd)):
             errors.append(f"site[{s}].route-distinguisher {rd!r} not in 'ASN:ID' form")
+
+    return len(errors) == 0, errors
+
+
+# ----- M3 new intent type semantic rules -----
+
+
+def _site_indices(fv: dict) -> List[int]:
+    """Return all site[N] indices referenced in fill_values, sorted."""
+    return sorted({
+        int(m.group(1))
+        for m in (re.match(r'^site\[(\d+)\]\.', k) for k in fv)
+        if m
+    })
+
+
+def _semantic_multisite_l2(intent: str, fv: dict, single_key: bool) -> Tuple[bool, List[str]]:
+    """Common multi-site L2 service rules (vpls / evpn-vpls / etree).
+
+    - Distinct device-ids across sites.
+    - All site SAPs share the same outer VLAN tag (typical for L2 broadcast
+      domains; the model that produces a per-site VLAN mismatch has almost
+      certainly hallucinated).
+    """
+    errors: List[str] = []
+    sites = _site_indices(fv)
+
+    seen_devs: Dict[str, int] = {}
+    vlans_seen: List[int] = []
+    for s in sites:
+        dev = fv.get(f"site[{s}].device-id")
+        if dev:
+            if dev in seen_devs:
+                errors.append(f"{intent} site[{s}].device-id {dev!r} duplicates site[{seen_devs[dev]}]")
+            seen_devs[dev] = s
+        v = fv.get(f"site[{s}].sap[0].outer-vlan-tag")
+        if v is not None:
+            vlans_seen.append(int(v))
+
+    if len(set(vlans_seen)) > 1:
+        errors.append(f"{intent} sites use mismatched outer-vlan-tag values: {sorted(set(vlans_seen))}")
+
+    return len(errors) == 0, errors
+
+
+def _semantic_etree(fv: dict) -> Tuple[bool, List[str]]:
+    """E-Tree must have at least one ROOT SAP and at least one LEAF SAP."""
+    ok, errors = _semantic_multisite_l2("etree", fv, single_key=True)
+    sites = _site_indices(fv)
+    n_root = 0
+    n_leaf = 0
+    for s in sites:
+        leaf_flag = fv.get(f"site[{s}].sap[0].etree-leaf")
+        if leaf_flag is True:
+            n_leaf += 1
+        elif leaf_flag is False:
+            n_root += 1
+    if n_root == 0 and sites:
+        errors.append("etree requires at least one root SAP (etree-leaf=False)")
+    if n_leaf == 0 and sites:
+        errors.append("etree requires at least one leaf SAP (etree-leaf=True)")
+    return len(errors) == 0, errors
+
+
+def _semantic_ies(fv: dict) -> Tuple[bool, List[str]]:
+    """IES is a single-site service: only site[0] is allowed."""
+    errors: List[str] = []
+    sites = _site_indices(fv)
+    if any(s != 0 for s in sites):
+        errors.append(f"ies must use only site[0]; found extra sites {[s for s in sites if s != 0]}")
+    return len(errors) == 0, errors
+
+
+def _semantic_cpipe(fv: dict) -> Tuple[bool, List[str]]:
+    """Cpipe rules:
+       - site-a / site-b devices must differ
+       - Both endpoints must declare the same time-slots range (a TDM
+         circuit is bidirectional and the two ends MUST use matching slots)
+       - vc-type must be one of the SR OS supported values
+    """
+    errors: List[str] = []
+    da = fv.get("site-a.device-id")
+    db = fv.get("site-b.device-id")
+    if da and db and da == db:
+        errors.append("cpipe site-a and site-b have the same device-id")
+
+    ts_a = fv.get("site-a.endpoint[0].time-slots")
+    ts_b = fv.get("site-b.endpoint[0].time-slots")
+    if ts_a and ts_b and ts_a != ts_b:
+        errors.append(f"cpipe time-slots mismatch: site-a={ts_a!r} site-b={ts_b!r}")
+
+    vc = fv.get("vc-type")
+    valid_vc = {"satope1", "satopt1", "satope3", "satopt3", "cesopsn"}
+    if vc and vc not in valid_vc:
+        errors.append(f"cpipe vc-type {vc!r} not in {sorted(valid_vc)}")
+
+    return len(errors) == 0, errors
+
+
+def _semantic_evpn_epipe(fv: dict) -> Tuple[bool, List[str]]:
+    """EVPN-Epipe rules:
+       - site-a / site-b devices must differ
+       - Both sites must declare the same EVI (the EVI ties them together)
+       - VLAN tag must match across both sites (E-Line semantics)
+    """
+    errors: List[str] = []
+    da = fv.get("site-a.device-id")
+    db = fv.get("site-b.device-id")
+    if da and db and da == db:
+        errors.append("evpn-epipe site-a and site-b have the same device-id")
+
+    evi_a = fv.get("site-a.evi")
+    evi_b = fv.get("site-b.evi")
+    if evi_a is not None and evi_b is not None and evi_a != evi_b:
+        errors.append(f"evpn-epipe site EVI mismatch: site-a={evi_a} site-b={evi_b}")
+
+    va = fv.get("site-a.sap[0].outer-vlan-tag")
+    vb = fv.get("site-b.sap[0].outer-vlan-tag")
+    if va is not None and vb is not None and va != vb:
+        errors.append(f"evpn-epipe vlan mismatch: site-a={va} site-b={vb}")
 
     return len(errors) == 0, errors
 

@@ -31,7 +31,8 @@ from intent_validator import (
     validate_merged_intent as _validate_merged_intent,
     validate_semantic as _validate_semantic,
 )
-from validate_sample import validate_epipe_sample, validate_tunnel_sample, validate_vprn_sample
+# validate_sample (the legacy shim) is imported lazily inside evaluate_single
+# so the import set stays free of dead names.
 
 
 def evaluate_single(prediction_text, ground_truth):
@@ -96,19 +97,20 @@ def evaluate_single(prediction_text, ground_truth):
     if gt_type == "epipe":
         scores["sdp_bidirectional"] = check_sdp_bidirectional(pred_fv)
 
-    # 6. Schema validation (legacy shim — now routes to Tier 1+2+4)
-    if pred_type == "epipe":
-        valid, _ = validate_epipe_sample(pred_fv)
-    elif pred_type == "tunnel":
-        valid, _ = validate_tunnel_sample(pred_fv)
-    elif pred_type == "vprn":
-        valid, _ = validate_vprn_sample(pred_fv)
-    else:
+    # 6. Schema validation (legacy shim — now routes to Tier 1+2+4 for any
+    #    intent type the YANG schema loader knows about)
+    try:
+        from validate_sample import validate_sample as _vs
+        sample_dict = {"output": json.dumps({"intent_type": pred_type, "fill_values": pred_fv})}
+        valid, _ = _vs(sample_dict)
+    except Exception:
         valid = False
     scores["schema_valid"] = valid
 
-    # 7. Full 4-tier YANG-driven validation (Milestone 2).
-    if pred_type in ("epipe", "tunnel", "vprn"):
+    # 7. Full 4-tier YANG-driven validation (Milestone 2 + 3).
+    #    Runs for ANY intent type the schema loader supports — no hardcoded
+    #    whitelist (the M3 6 new types must NOT be silently skipped).
+    if pred_type:
         tier_errors = {}
         try:
             ok12, errs12 = _validate_fill_values_yang(pred_type, pred_fv)
@@ -166,8 +168,10 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
         samples = [json.loads(line) for line in f]
 
     all_scores = []
-    intent_counts = {"epipe": 0, "tunnel": 0, "vprn": 0}
-    intent_scores = {"epipe": [], "tunnel": [], "vprn": []}
+    intent_counts = {}    # populated lazily as samples are seen
+    intent_scores = {}    # populated lazily so all 9 (or more) intent
+                          # types are tracked instead of being silently
+                          # filtered to the original 3.
 
     # Per-sample checkpoint file: written incrementally so a crash in the
     # final aggregation step doesn't lose all the inference work.

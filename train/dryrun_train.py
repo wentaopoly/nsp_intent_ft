@@ -71,7 +71,7 @@ def main():
 
     # 5. Tokenization length distribution — THE critical check
     print("\n[5] Tokenized length distribution (train + val)...")
-    MAX_LEN = 4096
+    MAX_LEN = 8192
     tok_lens = []
     too_long = []
     by_intent_max = {}

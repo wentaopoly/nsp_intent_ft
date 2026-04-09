@@ -105,6 +105,43 @@ def _envelope_fields(intent_type: str) -> Dict[str, "LeafMeta"]:
         "service-name": _envelope_meta("service-name", length_expr="1..64"),
     }
 
+
+# ---------------------------------------------------------------------------
+# NSP intent BODY metadata: which JSON keys wrap the per-intent body
+# ---------------------------------------------------------------------------
+#
+# Every intent JSON looks like:
+#
+#     {"<INTENT_KEY>": [{"intent-specific-data": {"<BODY_KEY>": {...body...}}}]}
+#
+# - Service intents (epipe / vprn / vpls / ies / etree / evpn-* / cpipe):
+#       INTENT_KEY = "nsp-service-intent:intent"
+# - Tunnel intent:
+#       INTENT_KEY = "nsp-tunnel-intent:intent"
+#
+# BODY_KEY is "<intent>:<intent>" by Nokia convention.
+
+_INTENT_BODY_INFO = {
+    "epipe":      {"intent_key": "nsp-service-intent:intent", "body_key": "epipe:epipe"},
+    "tunnel":     {"intent_key": "nsp-tunnel-intent:intent",  "body_key": "tunnel:tunnel"},
+    "vprn":       {"intent_key": "nsp-service-intent:intent", "body_key": "vprn:vprn"},
+    "vpls":       {"intent_key": "nsp-service-intent:intent", "body_key": "vpls:vpls"},
+    "ies":        {"intent_key": "nsp-service-intent:intent", "body_key": "ies:ies"},
+    "etree":      {"intent_key": "nsp-service-intent:intent", "body_key": "etree:etree"},
+    "cpipe":      {"intent_key": "nsp-service-intent:intent", "body_key": "cpipe:cpipe"},
+    "evpn-epipe": {"intent_key": "nsp-service-intent:intent", "body_key": "evpn-epipe:evpn-epipe"},
+    "evpn-vpls":  {"intent_key": "nsp-service-intent:intent", "body_key": "evpn-vpls:evpn-vpls"},
+}
+
+
+def intent_body_info(intent_type: str) -> Dict[str, str]:
+    """Return the {intent_key, body_key} pair for an intent type.
+
+    Raises KeyError for unknown intent types so the caller knows to add a
+    new entry to _INTENT_BODY_INFO when introducing a new intent.
+    """
+    return _INTENT_BODY_INFO[intent_type]
+
 # Regex to normalize concrete list indices (`[0]`, `[1]`, ...) to wildcard `[*]`
 # so that `site-a.endpoint[0].port-id` matches the canonical `endpoint[*]`.
 _INDEX_RE = re.compile(r"\[\d+\]")
@@ -167,6 +204,87 @@ class SchemaIndex:
         """Return all LeafMeta matches for an ambiguous suffix lookup."""
         norm = _normalize(dot_path)
         return list(self.suffix_index.get(norm, []))
+
+
+def resolve_path(intent_type: str, dot_path: str) -> Optional[List]:
+    """Translate a fill_values dot-path into a JSON-pointer-like segment list.
+
+    This is the YANG-driven generic replacement for the old hardcoded
+    `resolve_epipe_paths` / `resolve_tunnel_paths` maps. Given a user
+    fill_values key like `sdp[0].sdp-id` or `service-name`, returns the
+    list of dict-keys / list-indices needed to set the value in the
+    merged intent JSON via `set_nested(template, segments, value)`.
+
+    Examples:
+        resolve_path("epipe", "service-name")
+            -> ["nsp-service-intent:intent", 0, "service-name"]
+        resolve_path("epipe", "customer-id")
+            -> ["nsp-service-intent:intent", 0, "intent-specific-data",
+                "epipe:epipe", "customer-id"]
+        resolve_path("epipe", "sdp[0].sdp-id")
+            -> ["nsp-service-intent:intent", 0, "intent-specific-data",
+                "epipe:epipe", "sdp-details", "sdp", 0, "sdp-id"]
+        resolve_path("tunnel", "source-ne-id")
+            -> ["nsp-tunnel-intent:intent", 0, "source-ne-id"]   (envelope!)
+        resolve_path("tunnel", "name")
+            -> ["nsp-tunnel-intent:intent", 0, "intent-specific-data",
+                "tunnel:tunnel", "name"]
+
+    Returns None if dot_path doesn't correspond to any known leaf in the
+    schema (caller can warn or skip, just like the old code did).
+    """
+    info = _INTENT_BODY_INFO.get(intent_type)
+    if info is None:
+        return None
+    intent_key = info["intent_key"]
+    body_key = info["body_key"]
+
+    schema = load_schema(intent_type)
+    meta = schema.lookup(dot_path)
+    if meta is None:
+        return None
+
+    # Envelope leaves use synthetic paths starting with "@envelope.".
+    # They live at `<intent_key>[0].<leaf_name>`, NOT inside intent-specific-data.
+    if meta.path.startswith("@envelope."):
+        leaf_name = meta.path[len("@envelope."):]
+        return [intent_key, 0, leaf_name]
+
+    # Body leaves: build path inside `intent-specific-data.<body_key>` using
+    # the canonical YANG hierarchy combined with the user-supplied list indices.
+    user_indices = [int(m) for m in re.findall(r"\[(\d+)\]", dot_path)]
+    body_segments = _canonical_to_segments(meta.path, user_indices)
+    return [intent_key, 0, "intent-specific-data", body_key] + body_segments
+
+
+def _canonical_to_segments(canonical_path: str, list_indices: List[int]) -> List:
+    """Convert a YANG canonical path with [*] markers into JSON path segments.
+
+    The first segment of the canonical path is the body container itself
+    (e.g. `epipe`, `vprn`, `tunnel`) and is dropped — we're already inside
+    that container in the merged JSON.
+
+    Each `name[*]` segment becomes two output segments: the list name and
+    the next index from `list_indices` (consumed in order).
+
+    Each plain `name` segment becomes a single output segment.
+    """
+    parts = canonical_path.split(".")[1:]  # drop the body container name
+    out: List = []
+    idx_iter = iter(list_indices)
+    for part in parts:
+        if part.endswith("[*]"):
+            list_name = part[:-3]
+            try:
+                idx = next(idx_iter)
+            except StopIteration:
+                # User dot-path didn't supply enough indices for nested lists.
+                idx = 0
+            out.append(list_name)
+            out.append(idx)
+        else:
+            out.append(part)
+    return out
 
 
 # ---------------------------------------------------------------------------

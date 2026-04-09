@@ -1,7 +1,7 @@
 """
 YANG-aware validator for NSP intent fill_values produced by the fine-tuned model.
 
-This module implements two tiers of offline validation:
+This module implements four tiers of offline validation:
 
   Tier 1 — Path validity
       Every key in `fill_values` must correspond to a real YANG leaf path
@@ -12,12 +12,29 @@ This module implements two tiers of offline validation:
       Each value must match its YANG leaf's type, value range, enum set,
       regex pattern(s), and string length restrictions.
 
-Tier 3 (mandatory / list-key / max-elements / when-clauses) and Tier 4
-(application semantic cross-field rules) live elsewhere and are added in
-Milestone 2.
+  Tier 3 — Structural constraints on the merged intent JSON
+      After merge_fill_values has produced the full intent body:
+        - All YANG `mandatory true` leaves at the envelope level must be
+          present (e.g. tunnel: name, destination-ne-id, source-ne-id, sdp-id)
+        - Every list entry has its `key` fields populated
+        - Lists respect their `max-elements` / `min-elements` bounds
+
+  Tier 4 — Application semantic cross-field rules
+      Logic that YANG cannot express but the project considers correctness:
+        - epipe: SDP[0] source = site-a / SDP[0] dest = site-b (bidirectional)
+        - epipe: VLAN tags match between site-a and site-b
+        - epipe: site-a.device-id != site-b.device-id
+        - tunnel: source-ne-id != destination-ne-id
+        - vprn: all site device-ids are distinct
+
+Tier 5 (`when` clause handling) and Tier 6 (canonical-payload similarity)
+are deferred to Milestone 4.
 
 Public API:
-    validate_fill_values(intent_type, fill_values) -> (ok: bool, errors: list[str])
+    validate_fill_values(intent_type, fill_values) -> (ok, errors)
+    validate_merged_intent(intent_type, merged_json) -> (ok, errors)
+    validate_semantic(intent_type, fill_values) -> (ok, errors)
+    validate_full(intent_type, fill_values, merged_json=None) -> (ok, errors)
 
 Note on validation completeness:
     NSP transforms the intent server-side via JavaScript before final
@@ -29,13 +46,19 @@ Note on validation completeness:
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 try:
-    from .yang_schema import LeafMeta, SchemaIndex, load_schema
+    from .yang_schema import (
+        LeafMeta, SchemaIndex, load_schema,
+        _envelope_fields, intent_body_info,
+    )
 except ImportError:
     # Allow loading as a top-level module (e.g. when sys.path includes data/)
-    from yang_schema import LeafMeta, SchemaIndex, load_schema
+    from yang_schema import (
+        LeafMeta, SchemaIndex, load_schema,
+        _envelope_fields, intent_body_info,
+    )
 
 
 def validate_fill_values(intent_type: str, fill_values: dict) -> Tuple[bool, List[str]]:
@@ -282,6 +305,254 @@ def _yang_pattern_to_python(pat: str) -> str:
             .replace(r"\p{N}", r"\d")
             .replace(r"\p{L}", r"[A-Za-z]")
             .replace(r"\p{Nd}", r"\d"))
+
+
+# ---------------------------------------------------------------------------
+# Tier 3 — structural validation of the merged intent JSON
+# ---------------------------------------------------------------------------
+
+
+def validate_merged_intent(intent_type: str, merged_json: dict) -> Tuple[bool, List[str]]:
+    """Validate the FULLY MERGED intent JSON against schema structural constraints.
+
+    Checks:
+      - Required envelope: `<intent_key>` array with one entry exists.
+      - Envelope-level mandatory fields are present (e.g. tunnel name).
+      - Every list entry inside the body has its YANG `key` fields.
+      - Every list respects its `max-elements` / `min-elements` bounds.
+
+    Returns (ok, errors).
+    """
+    try:
+        schema = load_schema(intent_type)
+    except (FileNotFoundError, RuntimeError) as exc:
+        return False, [f"Schema load failed for intent_type={intent_type!r}: {exc}"]
+
+    try:
+        body_info = intent_body_info(intent_type)
+    except KeyError:
+        return False, [f"Unknown intent_type {intent_type!r} (missing _INTENT_BODY_INFO entry)"]
+
+    intent_key = body_info["intent_key"]
+    body_key = body_info["body_key"]
+
+    errors: List[str] = []
+
+    intent_array = merged_json.get(intent_key)
+    if not isinstance(intent_array, list) or not intent_array:
+        return False, [f"missing or invalid root key: {intent_key}"]
+    intent_obj = intent_array[0]
+    if not isinstance(intent_obj, dict):
+        return False, [f"{intent_key}[0] is not an object"]
+
+    # Envelope-level mandatory check
+    envelope_meta = _envelope_fields(intent_type)
+    for env_name, env_meta in envelope_meta.items():
+        if env_meta.mandatory and env_name not in intent_obj:
+            errors.append(f"missing mandatory envelope field: {env_name}")
+
+    # Walk the body container, checking lists
+    body = intent_obj.get("intent-specific-data", {}).get(body_key)
+    if isinstance(body, dict):
+        _walk_for_list_checks(body, "<body>", schema, errors)
+        # Body-level mandatory leaves (non-list-nested). Body container name
+        # is the intent type by Nokia convention (epipe.yang -> container epipe).
+        _check_body_mandatory(body, schema, intent_type, errors)
+
+    return len(errors) == 0, errors
+
+
+def _check_body_mandatory(body: dict, schema: SchemaIndex, body_container_name: str,
+                          errors: List[str]) -> None:
+    """Check that all `mandatory true` leaves NOT inside a list are present in body."""
+    for canonical_path, meta in schema.leaves.items():
+        if not meta.mandatory:
+            continue
+        if canonical_path.startswith("@envelope."):
+            continue  # envelope-level, already handled by caller
+        if "[*]" in canonical_path:
+            continue  # inside a list — defer to list-entry-keyed check
+        if not canonical_path.startswith(body_container_name + "."):
+            continue  # belongs to another body container
+
+        sub_parts = canonical_path[len(body_container_name) + 1:].split(".")
+        cur: Any = body
+        missing = False
+        for part in sub_parts[:-1]:
+            if not isinstance(cur, dict) or part not in cur:
+                missing = True
+                break
+            cur = cur[part]
+        if missing or not isinstance(cur, dict) or sub_parts[-1] not in cur:
+            errors.append(f"missing mandatory body leaf: {canonical_path}")
+
+
+def _walk_for_list_checks(node: Any, current_path: str, schema: SchemaIndex, errors: List[str]) -> None:
+    """Recursively walk merged JSON, checking any list-typed values against schema.lists."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            sub = f"{current_path}.{k}"
+            if isinstance(v, list) and v and isinstance(v[0], dict):
+                # Probably a YANG list of entries (not a leaf-list of primitives)
+                _check_list_against_schema(v, k, sub, schema, errors)
+                for i, item in enumerate(v):
+                    _walk_for_list_checks(item, f"{sub}[{i}]", schema, errors)
+            elif isinstance(v, dict):
+                _walk_for_list_checks(v, sub, schema, errors)
+            # Leaf and leaf-list values are covered by Tier 1 + 2.
+
+
+def _check_list_against_schema(lst: list, list_name: str, path: str,
+                                schema: SchemaIndex, errors: List[str]) -> None:
+    """Check max/min-elements and per-entry list-key presence for a YANG list."""
+    # Suffix-match the list_name against schema.lists. Multiple matches are
+    # acceptable: the YANG `endpoint` list (for example) shows up under both
+    # site-a and site-b but they share the same key tuple, so any one is fine.
+    candidates = [lm for p, lm in schema.lists.items()
+                  if p.endswith(f".{list_name}[*]") or p == f"{list_name}[*]"]
+    if not candidates:
+        return  # Unknown list — Tier 1 already caught any unknown leaves under it.
+    list_meta = candidates[0]
+
+    if list_meta.max_elements is not None and len(lst) > list_meta.max_elements:
+        errors.append(f"{path}: {len(lst)} entries exceeds max-elements={list_meta.max_elements}")
+    if list_meta.min_elements is not None and len(lst) < list_meta.min_elements:
+        errors.append(f"{path}: {len(lst)} entries below min-elements={list_meta.min_elements}")
+
+    for i, entry in enumerate(lst):
+        if not isinstance(entry, dict):
+            continue
+        for key_field in list_meta.keys:
+            if key_field not in entry:
+                errors.append(f"{path}[{i}]: missing list key {key_field!r}")
+
+
+# ---------------------------------------------------------------------------
+# Tier 4 — application semantic cross-field rules
+# ---------------------------------------------------------------------------
+#
+# These rules express invariants the YANG schema cannot encode. They are the
+# project's accumulated domain knowledge about what makes a network intent
+# semantically correct (vs. just structurally valid).
+#
+# Ported from the original validate_sample.py.
+
+
+_RD_RE = re.compile(r"^\d+:\d+$")
+
+
+def validate_semantic(intent_type: str, fill_values: dict) -> Tuple[bool, List[str]]:
+    """Cross-field semantic checks (Tier 4). Returns (ok, errors)."""
+    if intent_type == "epipe":
+        return _semantic_epipe(fill_values)
+    if intent_type == "tunnel":
+        return _semantic_tunnel(fill_values)
+    if intent_type == "vprn":
+        return _semantic_vprn(fill_values)
+    # New intent types added in Milestone 3 will register their own rule sets here.
+    return True, []
+
+
+def _semantic_epipe(fv: dict) -> Tuple[bool, List[str]]:
+    errors: List[str] = []
+
+    # Site-a / site-b devices must differ
+    sa = fv.get("site-a.device-id")
+    sb = fv.get("site-b.device-id")
+    if sa and sb and sa == sb:
+        errors.append("site-a and site-b have the same device-id")
+
+    # VLAN tags must match between sites
+    va = fv.get("site-a.endpoint[0].outer-vlan-tag")
+    vb = fv.get("site-b.endpoint[0].outer-vlan-tag")
+    if va is not None and vb is not None and va != vb:
+        errors.append(f"site-a vlan {va} does not match site-b vlan {vb}")
+
+    # SDP[0] / SDP[1] must form a bidirectional pair tied to site-a/site-b
+    s0_src = fv.get("sdp[0].source-device-id")
+    s0_dst = fv.get("sdp[0].destination-device-id")
+    s1_src = fv.get("sdp[1].source-device-id")
+    s1_dst = fv.get("sdp[1].destination-device-id")
+    if sa and s0_src and s0_src != sa:
+        errors.append(f"sdp[0].source-device-id {s0_src!r} != site-a.device-id {sa!r}")
+    if sb and s0_dst and s0_dst != sb:
+        errors.append(f"sdp[0].destination-device-id {s0_dst!r} != site-b.device-id {sb!r}")
+    if sb and s1_src and s1_src != sb:
+        errors.append(f"sdp[1].source-device-id {s1_src!r} != site-b.device-id {sb!r}")
+    if sa and s1_dst and s1_dst != sa:
+        errors.append(f"sdp[1].destination-device-id {s1_dst!r} != site-a.device-id {sa!r}")
+
+    return len(errors) == 0, errors
+
+
+def _semantic_tunnel(fv: dict) -> Tuple[bool, List[str]]:
+    errors: List[str] = []
+    src = fv.get("source-ne-id")
+    dst = fv.get("destination-ne-id")
+    if src and dst and src == dst:
+        errors.append("source-ne-id and destination-ne-id are the same")
+    return len(errors) == 0, errors
+
+
+def _semantic_vprn(fv: dict) -> Tuple[bool, List[str]]:
+    errors: List[str] = []
+
+    # Discover sites
+    site_indices = sorted({
+        int(m.group(1))
+        for m in (re.match(r'^site\[(\d+)\]\.', k) for k in fv)
+        if m
+    })
+
+    # Distinct device-ids per site
+    seen_ids: Dict[str, int] = {}
+    for s in site_indices:
+        dev = fv.get(f"site[{s}].device-id")
+        if not dev:
+            continue
+        if dev in seen_ids:
+            errors.append(
+                f"site[{s}].device-id {dev!r} duplicates site[{seen_ids[dev]}]"
+            )
+        else:
+            seen_ids[dev] = s
+
+        # Route distinguisher format
+        rd = fv.get(f"site[{s}].route-distinguisher")
+        if rd and not _RD_RE.match(str(rd)):
+            errors.append(f"site[{s}].route-distinguisher {rd!r} not in 'ASN:ID' form")
+
+    return len(errors) == 0, errors
+
+
+# ---------------------------------------------------------------------------
+# Combined "everything" validator
+# ---------------------------------------------------------------------------
+
+
+def validate_full(intent_type: str, fill_values: dict, merged_json: dict | None = None
+                  ) -> Tuple[bool, Dict[str, List[str]]]:
+    """Run all available tiers and return per-tier errors keyed by tier name.
+
+    If `merged_json` is None, Tier 3 is skipped (caller should pass it after
+    running merge_fill_values).
+    """
+    out: Dict[str, List[str]] = {}
+
+    ok1, errs1 = validate_fill_values(intent_type, fill_values)
+    out["tier1_2"] = errs1
+
+    if merged_json is not None:
+        ok3, errs3 = validate_merged_intent(intent_type, merged_json)
+        out["tier3"] = errs3
+    else:
+        ok3 = True
+        out["tier3"] = []
+
+    ok4, errs4 = validate_semantic(intent_type, fill_values)
+    out["tier4"] = errs4
+
+    return (ok1 and ok3 and ok4), out
 
 
 # ---------------------------------------------------------------------------

@@ -12,13 +12,26 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "inference"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "data"))
 
 from predict import load_model, predict, extract_json
-from validate_sample import validate_epipe_sample, validate_tunnel_sample, validate_vprn_sample
+from merge_fill_values import merge_fill_values
 
-# YANG-based validator (Milestone 1). Imported from data/intent_validator.py.
-# Provides Tier 1 (path validity) + Tier 2 (type/range/enum/pattern/length)
-# checks against the official Nokia NSP YANG schema. Reported as a separate
-# `yang_valid` metric alongside the existing regex-based `schema_valid`.
-from intent_validator import validate_fill_values as validate_fill_values_yang
+# Milestone 2 validators: 4-tier YANG-aware stack from data/intent_validator.py.
+#
+#   tier1_2  -- path validity + type/range/enum/pattern (YANG schema-shape)
+#   tier3    -- merged-JSON structural checks (envelope mandatory + body
+#               mandatory + list keys + max-elements)
+#   tier4    -- semantic cross-field rules (SDP bidirectional, vlan match,
+#               distinct devices, src != dst, etc.)
+#   all_valid = tier1_2 AND tier3 AND tier4
+#
+# We keep the legacy `schema_valid` metric for one more eval cycle so the
+# comparison stays meaningful, but it now points at the same shim that
+# routes through tier1_2 + tier4 (no more regex).
+from intent_validator import (
+    validate_fill_values as _validate_fill_values_yang,
+    validate_merged_intent as _validate_merged_intent,
+    validate_semantic as _validate_semantic,
+)
+from validate_sample import validate_epipe_sample, validate_tunnel_sample, validate_vprn_sample
 
 
 def evaluate_single(prediction_text, ground_truth):
@@ -30,9 +43,14 @@ def evaluate_single(prediction_text, ground_truth):
         "field_precision": 0.0,
         "value_accuracy": 0.0,
         "sdp_bidirectional": None,
-        "schema_valid": False,    # legacy regex-based validator (validate_sample.py)
-        "yang_valid": False,      # YANG-based validator (intent_validator.py)
-        "yang_errors": [],        # detailed errors when yang_valid is False
+        "schema_valid": False,    # legacy shim (now Tier 1+2+4 via validate_sample.py)
+        "yang_valid": False,      # legacy alias kept for M1 baseline comparison
+        "tier1_2_valid": False,   # YANG path / type / range / enum / pattern
+        "tier3_valid": False,     # merged-JSON structural (mandatory + list keys)
+        "tier4_valid": False,     # semantic cross-field rules
+        "all_tiers_valid": False, # all three tiers AND merge succeeds
+        "yang_errors": [],
+        "tier_errors": {},
     }
 
     # 1. JSON validity
@@ -78,7 +96,7 @@ def evaluate_single(prediction_text, ground_truth):
     if gt_type == "epipe":
         scores["sdp_bidirectional"] = check_sdp_bidirectional(pred_fv)
 
-    # 6. Schema validation (legacy regex-based)
+    # 6. Schema validation (legacy shim — now routes to Tier 1+2+4)
     if pred_type == "epipe":
         valid, _ = validate_epipe_sample(pred_fv)
     elif pred_type == "tunnel":
@@ -89,17 +107,36 @@ def evaluate_single(prediction_text, ground_truth):
         valid = False
     scores["schema_valid"] = valid
 
-    # 7. YANG-based validation (Milestone 1).
-    # Tier 1 (path validity) + Tier 2 (type/range/enum/pattern/length) against
-    # the official Nokia NSP YANG schema in data/yang/<intent>/.
+    # 7. Full 4-tier YANG-driven validation (Milestone 2).
     if pred_type in ("epipe", "tunnel", "vprn"):
+        tier_errors = {}
         try:
-            yang_ok, yang_errs = validate_fill_values_yang(pred_type, pred_fv)
-            scores["yang_valid"] = yang_ok
-            scores["yang_errors"] = yang_errs
+            ok12, errs12 = _validate_fill_values_yang(pred_type, pred_fv)
+            scores["tier1_2_valid"] = ok12
+            scores["yang_valid"] = ok12  # legacy alias for M1 comparison
+            scores["yang_errors"] = errs12
+            tier_errors["tier1_2"] = errs12
+
+            ok4, errs4 = _validate_semantic(pred_type, pred_fv)
+            scores["tier4_valid"] = ok4
+            tier_errors["tier4"] = errs4
+
+            # Tier 3 needs the merged JSON. If merge fails, Tier 3 fails.
+            try:
+                merged = merge_fill_values(pred_type, pred_fv)
+                ok3, errs3 = _validate_merged_intent(pred_type, merged)
+            except Exception as exc:
+                ok3, errs3 = False, [f"merge crashed: {exc}"]
+            scores["tier3_valid"] = ok3
+            tier_errors["tier3"] = errs3
+
+            scores["all_tiers_valid"] = ok12 and ok3 and ok4
+            scores["tier_errors"] = tier_errors
         except Exception as exc:
+            scores["tier1_2_valid"] = False
             scores["yang_valid"] = False
             scores["yang_errors"] = [f"validator crashed: {exc}"]
+            scores["tier_errors"] = {"crash": str(exc)}
 
     return scores
 
@@ -173,8 +210,10 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
         "Field Recall": sum(s["field_recall"] for s in all_scores) / n,
         "Field Precision": sum(s["field_precision"] for s in all_scores) / n,
         "Value Accuracy": sum(s["value_accuracy"] for s in all_scores) / n,
-        "Schema Valid Rate (regex)": sum(s["schema_valid"] for s in all_scores) / n,
-        "YANG Valid Rate": sum(s["yang_valid"] for s in all_scores) / n,
+        "Tier 1+2 Valid (path/type)": sum(s["tier1_2_valid"] for s in all_scores) / n,
+        "Tier 3 Valid (merged structure)": sum(s["tier3_valid"] for s in all_scores) / n,
+        "Tier 4 Valid (semantic)": sum(s["tier4_valid"] for s in all_scores) / n,
+        "All Tiers Valid": sum(s["all_tiers_valid"] for s in all_scores) / n,
     }
 
     # SDP check (epipe only)

@@ -1,25 +1,12 @@
 """
 Merge fill-values into NSP intent templates to produce API-ready JSON.
 Uses dot-path notation with array index support.
-
-Path resolution is YANG-driven via `data.yang_schema.resolve_path` (Milestone 2):
-the previous hardcoded `resolve_epipe_paths` / `resolve_tunnel_paths` maps
-have been removed in favour of one generic resolver that walks the official
-Nokia YANG schema for the intent type.
-
-The VPRN site / interface skeletons remain hand-coded because they encode
-NSP API DEFAULTS (captured from real network responses) that are NOT YANG
-defaults — they have to be provided alongside the schema-driven path
-resolution. Future work will derive these from a richer source (e.g. the
-canonical `documentation/payload*.ibsf.json` examples in the unified
-artifact bundle) once Milestone 3 needs them for new intent types.
 """
 
 import json
 import copy
 import re
 import os
-import sys
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "templates")
 
@@ -28,13 +15,6 @@ TEMPLATES = {
     "tunnel": "tunnel_template.json",
     "vprn": "vprn_template.json",
 }
-
-# Make `data/` importable so we can pull in yang_schema.resolve_path.
-_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
-if _DATA_DIR not in sys.path:
-    sys.path.insert(0, _DATA_DIR)
-
-from yang_schema import resolve_path  # noqa: E402
 
 # VPRN site skeleton used when dynamically adding sites
 VPRN_SITE_SKELETON = {
@@ -165,50 +145,92 @@ def set_nested(obj, path_segments, value):
         current[last_key] = value
 
 
+def resolve_epipe_paths(fill_values):
+    """Map fill-value dot-paths to actual template JSON paths for epipe."""
+    path_map = {
+        "service-name": ["nsp-service-intent:intent", 0, "service-name"],
+        "customer-id": ["nsp-service-intent:intent", 0, "intent-specific-data", "epipe:epipe", "customer-id"],
+        "ne-service-id": ["nsp-service-intent:intent", 0, "intent-specific-data", "epipe:epipe", "ne-service-id"],
+        "mtu": ["nsp-service-intent:intent", 0, "intent-specific-data", "epipe:epipe", "mtu"],
+    }
+
+    base = ["nsp-service-intent:intent", 0, "intent-specific-data", "epipe:epipe"]
+
+    dynamic_maps = {
+        "site-a.device-id": base + ["site-a", "device-id"],
+        "site-a.endpoint[0].port-id": base + ["site-a", "endpoint", 0, "port-id"],
+        "site-a.endpoint[0].outer-vlan-tag": base + ["site-a", "endpoint", 0, "outer-vlan-tag"],
+        "site-b.device-id": base + ["site-b", "device-id"],
+        "site-b.endpoint[0].port-id": base + ["site-b", "endpoint", 0, "port-id"],
+        "site-b.endpoint[0].outer-vlan-tag": base + ["site-b", "endpoint", 0, "outer-vlan-tag"],
+        "sdp[0].sdp-id": base + ["sdp-details", "sdp", 0, "sdp-id"],
+        "sdp[0].source-device-id": base + ["sdp-details", "sdp", 0, "source-device-id"],
+        "sdp[0].destination-device-id": base + ["sdp-details", "sdp", 0, "destination-device-id"],
+        "sdp[1].sdp-id": base + ["sdp-details", "sdp", 1, "sdp-id"],
+        "sdp[1].source-device-id": base + ["sdp-details", "sdp", 1, "source-device-id"],
+        "sdp[1].destination-device-id": base + ["sdp-details", "sdp", 1, "destination-device-id"],
+    }
+
+    path_map.update(dynamic_maps)
+    return path_map
+
+
+def resolve_tunnel_paths(fill_values):
+    """Map fill-value dot-paths to actual template JSON paths for tunnel."""
+    base = ["nsp-tunnel-intent:intent", 0]
+    return {
+        "source-ne-id": base + ["source-ne-id"],
+        "sdp-id": base + ["sdp-id"],
+        "destination-ne-id": base + ["intent-specific-data", "tunnel:tunnel", "destination-ne-id"],
+        "name": base + ["intent-specific-data", "tunnel:tunnel", "name"],
+    }
+
+
 def merge_fill_values(intent_type, fill_values):
     """
     Merge fill_values into the appropriate template.
     Returns the complete API-ready JSON.
-
-    All path resolution goes through `data.yang_schema.resolve_path`, which
-    walks the official Nokia YANG schema. The only intent-type-specific
-    handling is the VPRN skeleton pre-population: NSP API expects each site
-    and interface to carry ~25 / ~15 default fields that aren't in YANG.
     """
     template = load_template(intent_type)
     result = copy.deepcopy(template)
 
-    # VPRN: pre-create site / interface skeletons in the merged JSON before
-    # the unified set_nested loop. set_nested won't overwrite the pre-created
-    # dicts; it walks into them and only sets the leaf the user specified.
-    if intent_type == "vprn":
-        _pre_populate_vprn_skeletons(result, fill_values)
+    if intent_type == "epipe":
+        path_map = resolve_epipe_paths(fill_values)
+        for key, value in fill_values.items():
+            if key in path_map:
+                set_nested(result, path_map[key], value)
+            else:
+                print(f"Warning: Unknown epipe field path: {key}")
 
-    for key, value in fill_values.items():
-        segments = resolve_path(intent_type, key)
-        if segments is None:
-            print(f"Warning: Unknown {intent_type} field path: {key}")
-            continue
-        set_nested(result, segments, value)
+    elif intent_type == "tunnel":
+        path_map = resolve_tunnel_paths(fill_values)
+        for key, value in fill_values.items():
+            if key in path_map:
+                set_nested(result, path_map[key], value)
+            else:
+                print(f"Warning: Unknown tunnel field path: {key}")
+
+    elif intent_type == "vprn":
+        result = _merge_vprn(result, fill_values)
+
+    else:
+        raise ValueError(f"Unknown intent type: {intent_type}")
 
     return result
 
 
-def _pre_populate_vprn_skeletons(result, fill_values):
-    """Inject VPRN_SITE_SKELETON / VPRN_INTERFACE_SKELETON into the merged JSON
-    at the right list indices, BEFORE the unified set_nested loop runs.
+def _merge_vprn(template, fill_values):
+    """Merge VPRN fill values, dynamically creating sites and interfaces."""
+    result = copy.deepcopy(template)
+    intent = result["nsp-service-intent:intent"][0]
 
-    This preserves NSP API default fields (admin-state, enable-rip, etc.)
-    that aren't in YANG. The set_nested loop afterwards overlays
-    user-provided fields on top of these skeletons.
-    """
-    sites_list = (
-        result["nsp-service-intent:intent"][0]
-        ["intent-specific-data"]["vprn:vprn"]
-        ["site-details"]["site"]
-    )
+    # Top-level fields
+    if "service-name" in fill_values:
+        intent["service-name"] = fill_values["service-name"]
+    if "customer-id" in fill_values:
+        intent["intent-specific-data"]["vprn:vprn"]["customer-id"] = fill_values["customer-id"]
 
-    # Discover which sites and interfaces are referenced by fill_values keys
+    # Discover sites and interfaces from fill_values
     site_indices = set()
     site_iface_indices = {}
     for key in fill_values:
@@ -220,18 +242,52 @@ def _pre_populate_vprn_skeletons(result, fill_values):
             if im:
                 site_iface_indices.setdefault(si, set()).add(int(im.group(1)))
 
-    # Pre-create sites in sorted order. The original `_merge_vprn` used
-    # sites_list.append(skeleton) for each site index in sorted order, so
-    # the resulting list positions are 0..N-1 regardless of which `site[K]`
-    # the user wrote. We preserve that behaviour exactly here for diff
-    # equivalence with the previous implementation.
+    sites_list = intent["intent-specific-data"]["vprn:vprn"]["site-details"]["site"]
+
     for si in sorted(site_indices):
+        # Create site skeleton
         site = copy.deepcopy(VPRN_SITE_SKELETON)
+
+        # Fill site-level fields
+        prefix = f"site[{si}]"
+        field_map = {
+            "site-name": "site-name",
+            "device-id": "device-id",
+            "ne-service-id": "ne-service-id",
+            "route-distinguisher": "route-distinguisher",
+            "vrf-import": "vrf-import",
+            "vrf-export": "vrf-export",
+        }
+        for fv_suffix, site_key in field_map.items():
+            fv_key = f"{prefix}.{fv_suffix}"
+            if fv_key in fill_values:
+                site[site_key] = fill_values[fv_key]
+
+        # Create interfaces
+        iface_indices = sorted(site_iface_indices.get(si, []))
+        for ii in iface_indices:
+            iface = copy.deepcopy(VPRN_INTERFACE_SKELETON)
+            ipfx = f"{prefix}.interface[{ii}]"
+
+            iface_field_map = {
+                "interface-name": ["interface-name"],
+                "sap.port-id": ["sap", "port-id"],
+                "ipv4.primary.address": ["ipv4", "primary", "address"],
+                "ipv4.primary.prefix-length": ["ipv4", "primary", "prefix-length"],
+            }
+            for fv_suffix, json_path in iface_field_map.items():
+                fv_key = f"{ipfx}.{fv_suffix}"
+                if fv_key in fill_values:
+                    obj = iface
+                    for p in json_path[:-1]:
+                        obj = obj[p]
+                    obj[json_path[-1]] = fill_values[fv_key]
+
+            site["interface-details"]["interface"].append(iface)
+
         sites_list.append(site)
 
-        iface_list = site["interface-details"]["interface"]
-        for ii in sorted(site_iface_indices.get(si, [])):
-            iface_list.append(copy.deepcopy(VPRN_INTERFACE_SKELETON))
+    return result
 
 
 if __name__ == "__main__":

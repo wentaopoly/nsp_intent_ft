@@ -13,6 +13,13 @@ from peft import PeftModel
 
 from merge_fill_values import merge_fill_values
 
+# Make data/ importable so we can run the YANG-driven 4-tier validator on
+# the merged JSON before returning it to the caller (Milestone 2).
+_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+if _DATA_DIR not in sys.path:
+    sys.path.insert(0, _DATA_DIR)
+from intent_validator import validate_full  # noqa: E402
+
 SYSTEM_PROMPT = (
     "You are an NSP (Network Services Platform) intent configuration assistant. "
     "Given a natural language description of a network service, output a JSON object with three fields: "
@@ -120,7 +127,12 @@ def predict(model, tokenizer, instruction, max_new_tokens=1024, temperature=0.1)
 
 
 def predict_and_merge(model, tokenizer, instruction):
-    """Full pipeline: instruction -> fill-values -> merged template -> API-ready JSON."""
+    """Full pipeline: instruction -> fill-values -> merged template -> API-ready JSON.
+
+    After merging, runs the 4-tier YANG-driven validator. Validation errors
+    are printed but do NOT block the return — the caller decides what to do
+    with a structurally-valid-but-imperfect intent.
+    """
     raw_output = predict(model, tokenizer, instruction)
     print(f"\nRaw model output:\n{raw_output}\n")
 
@@ -137,6 +149,20 @@ def predict_and_merge(model, tokenizer, instruction):
         return None
 
     result = merge_fill_values(intent_type, fill_values)
+
+    # Post-merge validation: report (don't block) any tier failures.
+    try:
+        ok, tier_errors = validate_full(intent_type, fill_values, merged_json=result)
+        if not ok:
+            print("WARNING: Validation found issues:")
+            for tier, errs in tier_errors.items():
+                if errs:
+                    print(f"  [{tier}]")
+                    for e in errs:
+                        print(f"    {e}")
+    except Exception as exc:
+        print(f"WARNING: Validator crashed: {exc}")
+
     return result
 
 

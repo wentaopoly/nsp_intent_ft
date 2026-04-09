@@ -1,0 +1,224 @@
+module cpipe {
+    namespace "urn:nokia:nsp:model:nsp-service-intent:services:cpipe";
+    yang-version 1.1;
+    prefix "cpipe";
+    import qos-filter-common { prefix "qos-filter-common"; }
+    import sdp-binding-common { prefix "sdp-binding-common"; }
+    import svc-common { prefix "svc-common"; }
+    organization "NOKIA Corp";
+    contact "";
+    description "";
+
+    revision "2026-01-06" {
+        description
+            "Adding collect-stats under sap";
+    }
+
+    revision "2024-07-25" {
+        description
+            "update jitter buffer range";
+    }
+    revision "2022-09-06" {
+            description
+                    "22.6 changes - update when condition for adc";
+        }
+    revision "2022-04-29" {
+        description
+                "22.6 changes - Remove pw-switching";
+    }
+    revision "2021-08-24" {
+        description
+                "21.11 changes";
+    }
+    revision "2021-04-15" {
+        description
+                "Initial revision.";
+    }
+    typedef ieee-address {
+        type string {
+            pattern "([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|([0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5})";
+        }
+        description "The ieee-address type represents an IEEE 802 MAC address.";
+    }
+
+    typedef cpipe-vc-type {
+            type enumeration {
+                enum satope1;
+                enum satopt1;
+                enum satope3;
+                enum satopt3;
+                enum cesopsn;
+                enum cesopsncas;
+                enum satopserial;
+                enum satoptpif;
+            }
+            description "Specifies the cpipe site vc-type";
+    }
+
+    typedef asym-delay-samples-type {
+            type enumeration {
+                enum one;
+                enum two;
+                enum four;
+                enum eight;
+                enum sixteen;
+                enum thirtytwo;
+            }
+            description "Specifies the cpipe site vc-type";
+    }
+
+    grouping cem-configuration-details {
+            container cem {
+                description "Enter the cem context";
+
+               leaf rtp-header {
+                   type boolean;
+                   default "false";
+                   description
+                       "Status whether RTP header to be used when packets are transmitted to the Packet Service Network";
+               }
+
+               leaf payload-size {
+                   type uint32 {
+                    range "0..2048";
+                   }
+                   units "bytes";
+                   description
+                   "The payload size (in bytes) of packets transmitted to the Packet Service Network (PSN) by the CEM SAP.";
+               }
+               leaf jitter-buffer {
+                   type uint32 {
+                   range "0..250";
+                   }
+                   units "milliseconds";
+                   description "The jitter buffer size in milliseconds (ms).";
+               }
+
+               container asymmetric-delay-control {
+                   description "Enter the asymmetric delay control context";
+
+                   leaf enable {
+                       type boolean;
+                       default "false";
+                       description
+                           "Enabling or disabling of the asymmetric delay control.";
+                   }
+
+                   leaf samples {
+                       type asym-delay-samples-type;
+                       when "../enable != 'false'";
+                       description
+                           "Number of packets being sampled during the sampling period when asymetric delay
+                            control is enabled. one, two, four or eight corresponds to 1024, 2048, 2096 or 8192 samples";
+                   }
+
+                   leaf repeat-period {
+                       type uint32 {
+                           range "0..1440";
+                       }
+                       units "minutes";
+                       when "../enable != 'false'";
+                       description "The sampling/adjusting period in minutes when the asymetric delay control is enabled";
+                   }
+
+               } // container asymmetric-delay-control
+
+           } // container cem
+        }
+
+    grouping cline-endpoint-details {
+            leaf port-id {
+               type string;
+               description "Port Identifier";
+           }
+
+           leaf time-slots {
+               type string {
+                   pattern 'NONE|((([1-9]|[1-2][0-9]|30|31|32))|(([1-9]|[1-2][0-9]|30|31|32))-(([1-9]|[1-2][0-9]|30|31|32)))(,((([1-9]|[1-2][0-9]|30|31|32))|(|([1-9]|[1-2][0-9]|30|31|32))-(|([1-9]|[1-2][0-9]|30|31|32))))*' {
+                       error-message "invalid timeslot format, eg format: 1-5,7-10,12,21-24";
+                   }
+               }
+               description "time-slot";
+           }
+
+           leaf admin-state {
+               type enumeration {
+                   enum locked;
+                   enum unlocked;
+               }
+               description "Service Administrative State.";
+               default unlocked;
+           }
+
+           leaf description {
+               type string;
+               description "Specify Sap Description.";
+           }
+           
+           leaf collect-stats {
+                type boolean;
+                default "false";
+                description "Collect accounting statistics";
+            }
+        }
+
+    grouping configuration-details {
+        container cpipe {
+            leaf ne-service-id {
+                type uint32 {
+                    range "1..2147483647";
+                }
+                description "Specify NE Service Id";
+            }
+
+            leaf vc-type {
+                type cpipe-vc-type;
+                description "Specifies the vc-type for cline services";
+            } //vc-type
+
+            leaf mtu {
+                type uint16;
+                description "Service MTU";
+            }
+
+            uses svc-common:svc-details;
+
+            container site-a {
+                uses svc-common:site-details;
+
+                list endpoint {
+                    key "port-id time-slots";
+                    max-elements 2;
+
+                    uses cpipe:cline-endpoint-details;
+                    uses cpipe:cem-configuration-details;
+                    uses qos-filter-common:access-configuration-details;
+                }
+            }
+
+            container site-b{
+                uses svc-common:site-details;
+
+                list endpoint {
+                    key "port-id time-slots";
+                    max-elements 2;
+
+                    uses cpipe:cline-endpoint-details;
+                    uses cpipe:cem-configuration-details;
+                    uses qos-filter-common:access-configuration-details;
+                }
+            }
+
+            container sdp-details{
+                list sdp {
+                    key "source-device-id sdp-id";
+                    max-elements 12;
+                    description "CPIPE spoke SDP information";
+
+                    uses sdp-binding-common:sdp-binding-details;
+                } // list spoke-sdp
+            }
+        }
+   }
+   uses cpipe:configuration-details;
+}

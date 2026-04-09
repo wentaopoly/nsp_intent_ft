@@ -1,0 +1,795 @@
+module evpn-vpls {
+    namespace "http://www.nokia.com/management-solutions/evpn-vpls";
+    yang-version 1.1;
+    prefix "evpn-vpls";
+    import qos-filter-common { prefix "qos-filter-common"; }
+    import sap-common { prefix "sap-common"; }
+    import svc-common { prefix "svc-common"; }
+    import ietf-inet-types { prefix "inet-types"; }
+    organization "NOKIA Corp";
+    contact "";
+    description "";
+    revision "2025-05-21" {
+        description
+            "Adding BGP AD and PW Template Support";
+    }
+
+    revision "2025-04-28" {
+        description
+            "Adding STP to SAP";
+    }
+
+    revision "2024-08-21" {
+        description
+            "evi range change";
+    }
+    revision "2024-08-15" {
+        description
+            "24.8 changes";
+    }
+    revision "2023-07-18" {
+            description
+                "Adding cfm-mac and site igmp-snooping";
+    }
+    revision "2023-05-09" {
+            description
+                "Common intent model for SR and SRL";
+    }
+    revision "2021-08-27" {
+        description
+                "21.11 changes";
+    }
+    revision "2021-04-23" {
+        description
+                "Initial revision.";
+    }
+    typedef ieee-address {
+        type string {
+            pattern "([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|([0-9a-fA-F]{2}(-[0-9a-fA-F]{2}){5})";
+        }
+        description "The ieee-address type represents an IEEE 802 MAC address.";
+    }
+
+    typedef rt-type {
+        type enumeration {
+    	    enum unspecified;
+            enum imp;
+            enum exp;
+            enum import-export;
+        }
+    }
+
+    typedef resolve-status {
+        type enumeration {
+            enum "none"                         { value 0; }
+            enum "filter"                       { value 1; }
+            enum "any"                          { value 2; }
+        }
+        description "The TResolveStatus indicates resolution status of the tunnels.";
+    }
+
+    typedef ipv4-address {
+        type inet-types:ipv4-address-no-zone {
+            pattern "[0-9\\.]*";
+            pattern "(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(%[\\p{N}\\p{L}]+)?";
+        }
+        description "An IPv4 address.";
+    }
+
+    grouping bgp-details {
+
+        leaf bgp-instance-id {
+            type int16 {
+                range "1..2";
+            }
+            description "BGP instance";
+        }
+
+        leaf route-distinguisher {
+            type string;
+            description "Route distinguisher";
+        }
+        leaf-list vsi-import {
+            type string;
+            max-elements 5;
+            ordered-by user;
+            description "VSI import policies";
+        }
+
+        leaf-list vsi-export {
+            type string;
+            max-elements 5;
+            ordered-by user;
+            description "VSI export policies";
+        }
+
+        list route-target {
+            key "target-type target-value";
+            description "Enter the vrf-target context";
+
+            leaf target-type {
+                type rt-type;
+                description "The type of route target";
+            }
+
+            leaf target-value {
+                type string;
+                description "The route target value";
+            }
+        } // list route-target
+
+        list pw-template-binding {
+            key "pw-template-name";
+            description "Enter the pw-template-binding list instance";
+
+            leaf pw-template-name {
+                type string;
+                description "Policy name";
+            }
+
+            leaf split-horizon-group {
+                type string;
+                description "Split horizon group";
+            }
+
+            leaf bfd-template {
+                type string;
+                description "BFD template name for PW-Template binding";
+            }
+
+            leaf bfd-liveness {
+                type boolean;
+                default "false";
+                description "Enable BFD";
+            }
+
+            leaf-list import-rt {
+                type string;
+                max-elements 5;
+                description "Import route-target communities";
+            }
+        }
+    }
+
+    grouping configuration-details {
+        container evpn-vpls {
+            uses svc-common:svc-details;
+
+            leaf mtu {
+                type uint16;
+                description "svc mtu";
+            }
+
+            leaf ne-service-id {
+                type uint32 {
+                    range "1..2147483647";
+                }
+                description "Specify NE Service Id";
+            }
+
+            container site-details{
+                list site {
+                    key "device-id";
+
+                    leaf evpn-type {
+                        type enumeration {
+                            enum mpls                   { value 0; }
+                            enum vxlan                  { value 1; }
+                            enum both                  { value 2; }
+                        }
+                        mandatory true;
+                        description "EVPN Type";
+                    }
+
+                    uses svc-common:site-details;
+
+                    leaf evi {
+                        type uint32 {
+                            range "1..16777215";
+                        }
+                        description "EVPN ID";
+                    }
+
+                    leaf ecmp {
+                        type int32 {
+                            range "1..32";
+                        }
+                        description "Maximum ECMP routes information";
+                    }
+
+                    leaf routed-vpls {
+                        type boolean;
+                        default "false";
+                        description "Enable/disable routed VPLS";
+                    }
+
+                    container mac-flush {
+                        description "Enter the mac-flush context";
+
+                        container tldp {
+                            description "Enter the tldp context";
+
+                            leaf propagate {
+                                type boolean;
+                                description "Propagate MAC flush messages received from the T-LDP";
+                            }
+
+                            leaf send-on-failure {
+                                type boolean;
+                                description "Send MAC withdraw message on SAP/Spoke-SDP failure";
+                            }
+
+                        } // container tldp
+
+                    } // container mac-flush
+
+                    container mac-duplication {
+                        description "Enter the mac-duplication context";
+
+                        leaf retry {
+                            type union {
+                                type uint32 {
+                                    range "2..60";
+                                }
+                                type enumeration {
+                                    enum "never"                        { value 0; }
+                                }
+                            }
+                            units "minutes";
+                            description "BGP EVPN MAC duplication retry";
+                        }
+
+                        leaf blackhole {
+                            type boolean;
+                            description "Enable black hole dup MAC configuration";
+                        }
+
+                        container detect {
+                            description "Enter the detect context";
+
+                            leaf num-moves {
+                                type uint32 {
+                                    range "3..10";
+                                }
+                                description "BGP EVPN MAC duplication detection number of moves";
+                            }
+
+                            leaf window {
+                                type uint32 {
+                                    range "1..15";
+                                }
+                                units "minutes";
+                                description "BGP EVPN MAC duplication detection window";
+                            }
+
+                        } // container detect
+
+                    } // container mac-duplication
+
+                    container proxy-arp {
+                        presence "Enable the proxy-arp context";
+                        description "Enable the proxy-arp context";
+
+                        leaf admin-state {
+                            type enumeration {
+                                enum unlocked;
+                                enum locked;
+                            }
+                            description "Administrative state of the proxy";
+                        }
+
+                        leaf dynamic-populate {
+                            type boolean;
+                            description "Populate proxy ARP entries from snooped GARP/ARP/ND messages on SAPs/SDP-bindings";
+                        }
+                    }
+
+                    container fdb {
+                        description "Enter the fdb context";
+
+                        leaf discard-unknown {
+                            type boolean;
+                            description "Discard packets with unknown destination MAC addresses";
+                        }
+
+                        container table {
+                            description "Enter the table context";
+
+                            leaf high-wmark {
+                                type int32 {
+                                    range "0..100";
+                                }
+                                description "High watermark for the FDB table";
+                            }
+
+                            leaf low-wmark {
+                                type int32 {
+                                    range "0..100";
+                                }
+                                description "Low watermark for the FDB table";
+                            }
+
+                            leaf size {
+                                type int32 {
+                                    range "1..511999";
+                                }
+                                description "Maximum MAC entries in the FDB";
+                            }
+
+                        } // container table
+
+                        container mac-learning {
+                            description "Enter the mac-learning context";
+
+                            leaf learning {
+                                type boolean;
+                                description "Enable learning of new MAC addresses";
+                            }
+
+                            leaf aging {
+                                type boolean;
+                                description "Enable aging of MAC addresses";
+                            }
+
+                            leaf local-age-time {
+                                type int32 {
+                                    range "60..86400";
+                                }
+                                description "Aging time for locally learned MAC addresses";
+                            }
+
+                            leaf remote-age-time {
+                                type int32 {
+                                    range "60..86400";
+                                }
+                                description "Aging time for locally learned MAC addresses";
+                            }
+
+                        } // container mac-learning
+                    } // container fdb
+
+                    list split-horizon-group {
+                        key "shg-name";
+                        leaf shg-name {
+                            type string;
+                            description "SHG name to which the SDP belongs";
+                        }
+
+                        leaf description {
+                            type string;
+                            description "Text description";
+                        }
+                    }
+
+                    container vxlan {
+                        when "../evpn-type != 'mpls'";
+                        leaf tunnel-interface {
+                            type string;
+                            description "Tunnel Interface Name";
+                        }
+                        leaf vni {
+                            type uint32;
+                            description "VNI of the VXLAN";
+                        }
+
+                        container bgp-instance {
+                            uses evpn-vpls:bgp-details;
+                        }
+
+                        leaf admin-state {
+                            type enumeration {
+                                enum unlocked;
+                                enum locked;
+                            }
+                            description "Administrative state of VXLAN auto-bindings creation";
+                        }
+
+                        leaf mh-mode {
+                            type enumeration {
+                                enum access                         { value 0; }
+                                enum network                        { value 1; }
+                            }
+                            description "Multi-homing mode";
+                        }
+
+                        container routes {
+                            description "Enter the routes context";
+
+                            container auto-disc {
+                                description "Enter the auto-disc context";
+
+                                leaf advertise {
+                                    type boolean;
+                                    description "Advertise routes on auto-discovery";
+                                }
+                            } // container auto-disc
+                        } // container routes
+                    }
+
+                    leaf cfm-mac {
+                        type boolean;
+                        description "Enable advertisement and withdrawal of MAC address";
+                    }
+
+                    container mpls {
+                       when "../evpn-type != 'vxlan'";
+
+                        container bgp-instance {
+                            uses evpn-vpls:bgp-details;
+                        }
+
+                        leaf admin-state {
+                            type enumeration {
+                                 enum unlocked;
+                                 enum locked;
+                            }
+                            description "Administratively Enable/Disable BGP-EVPN mpls";
+                        }
+
+                        leaf control-word {
+                            type boolean;
+                            description "Enable control word support";
+                        }
+
+                        leaf force-vc-forwarding {
+                            type boolean;
+                            description "VC forwarding action";
+                        }
+
+                        leaf ingress-replication-bum-label {
+                            type boolean;
+                            description "Use the same label as the one advertised for unicast traffic";
+                        }
+
+                        container auto-bind-tunnel {
+                            description "Enter the auto-bind-tunnel context";
+
+                            leaf resolution {
+                                type resolve-status;
+                                description "Resolution method for tunnel selection";
+                            }
+
+                            leaf enforce-strict-tunnel-tagging {
+                                type boolean;
+                                description "Consider only LSPs marked with an admin-tag for next-hop resolution";
+                            }
+
+                            leaf allow-flex-algo-fallback {
+                                type boolean;
+                                default "false";
+                                description "Enable flexible algorithm fallback";
+                            }
+
+                            container resolution-filter {
+                                description "Enter the resolution-filter context";
+
+                                leaf bgp {
+                                    type boolean;
+                                    description "Set BGP type for auto bind tunnel";
+                                }
+
+                                leaf gre {
+                                    type boolean;
+                                    description "Enable/disable setting GRE type for auto-bind-tunnel";
+                                }
+
+                                leaf ldp {
+                                    type boolean;
+                                    description "Enable/disable setting LDP type for auto-bind-tunnel";
+                                }
+
+                                leaf rsvp {
+                                    type boolean;
+                                    description "Enable/disable setting RSVP-TE type for auto-bind-tunnel";
+                                }
+
+                                leaf sr-isis {
+                                    type boolean;
+                                    description "Enable/disable setting SR-ISIS type for auto-bind-tunnel";
+                                }
+
+                                leaf sr-ospf {
+                                    type boolean;
+                                    description "Enable/disable setting SR-OSPF type for auto-bind-tunnel";
+                                }
+
+                                leaf sr-te {
+                                    type boolean;
+                                    description "Enable/disable setting SR-TE type for auto-bind-tunnel";
+                                }
+
+                            } // container resolution-filter
+
+                        } // container auto-bind-tunnel
+                    }
+
+                    container bgp-ad {
+                        presence "Enable BGP AD configuration information.";
+                        leaf admin-state {
+                            type enumeration {
+                                 enum unlocked;
+                                 enum locked;
+                            }
+                            description "Administrative state of BGP Auto-Discovery";
+                        }
+                        leaf vpls-id {
+                            type string;
+                            description "VPLS identifier as a 8-byte route distinguisher";
+                        }
+                        leaf vsi-id-prefix {
+                            type ipv4-address;
+                            description "VSI prefix value";
+                        }
+                    }
+
+                    container igmp-snooping {
+                        leaf admin-state {
+                            type enumeration {
+                                enum unlocked;
+                                enum locked;
+                            }
+                            description "Administrative state of snooping.";
+                        }
+                        leaf report-source-address {
+                            type ipv4-address;
+                            description "Source IP address used when generating IGMP reports";
+                        }
+                        leaf query-source-address {
+                            type union {
+                                type enumeration {
+                                    enum "system"                       { value 1; }
+                                }
+                                type ipv4-address;
+                            }
+                            description "Source address for IGMP queries";
+                        }
+                    }
+
+                    container pim-snooping {
+                        presence "Enable the pim-snooping context";
+                        description "Enable the pim-snooping context";
+
+                        leaf hold-time {
+                            type uint32 {
+                                range "0..300";
+                            }
+                            units "seconds";
+                            description "Duration that allows the PIM-snooping switch to snoop all the PIM states in the VPLS";
+                        }
+
+                        leaf-list group-policy {
+                            type string {
+                                length "1..255";
+                            }
+                            max-elements 5;
+                            ordered-by user;
+                            description "Group policy name";
+                        }
+
+                        container ipv4 {
+                            description "Enter the ipv4 context";
+
+                            leaf admin-state {
+                                type enumeration {
+                                    enum unlocked;
+                                    enum locked;
+                                }
+
+                                description "Administrative state of snooping for multicast traffic";
+                            }
+                        } // container ipv4
+
+                        container ipv6 {
+                            description "Enter the ipv6 context";
+
+                            leaf admin-state {
+                                type enumeration {
+                                    enum unlocked;
+                                    enum locked;
+                                }
+
+                                description "Administrative state of snooping for multicast traffic";
+                            }
+                        } // container ipv6
+
+                        leaf mode {
+                            type enumeration {
+                                enum snoop;
+                                enum proxy;
+                            }
+                            description "Pim-snooping mode";
+                        }
+                    } // container pim-snooping
+
+                    container sap-details {
+                        list sap {
+                            key "port-id inner-vlan-tag outer-vlan-tag";
+                            uses sap-common:sap-details;
+                            uses qos-filter-common:access-configuration-details;
+
+                            leaf split-horizon-group {
+                                type leafref {
+                                    path "../../../split-horizon-group/shg-name";
+                                }
+                                description "Name of the split horizon group where the spoke SDP bind belongs to";
+                            }
+
+                            container fdb {
+                                description "Enter the fdb context";
+
+                                leaf maximum-mac-addresses {
+                                    type int32 {
+                                        range "1..511999";
+                                    }
+                                    description "Maximum number of MAC entries in the FDB";
+                                }
+
+                                leaf discard-unknown-source {
+                                    type boolean;
+                                    description "Discard frames with unknown source";
+                                }
+
+                                leaf auto-learn-mac-protect {
+                                    type boolean;
+                                    description "Enable automatic update of MAC protect list";
+                                }
+
+                                container mac-learning {
+                                    description "Enter the mac-learning context";
+
+                                    leaf learning {
+                                        type boolean;
+                                        description "Enable learning of new MAC addresses";
+                                    }
+
+                                    leaf aging {
+                                        type boolean;
+                                        description "Enable aging of MAC addresses";
+                                    }
+                                }//container mac-learning
+
+                            } // container fdb
+
+                            container stp {
+                                leaf admin-state {
+                                    type enumeration {
+                                        enum unlocked;
+                                        enum locked;
+                                    }
+                                    description "Administrative state of STP";
+                                }
+
+                                leaf path-cost {
+                                    type int32 {
+                                        range "1..200000000";
+                                    }
+                                    default "10";
+                                    description "Configure path-cost";
+                                }
+
+                                leaf priority {
+                                    type int32 {
+                                        range "0..255";
+                                    }
+                                    default "128";
+                                    description "Configure STP priority";
+                                }
+                            }
+
+                            container igmp-snooping {
+                                leaf import-policy {
+                                    type string;
+                                    description "Import policy that filters IGMP packets";
+                                }
+
+                                leaf maximum-number-groups {
+                                    type uint32 {
+                                        range "1..16000";
+                                    }
+                                    description "Maximum groups allowed";
+                                }
+
+                                leaf send-queries {
+                                    type boolean;
+                                    description "Generate IGMP general queries";
+                                }
+
+                                container mcac {
+                                    description "Enter the mcac context";
+                                    leaf policy {
+                                        type string;
+                                        description "Multicast CAC policy name";
+                                    }
+                                    container bandwidth {
+                                        description "Enter the bandwidth context";
+
+                                        leaf total {
+                                            type union {
+                                                type int32 {
+                                                    range "0..max";
+                                                }
+                                                type enumeration {
+                                                    enum "unlimited"                    { value -1; }
+                                                }
+                                            }
+                                            description "Maximum allowed bandwidth";
+                                        }
+
+                                        leaf mandatory {
+                                            type union {
+                                                type int32 {
+                                                    range "0..max";
+                                                }
+                                                type enumeration {
+                                                    enum "unlimited"                    { value -1; }
+                                                }
+                                            }
+                                            description "Pre-reserved bandwidth for all mandatory channels";
+                                        }
+
+                                    } // container bandwidth
+                                }
+
+                                container static {
+                                    description "Enter the static context";
+
+                                    list group {
+                                        key "group-address";
+                                        description "Enter the group list instance";
+
+                                        leaf group-address {
+                                            type ipv4-address;
+                                            description "Group address of static IGMP multicast channel";
+                                        }
+
+                                        choice source-or-starg {
+                                            mandatory true;
+                                            case source {
+                                                list source {
+                                                    key "source-address";
+                                                    description "Add a list entry for source";
+                                                    leaf source-address {
+                                                        type ipv4-address;
+                                                        description "Source IP address of multicast channel sending data";
+                                                    }
+                                                } // list source
+                                            }
+                                            case starg {
+                                                leaf starg {
+                                                    type empty;
+                                                    description "any source address (*,G)";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            leaf oper-group {
+                                type string;
+                                description "Operational group";
+                            }
+
+                            container pim-snooping {
+                                description "Enter the pim-snooping context";
+
+                                leaf maximum-number-groups {
+                                    type uint32 {
+                                        range "0..16000";
+                                    }
+                                    description "Maximum groups for this interface";
+                                }
+                            } // container pim-snooping
+                        }
+                    }
+                    container proxy-nd {
+                        presence "Enable proxy nd configuration information.";
+                        description "Enter the proxy-nd context";
+                        uses svc-common:proxy-nd;
+                    }
+                }
+            }
+        }
+    }
+    uses evpn-vpls:configuration-details;
+}

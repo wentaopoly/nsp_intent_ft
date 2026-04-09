@@ -47,27 +47,19 @@ DEFAULT_ADAPTER = os.path.join(os.path.dirname(__file__), "..", "output", "qwen3
 class JsonStoppingCriteria(StoppingCriteria):
     """Stop generation when a complete JSON object has been produced.
 
-    Supports the M2.5 prefix-injection mode: when the prompt is suffixed with
-    `{` to force the model to start its JSON immediately, pass `prefix_braces=1`
-    so the criteria knows there is already one open brace before generation
-    begins. Without this, the criteria would stop on the first inner closing
-    brace and produce truncated JSON.
+    Tracks brace nesting in the generated text and stops when the count
+    returns to zero after at least one opening brace has been seen.
     """
 
-    def __init__(self, tokenizer, start_len, prefix_braces=0):
+    def __init__(self, tokenizer, start_len):
         self.tokenizer = tokenizer
         self.start_len = start_len
-        self.brace_count = prefix_braces
-        self.started = prefix_braces > 0
 
     def __call__(self, input_ids, scores, **kwargs):
         new_tokens = input_ids[0][self.start_len:].tolist()
         text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
-        # Recompute counts from scratch each step starting from the injected
-        # prefix brace state. This is O(N) per token but N is bounded by the
-        # current output length and decode is the slow part anyway.
-        count = self.brace_count   # initial = prefix_braces
-        started = self.started     # initial = (prefix_braces > 0)
+        count = 0
+        started = False
         for char in text:
             if char == '{':
                 count += 1
@@ -81,37 +73,30 @@ def extract_json(text):
     """Extract a JSON object from generated text.
 
     Tries (in order):
-      1. ```json ... ``` fenced code block
-      2. Greedy `{...}` substring match
-      3. The whole text as JSON
-      4. Prepend `{` and retry — handles M2.5 prefix injection where the
-         leading brace was added to the prompt and is therefore NOT in the
-         generated text.
+      1. The whole text as JSON (the M3 model with enable_thinking=False
+         emits a clean JSON object as its entire response).
+      2. ```json ... ``` fenced code block (if the model wrapped it).
+      3. Greedy `{...}` substring match (if the model added stray prose
+         before / after the JSON).
     """
     text = text.strip()
-    # 1. Fenced code block
+    # 1. Whole text — the canonical happy path for the M3 adapter.
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    # 2. Fenced code block
     m = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except json.JSONDecodeError:
             pass
-    # 2. Greedy `{...}` match
+    # 3. Greedy `{...}` substring
     m = re.search(r'(\{.*\})', text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
-        except json.JSONDecodeError:
-            pass
-    # 3. Try the whole text as JSON
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    # 4. Prefix injection: text was generated AFTER an injected `{` in the prompt.
-    if not text.lstrip().startswith("{"):
-        try:
-            return json.loads("{" + text)
         except json.JSONDecodeError:
             pass
     return None
@@ -134,31 +119,58 @@ def load_model(model_name=DEFAULT_MODEL, adapter_dir=DEFAULT_ADAPTER):
     return model, tokenizer
 
 
-def predict(model, tokenizer, instruction, max_new_tokens=8192, temperature=0.1,
-            inject_json_prefix=True):
+def predict(model, tokenizer, instruction, max_new_tokens=8192, temperature=0.1):
     """Run model inference on a natural language instruction.
 
-    M2.5 changes:
-      - max_new_tokens raised from 1024 to 8192 to absorb long VPRN multi-site
-        outputs without truncation (pre-fix, ~11/17 failures were truncations).
-      - Optional `inject_json_prefix=True` appends `{` to the chat-template
-        prompt, forcing the model to begin its response with JSON content
-        regardless of any chain-of-thought bias. The leading `{` is then
-        prepended back to the decoded output so callers see a complete JSON.
+    Critical chat-template alignment (M3 root-cause fix):
+      Qwen3.5's chat template automatically wraps every assistant message
+      with `<think>\\n\\n</think>\\n\\n` BEFORE the actual content. So the
+      training data, after chat-template rendering, looks like:
+
+          <|im_start|>assistant
+          <think>
+
+          </think>
+
+          {
+            "intent_type": ...
+          }<|im_end|>
+
+      The model is trained to predict `{...JSON...}` AFTER the closing
+      `</think>\\n\\n`.
+
+      At inference time the default `apply_chat_template(..., add_generation_prompt=True)`
+      produces a prompt that ends in `<|im_start|>assistant\\n<think>\\n` — i.e.
+      the thinking block is OPEN and the model is expected to write reasoning
+      content. This is OUT OF DISTRIBUTION for the M3 adapter which never saw
+      a context where the thinking block had to be filled — its training had
+      the block always already empty + closed.
+
+      The fix is to pass `enable_thinking=False` to the chat template, which
+      makes inference produce a prompt ending in `<|im_start|>assistant\\n<think>\\n\\n</think>\\n\\n`
+      — BYTE-FOR-BYTE identical to where training started predicting tokens.
+      The model then continues with `{...JSON...}` exactly as trained.
+
+      This eliminates the need for prefix injection (which was a workaround
+      for a problem caused by the same chat-template mismatch — and which
+      actively BROKE M3 by inserting `{` INSIDE the open `<think>` block,
+      causing the model to emit degraded JS-like object literals).
+
+    Other behaviour:
+      - max_new_tokens=8192 to absorb long VPRN multi-site outputs without
+        truncation (pre-M2.5 fix, ~11/17 failures were truncations).
     """
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": instruction},
     ]
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    if inject_json_prefix:
-        prompt = prompt + "{"
+    prompt = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True, enable_thinking=False,
+    )
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     input_len = inputs["input_ids"].shape[1]
 
-    stopping = StoppingCriteriaList([
-        JsonStoppingCriteria(tokenizer, input_len, prefix_braces=1 if inject_json_prefix else 0)
-    ])
+    stopping = StoppingCriteriaList([JsonStoppingCriteria(tokenizer, input_len)])
 
     with torch.no_grad():
         outputs = model.generate(
@@ -172,12 +184,7 @@ def predict(model, tokenizer, instruction, max_new_tokens=8192, temperature=0.1,
         )
 
     generated = outputs[0][input_len:]
-    text = tokenizer.decode(generated, skip_special_tokens=True)
-    if inject_json_prefix:
-        # Re-attach the injected leading brace so downstream parsers see a
-        # syntactically complete JSON object.
-        text = "{" + text
-    return text
+    return tokenizer.decode(generated, skip_special_tokens=True)
 
 
 def predict_and_merge(model, tokenizer, instruction):

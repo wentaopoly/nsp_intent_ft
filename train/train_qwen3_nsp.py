@@ -122,8 +122,13 @@ def main():
         weight_decay=0.01,
         optim="adamw_torch",
         max_grad_norm=1.0,
-        # Sequence
-        max_length=2048,
+        # Sequence -- M3 raise from 2048 to 4096. The new etree intent type
+        # produces samples up to ~2700 tokens (1-2 roots x 2-3 leaves x SDP
+        # mesh). 2048 was silently truncating 32 etree samples in M3 dry-run,
+        # which would teach the model to emit unfinished JSON for complex
+        # multipoint services. 4096 leaves comfortable headroom (Qwen3.5-9B
+        # has a 32k context window).
+        max_length=4096,
         # Evaluation
         per_device_eval_batch_size=1,
         eval_strategy="steps",

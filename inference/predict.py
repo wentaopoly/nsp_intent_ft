@@ -22,13 +22,20 @@ from intent_validator import validate_full  # noqa: E402
 
 SYSTEM_PROMPT = (
     "You are an NSP (Network Services Platform) intent configuration assistant. "
-    "Given a natural language description of a network service, output a JSON object with three fields: "
-    "'intent_type' (one of: epipe, tunnel, vprn), "
-    "'template_name' (the NSP template to use), "
-    "and 'fill_values' (a flat dictionary of field paths and their values that should be filled into the intent template). "
-    "Only include fields that differ from template defaults. "
-    "Use dot notation for nested paths and [N] for array indices. "
-    "Output only valid JSON, no explanations."
+    "Convert each natural language network service request into a single JSON object with three fields:\n"
+    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\"\n"
+    "- template_name: the NSP template name\n"
+    "- fill_values: a flat dictionary of dot-notation field paths and their values\n"
+    "\n"
+    "Use dot notation for nested paths (e.g. site-a.endpoint[0].port-id) and [N] for list indices.\n"
+    "Only include fields that differ from template defaults.\n"
+    "\n"
+    "CRITICAL OUTPUT RULES:\n"
+    "1. Your entire response must be a single JSON object and absolutely nothing else.\n"
+    "2. Do NOT write any preamble, reasoning, plan, or explanation.\n"
+    "3. Do NOT begin with phrases like \"The user wants\", \"Let me\", \"I will\", \"Sure\", \"Here is\", or \"Field paths to fill\".\n"
+    "4. Do NOT wrap the JSON in markdown code fences such as ```json.\n"
+    "5. Begin your response with the character `{` immediately and end it with `}`."
 )
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-9B"
@@ -36,49 +43,76 @@ DEFAULT_ADAPTER = os.path.join(os.path.dirname(__file__), "..", "output", "qwen3
 
 
 class JsonStoppingCriteria(StoppingCriteria):
-    """Stop generation when a complete JSON object has been produced."""
+    """Stop generation when a complete JSON object has been produced.
 
-    def __init__(self, tokenizer, start_len):
+    Supports the M2.5 prefix-injection mode: when the prompt is suffixed with
+    `{` to force the model to start its JSON immediately, pass `prefix_braces=1`
+    so the criteria knows there is already one open brace before generation
+    begins. Without this, the criteria would stop on the first inner closing
+    brace and produce truncated JSON.
+    """
+
+    def __init__(self, tokenizer, start_len, prefix_braces=0):
         self.tokenizer = tokenizer
         self.start_len = start_len
-        self.brace_count = 0
-        self.started = False
+        self.brace_count = prefix_braces
+        self.started = prefix_braces > 0
 
     def __call__(self, input_ids, scores, **kwargs):
         new_tokens = input_ids[0][self.start_len:].tolist()
         text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+        # Recompute counts from scratch each step starting from the injected
+        # prefix brace state. This is O(N) per token but N is bounded by the
+        # current output length and decode is the slow part anyway.
+        count = self.brace_count   # initial = prefix_braces
+        started = self.started     # initial = (prefix_braces > 0)
         for char in text:
             if char == '{':
-                self.brace_count += 1
-                self.started = True
+                count += 1
+                started = True
             elif char == '}':
-                self.brace_count -= 1
-        if self.started and self.brace_count <= 0:
-            return True
-        return False
+                count -= 1
+        return started and count <= 0
 
 
 def extract_json(text):
-    """Extract a JSON object from generated text."""
+    """Extract a JSON object from generated text.
+
+    Tries (in order):
+      1. ```json ... ``` fenced code block
+      2. Greedy `{...}` substring match
+      3. The whole text as JSON
+      4. Prepend `{` and retry — handles M2.5 prefix injection where the
+         leading brace was added to the prompt and is therefore NOT in the
+         generated text.
+    """
     text = text.strip()
-    # Try fenced code block
+    # 1. Fenced code block
     m = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except json.JSONDecodeError:
             pass
-    # Try finding JSON object directly
+    # 2. Greedy `{...}` match
     m = re.search(r'(\{.*\})', text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except json.JSONDecodeError:
             pass
+    # 3. Try the whole text as JSON
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        return None
+        pass
+    # 4. Prefix injection: text was generated AFTER an injected `{` in the prompt.
+    if not text.lstrip().startswith("{"):
+        try:
+            return json.loads("{" + text)
+        except json.JSONDecodeError:
+            pass
+    return None
 
 
 def load_model(model_name=DEFAULT_MODEL, adapter_dir=DEFAULT_ADAPTER):
@@ -98,17 +132,31 @@ def load_model(model_name=DEFAULT_MODEL, adapter_dir=DEFAULT_ADAPTER):
     return model, tokenizer
 
 
-def predict(model, tokenizer, instruction, max_new_tokens=1024, temperature=0.1):
-    """Run model inference on a natural language instruction."""
+def predict(model, tokenizer, instruction, max_new_tokens=8192, temperature=0.1,
+            inject_json_prefix=True):
+    """Run model inference on a natural language instruction.
+
+    M2.5 changes:
+      - max_new_tokens raised from 1024 to 8192 to absorb long VPRN multi-site
+        outputs without truncation (pre-fix, ~11/17 failures were truncations).
+      - Optional `inject_json_prefix=True` appends `{` to the chat-template
+        prompt, forcing the model to begin its response with JSON content
+        regardless of any chain-of-thought bias. The leading `{` is then
+        prepended back to the decoded output so callers see a complete JSON.
+    """
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": instruction},
     ]
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    if inject_json_prefix:
+        prompt = prompt + "{"
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     input_len = inputs["input_ids"].shape[1]
 
-    stopping = StoppingCriteriaList([JsonStoppingCriteria(tokenizer, input_len)])
+    stopping = StoppingCriteriaList([
+        JsonStoppingCriteria(tokenizer, input_len, prefix_braces=1 if inject_json_prefix else 0)
+    ])
 
     with torch.no_grad():
         outputs = model.generate(
@@ -123,6 +171,10 @@ def predict(model, tokenizer, instruction, max_new_tokens=1024, temperature=0.1)
 
     generated = outputs[0][input_len:]
     text = tokenizer.decode(generated, skip_special_tokens=True)
+    if inject_json_prefix:
+        # Re-attach the injected leading brace so downstream parsers see a
+        # syntactically complete JSON object.
+        text = "{" + text
     return text
 
 

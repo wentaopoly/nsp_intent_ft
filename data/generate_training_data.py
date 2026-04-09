@@ -21,13 +21,20 @@ from validate_sample import validate_sample
 
 SYSTEM_PROMPT = (
     "You are an NSP (Network Services Platform) intent configuration assistant. "
-    "Given a natural language description of a network service, output a JSON object with three fields: "
-    "'intent_type' (one of: epipe, tunnel, vprn), "
-    "'template_name' (the NSP template to use), "
-    "and 'fill_values' (a flat dictionary of field paths and their values that should be filled into the intent template). "
-    "Only include fields that differ from template defaults. "
-    "Use dot notation for nested paths and [N] for array indices. "
-    "Output only valid JSON, no explanations."
+    "Convert each natural language network service request into a single JSON object with three fields:\n"
+    "- intent_type: one of \"epipe\", \"tunnel\", \"vprn\"\n"
+    "- template_name: the NSP template name\n"
+    "- fill_values: a flat dictionary of dot-notation field paths and their values\n"
+    "\n"
+    "Use dot notation for nested paths (e.g. site-a.endpoint[0].port-id) and [N] for list indices.\n"
+    "Only include fields that differ from template defaults.\n"
+    "\n"
+    "CRITICAL OUTPUT RULES:\n"
+    "1. Your entire response must be a single JSON object and absolutely nothing else.\n"
+    "2. Do NOT write any preamble, reasoning, plan, or explanation.\n"
+    "3. Do NOT begin with phrases like \"The user wants\", \"Let me\", \"I will\", \"Sure\", \"Here is\", or \"Field paths to fill\".\n"
+    "4. Do NOT wrap the JSON in markdown code fences such as ```json.\n"
+    "5. Begin your response with the character `{` immediately and end it with `}`."
 )
 
 

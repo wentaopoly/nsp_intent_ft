@@ -177,10 +177,24 @@ def main():
           f"({100 * trainable_params / total_params:.2f}%)")
 
     # --- Train ---
+    # Support checkpoint resumption via RESUME_CHECKPOINT env var:
+    #   "auto"  → find the latest checkpoint in OUTPUT_DIR and resume
+    #   <path>  → resume from a specific checkpoint directory
+    #   unset   → train from scratch
+    resume_ckpt = os.environ.get("RESUME_CHECKPOINT", None)
+    if resume_ckpt == "auto":
+        resume_ckpt = True  # HF Trainer auto-detects latest in output_dir
+    elif resume_ckpt and not os.path.isdir(resume_ckpt):
+        print(f"WARNING: RESUME_CHECKPOINT={resume_ckpt!r} is not a directory, ignoring")
+        resume_ckpt = None
+
     print("\n" + "=" * 60)
-    print("Starting training...")
+    if resume_ckpt:
+        print(f"Resuming training from checkpoint: {resume_ckpt}")
+    else:
+        print("Starting training from scratch...")
     print("=" * 60 + "\n")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=resume_ckpt)
 
     # --- Save ---
     print("\nSaving adapter weights...")

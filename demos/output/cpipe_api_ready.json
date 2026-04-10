@@ -1,0 +1,50 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "cpipe",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "cpipe-default",
+      "intent-specific-data": {
+        "cpipe:cpipe": {
+          "customer-id": 35,
+          "ne-service-id": 600,
+          "vc-type": "cesopsn",
+          "site-a": {
+            "device-id": "192.168.0.16",
+            "endpoint": [
+              {
+                "port-id": "1/2/c4/1",
+                "time-slots": "1-32"
+              }
+            ]
+          },
+          "site-b": {
+            "device-id": "192.168.0.37",
+            "endpoint": [
+              {
+                "port-id": "1/2/c5/1",
+                "time-slots": "1-32"
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "Cpipe-600-TDM"
+    }
+  ]
+}

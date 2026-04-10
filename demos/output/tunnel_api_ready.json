@@ -1,0 +1,32 @@
+{
+  "nsp-tunnel-intent:intent": [
+    {
+      "source-ne-id": "192.168.0.16",
+      "sdp-id": "1637",
+      "intent-type": "tunnel",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "MPLSTunnelsWithBGP",
+      "intent-specific-data": {
+        "tunnel:tunnel": {
+          "destination-ne-id": "192.168.0.37",
+          "admin-state": "unlocked",
+          "transport-type": "mpls",
+          "signaling": "tldp",
+          "mpls": {
+            "mixed-lsp-mode": false,
+            "enable-ldp": false,
+            "enable-bgp-tunnel": true,
+            "sr-isis": false,
+            "sr-ospf": false,
+            "lsp": ""
+          },
+          "hello-parameters": {
+            "keep-alive-enabled": false
+          },
+          "name": "SDP-from-C2U16-to-C2U37"
+        }
+      }
+    }
+  ]
+}

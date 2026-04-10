@@ -1,7 +1,7 @@
 """
 YANG-aware validator for NSP intent fill_values produced by the fine-tuned model.
 
-This module implements four tiers of offline validation:
+This module implements five tiers of offline validation:
 
   Tier 1 — Path validity
       Every key in `fill_values` must correspond to a real YANG leaf path
@@ -27,13 +27,25 @@ This module implements four tiers of offline validation:
         - tunnel: source-ne-id != destination-ne-id
         - vprn: all site device-ids are distinct
 
-Tier 5 (`when` clause handling) and Tier 6 (canonical-payload similarity)
-are deferred to Milestone 4.
+  Tier 6 — Canonical payload similarity (M3.5 polish)
+      For intent types that have Nokia-shipped canonical examples in
+      data/canonical_payloads/, every model-produced field path must
+      appear (after wrapper-strip + index-wildcard normalization) in
+      at least one canonical payload. Novel paths are returned as
+      WARNINGS, not failures — the canonical payloads are not exhaustive
+      (e.g. vprn payload2 has 15 fields, payload1 has 658), so a path
+      missing from the canonical set is suspicious but not definitively
+      wrong. Tier 6 returns its findings separately so the caller can
+      decide how strict to be.
+
+Tier 5 (`when` clause handling) is deferred — most NSP intents use only
+trivial equality `when` expressions which Tier 3 already handles.
 
 Public API:
     validate_fill_values(intent_type, fill_values) -> (ok, errors)
     validate_merged_intent(intent_type, merged_json) -> (ok, errors)
     validate_semantic(intent_type, fill_values) -> (ok, errors)
+    validate_canonical_similarity(intent_type, fill_values) -> (n_known, n_novel, novel_paths)
     validate_full(intent_type, fill_values, merged_json=None) -> (ok, errors)
 
 Note on validation completeness:
@@ -632,12 +644,53 @@ def _semantic_cpipe(fv: dict) -> Tuple[bool, List[str]]:
 
 
 def _semantic_evpn_epipe(fv: dict) -> Tuple[bool, List[str]]:
-    """EVPN-Epipe rules:
-       - site-a / site-b devices must differ
-       - Both sites must declare the same EVI (the EVI ties them together)
-       - VLAN tag must match across both sites (E-Line semantics)
+    """EVPN-Epipe semantic rules (M3.5-fix: aligned to single-site idiom).
+
+    Nokia's canonical EVPN-Epipe pattern uses ONE site (`site-a`) with
+    a `local-ac` and a `remote-ac` representing the two PW endpoints
+    inside one container; the legacy two-site form is structurally legal
+    but is not what NSP emits. Our generator produces the single-site
+    form, so the validator only checks invariants of that form:
+
+       - exactly one of `mpls.*` or `vxlan.*` sub-trees must be populated,
+         matching the top-level `evpn-type`
+       - if BOTH the local AC and the remote AC have eth-tags, they
+         must equal the SAP's outer-vlan-tag (the access encap)
+       - the legacy two-site checks (site-a vs site-b mismatch) are
+         retained as backward-compat: if a sample still uses both sites,
+         the old rules apply.
     """
     errors: List[str] = []
+
+    # ----- single-site (M3.5-fix canonical) checks -----
+    evpn_type = fv.get("evpn-type")
+    has_mpls_subtree = any(k.startswith("site-a.mpls.") for k in fv)
+    has_vxlan_subtree = any(k.startswith("site-a.vxlan.") for k in fv)
+
+    if evpn_type == "mpls":
+        if not has_mpls_subtree:
+            errors.append("evpn-epipe evpn-type=mpls but no site-a.mpls.* fields present")
+        if has_vxlan_subtree:
+            errors.append("evpn-epipe evpn-type=mpls but site-a.vxlan.* fields are present")
+    elif evpn_type == "vxlan":
+        if not has_vxlan_subtree:
+            errors.append("evpn-epipe evpn-type=vxlan but no site-a.vxlan.* fields present")
+        if has_mpls_subtree:
+            errors.append("evpn-epipe evpn-type=vxlan but site-a.mpls.* fields are present")
+
+    vlan = fv.get("site-a.sap[0].outer-vlan-tag")
+    local_eth = fv.get("site-a.local-ac.eth-tag")
+    remote_eth = fv.get("site-a.remote-ac.eth-tag")
+    if vlan is not None and local_eth is not None and local_eth != vlan:
+        errors.append(
+            f"evpn-epipe local-ac.eth-tag={local_eth} != access vlan={vlan}"
+        )
+    if vlan is not None and remote_eth is not None and remote_eth != vlan:
+        errors.append(
+            f"evpn-epipe remote-ac.eth-tag={remote_eth} != access vlan={vlan}"
+        )
+
+    # ----- legacy two-site backward-compat checks -----
     da = fv.get("site-a.device-id")
     db = fv.get("site-b.device-id")
     if da and db and da == db:
@@ -661,12 +714,156 @@ def _semantic_evpn_epipe(fv: dict) -> Tuple[bool, List[str]]:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Tier 6 — Canonical payload similarity
+# ---------------------------------------------------------------------------
+#
+# Loads Nokia-shipped canonical `payload*.ibsf.json` files vendored at
+# data/canonical_payloads/<intent_type>/payload<N>.json and builds an index
+# of normalized leaf paths per type. The model's fill_values keys are then
+# normalized the same way and any key whose normalized form is not in the
+# canonical set is reported as "novel".
+#
+# Normalization:
+#   - Strip Nokia wrapper containers (`*-details.`)
+#   - Collapse list indices to `[*]` so `site[0]` and `site[1]` match
+#
+# This is intentionally lossy in the same way Tier 1's path lookup is lossy.
+
+import os
+import json as _json
+
+_CANONICAL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "canonical_payloads")
+_CANONICAL_CACHE: Dict[str, set] = {}
+# Wrapper-stripping mirrors yang_schema._WRAPPER_RE so behaviour stays in sync.
+_TIER6_WRAPPER_RE = re.compile(r"\b[\w-]+-details\.")
+_TIER6_INDEX_RE = re.compile(r"\[\d+\]")
+
+
+def _normalize_path(path: str) -> str:
+    """Strip Nokia `*-details.` wrappers and collapse list indices to `[*]`.
+
+    Used for both canonical payload paths (which contain wrapper containers
+    like `site-details.site[0].sap-details.sap[0].port-id`) and our model's
+    fill_values keys (which are wrapper-stripped, e.g. `site[0].sap[0].port-id`).
+    Both forms collapse to `site[*].sap[*].port-id`.
+
+    Leaf-list edge case: canonical JSON stores leaf-lists as
+    `vsi-export[0] = "bgp-export"` so flattening yields `vsi-export[0]` →
+    normalized `vsi-export[*]`. Our model's fill_values stores the whole
+    list as a single value under the bare key `vsi-export`. We strip a
+    trailing `[*]` so both forms match. Trailing `[*]` is always degenerate
+    (a path can't continue after a leaf), so this is safe — `route-target[*].
+    target-type` keeps its inner `[*]`.
+    """
+    p = _TIER6_WRAPPER_RE.sub("", path)
+    p = _TIER6_INDEX_RE.sub("[*]", p)
+    if p.endswith("[*]"):
+        p = p[:-3]
+    return p
+
+
+def _flatten_canonical(obj: Any, prefix: str = "") -> Iterable[str]:
+    """Yield leaf paths from a canonical-payload JSON tree."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            sub = f"{prefix}.{k}" if prefix else k
+            yield from _flatten_canonical(v, sub)
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            yield from _flatten_canonical(v, f"{prefix}[{i}]")
+    else:
+        if prefix:
+            yield prefix
+
+
+def _load_canonical_paths(intent_type: str) -> set:
+    """Return the set of normalized leaf paths from all canonical payloads
+    vendored for `intent_type`. Empty set if no fixtures exist.
+    """
+    if intent_type in _CANONICAL_CACHE:
+        return _CANONICAL_CACHE[intent_type]
+
+    type_dir = os.path.join(_CANONICAL_DIR, intent_type)
+    paths: set = set()
+    if not os.path.isdir(type_dir):
+        _CANONICAL_CACHE[intent_type] = paths
+        return paths
+
+    body_key = f"{intent_type}:{intent_type}"
+    for fname in sorted(os.listdir(type_dir)):
+        if not fname.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(type_dir, fname)) as f:
+                doc = _json.load(f)
+            # Canonical envelope: {"nsp-service-intent:intent": [{...}]}
+            intents = doc.get("nsp-service-intent:intent", [])
+            if not intents:
+                continue
+            envelope = intents[0]
+            # Envelope-level fields (service-name, template-name) live OUTSIDE
+            # the body container in the canonical payload but our model
+            # produces them at the top of fill_values. Add them as known
+            # paths so they don't show up as Tier 6 novel hits.
+            for k in envelope.keys():
+                if k != "intent-specific-data":
+                    paths.add(_normalize_path(k))
+            body = envelope.get("intent-specific-data", {}).get(body_key, {})
+            for leaf in _flatten_canonical(body):
+                paths.add(_normalize_path(leaf))
+        except Exception:
+            # Bad fixture file — skip silently; Tier 6 is best-effort.
+            continue
+
+    _CANONICAL_CACHE[intent_type] = paths
+    return paths
+
+
+def validate_canonical_similarity(
+    intent_type: str, fill_values: dict
+) -> Tuple[int, int, List[str]]:
+    """Compare model fill_values keys against the union of canonical payload
+    paths for this intent type.
+
+    Returns (n_known, n_novel, novel_paths_sorted).
+
+    - `n_known`  : number of fill_values keys whose normalized form appears
+                   in at least one canonical payload
+    - `n_novel`  : number of fill_values keys whose normalized form does NOT
+                   appear in any canonical payload (potential hallucination,
+                   or just an unexercised feature)
+    - `novel_paths_sorted` : the original (un-normalized) keys for the novel
+                             ones, sorted
+
+    If no canonical fixtures exist for `intent_type` (e.g. tunnel/etree/cpipe
+    where Nokia ships none), returns (0, 0, []) — Tier 6 is silent rather
+    than wrong.
+    """
+    canonical = _load_canonical_paths(intent_type)
+    if not canonical:
+        return 0, 0, []
+
+    known: List[str] = []
+    novel: List[str] = []
+    for key in fill_values.keys():
+        if _normalize_path(key) in canonical:
+            known.append(key)
+        else:
+            novel.append(key)
+    return len(known), len(novel), sorted(novel)
+
+
 def validate_full(intent_type: str, fill_values: dict, merged_json: dict | None = None
                   ) -> Tuple[bool, Dict[str, List[str]]]:
     """Run all available tiers and return per-tier errors keyed by tier name.
 
     If `merged_json` is None, Tier 3 is skipped (caller should pass it after
     running merge_fill_values).
+
+    Tier 6 results are stored under the `tier6_novel_paths` key but do NOT
+    affect the boolean `ok` return — they are warnings, not errors.
     """
     out: Dict[str, List[str]] = {}
 
@@ -682,6 +879,10 @@ def validate_full(intent_type: str, fill_values: dict, merged_json: dict | None 
 
     ok4, errs4 = validate_semantic(intent_type, fill_values)
     out["tier4"] = errs4
+
+    # Tier 6 — informational only, doesn't gate `ok`.
+    _, _, novel = validate_canonical_similarity(intent_type, fill_values)
+    out["tier6_novel_paths"] = novel
 
     return (ok1 and ok3 and ok4), out
 

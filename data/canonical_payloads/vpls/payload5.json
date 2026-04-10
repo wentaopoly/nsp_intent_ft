@@ -1,0 +1,27 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "is-management-vpls": true,
+          "ne-service-id": 325,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15"
+              }
+            ]
+          },
+          "vpls-type": "standard"
+        }
+      },
+      "intent-type": "vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "mvpls",
+      "template-name": "vplsGapAnalysis"
+    }
+  ]
+}

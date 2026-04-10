@@ -1,0 +1,420 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "evpn-vpls:evpn-vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "test",
+          "job-id": "test",
+          "mtu": 1,
+          "ne-service-id": 600,
+          "site-details": {
+            "site": [
+              {
+                "cfm-mac": true,
+                "description": "test",
+                "device-id": "15.15.15.15",
+                "ecmp": 1,
+                "evi": 1,
+                "evpn-type": "both",
+                "fdb": {
+                  "discard-unknown": true,
+                  "mac-learning": {
+                    "aging": true,
+                    "learning": true,
+                    "local-age-time": 60,
+                    "remote-age-time": 60
+                  },
+                  "table": {
+                    "high-wmark": 1,
+                    "low-wmark": 1,
+                    "size": 1
+                  }
+                },
+                "igmp-snooping": {
+                  "admin-state": "unlocked",
+                  "query-source-address": "10.10.10.10",
+                  "report-source-address": "10.10.10.10"
+                },
+                "mac-duplication": {
+                  "blackhole": true,
+                  "detect": {
+                    "num-moves": 3,
+                    "window": 1
+                  },
+                  "retry": 2
+                },
+                "mac-flush": {
+                  "tldp": {
+                    "propagate": true,
+                    "send-on-failure": true
+                  }
+                },
+                "mpls": {
+                  "admin-state": "unlocked",
+                  "auto-bind-tunnel": {
+                    "allow-flex-algo-fallback": true,
+                    "enforce-strict-tunnel-tagging": true,
+                    "resolution": "filter",
+                    "resolution-filter": {
+                      "bgp": true,
+                      "ldp": true,
+                      "rsvp": true,
+                      "sr-isis": true,
+                      "sr-ospf": true,
+                      "sr-te": true
+                    }
+                  },
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:600",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65001:600"
+                      }
+                    ],
+                    "vsi-export": [
+                      "bgp-export"
+                    ],
+                    "vsi-import": [
+                      "bgp-import"
+                    ]
+                  },
+                  "force-vc-forwarding": true,
+                  "ingress-replication-bum-label": true
+                },
+                "mtu": 1,
+                "pim-snooping": {
+                  "group-policy": [
+                    "test"
+                  ],
+                  "hold-time": 1,
+                  "ipv4": {
+                    "admin-state": "unlocked"
+                  },
+                  "ipv6": {
+                    "admin-state": "locked"
+                  },
+                  "mode": "snoop"
+                },
+                "proxy-arp": {
+                  "admin-state": "unlocked",
+                  "dynamic-populate": true
+                },
+                "proxy-nd": {
+                  "admin-state": "unlocked",
+                  "evpn": {
+                    "advertise-neighbor-type": "router"
+                  }
+                },
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": [
+                    {
+                      "accounting-policy-id": 1,
+                      "admin-state": "unlocked",
+                      "collect-stats": true,
+                      "cpu-protection": {
+                        "policy-id": "255"
+                      },
+                      "description": "test",
+                      "egress": {
+                        "filter": {
+                          "ip": "test-ipfilter",
+                          "ipv6": "test-ipv6filter"
+                        },
+                        "percent-agg-rate": {
+                          "cir": "40",
+                          "pir": "50"
+                        },
+                        "qos": {
+                          "egress-remark-policy": {
+                            "policy-name": "test"
+                          },
+                          "policer-control-policy": {
+                            "overrides": {
+                              "root": {
+                                "max-rate": 1,
+                                "priority-mbs-thresholds": {
+                                  "min-thresh-separation": 1,
+                                  "priority": [
+                                    {
+                                      "mbs-contribution": 1,
+                                      "priority-level": 1
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            "policy-name": "policerPol"
+                          },
+                          "qinq-mark-top-only": true,
+                          "sap-egress": {
+                            "overrides": {
+                              "policer": [
+                                {
+                                  "cbs": "1000",
+                                  "mbs": "2000",
+                                  "policer-id": 1,
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  },
+                                  "stat-mode": "no-stats"
+                                },
+                                {
+                                  "cbs": "2000",
+                                  "mbs": "3000",
+                                  "percent-rate": {
+                                    "cir": "30",
+                                    "pir": "70"
+                                  },
+                                  "policer-id": 2
+                                }
+                              ],
+                              "queue": [
+                                {
+                                  "cbs": "1000",
+                                  "mbs": "2000",
+                                  "queue-id": 1,
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  }
+                                }
+                              ]
+                            },
+                            "policy-name": "sapEgr988"
+                          },
+                          "scheduler-policy": {
+                            "overrides": {
+                              "scheduler": [
+                                {
+                                  "parent": {
+                                    "cir-weight": 1,
+                                    "weight": 1
+                                  },
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  },
+                                  "scheduler-name": "Scheduler_Ingress_1"
+                                }
+                              ]
+                            },
+                            "policy-name": "Scheduler_Policy_1"
+                          },
+                          "vlan-qos-policy": {
+                            "policy-name": "test",
+                            "port-redirect": true
+                          }
+                        },
+                        "scheduler-mode": "fourPriority",
+                        "vlan-manipulation": {
+                          "action": "preserve",
+                          "tag": "null"
+                        }
+                      },
+                      "enable-filter": true,
+                      "enable-qos": true,
+                      "encap-type": "qinq",
+                      "fdb": {
+                        "auto-learn-mac-protect": true,
+                        "discard-unknown-source": true,
+                        "mac-learning": {
+                          "aging": true,
+                          "learning": true
+                        },
+                        "maximum-mac-addresses": 1
+                      },
+                      "igmp-snooping": {
+                        "import-policy": "bgp-import",
+                        "maximum-number-groups": 1,
+                        "mcac": {
+                          "bandwidth": {
+                            "mandatory": 1,
+                            "total": 1
+                          },
+                          "policy": "mcacPolicy"
+                        },
+                        "send-queries": true,
+                        "static": {
+                          "group": [
+                            {
+                              "group-address": "224.0.12.21",
+                              "source": [
+                                {
+                                  "source-address": "10.10.10.10"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "ingress": {
+                        "aggregate-policer": {
+                          "burst": 1,
+                          "cbs": "1000",
+                          "cir": "40",
+                          "rate": 144
+                        },
+                        "filter": {
+                          "ip": "test-ipfilter",
+                          "ipv6": "test-ipv6filter"
+                        },
+                        "percent-agg-rate": {
+                          "cir": "40",
+                          "pir": "50"
+                        },
+                        "qos": {
+                          "match-qinq-dot1p": "top",
+                          "policer-control-policy": {
+                            "overrides": {
+                              "root": {
+                                "max-rate": 1,
+                                "priority-mbs-thresholds": {
+                                  "min-thresh-separation": 1,
+                                  "priority": [
+                                    {
+                                      "mbs-contribution": 1,
+                                      "priority-level": 1
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            "policy-name": "policerPol"
+                          },
+                          "sap-ingress": {
+                            "overrides": {
+                              "policer": [
+                                {
+                                  "cbs": "1000",
+                                  "mbs": "2000",
+                                  "policer-id": 1,
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  },
+                                  "stat-mode": "no-stats"
+                                },
+                                {
+                                  "cbs": "2000",
+                                  "mbs": "3000",
+                                  "percent-rate": {
+                                    "cir": "30",
+                                    "pir": "70"
+                                  },
+                                  "policer-id": 2
+                                }
+                              ],
+                              "queue": [
+                                {
+                                  "cbs": "1000",
+                                  "mbs": "2000",
+                                  "queue-id": 1,
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  }
+                                }
+                              ]
+                            },
+                            "policy-name": "sapIng987",
+                            "queuing-type": "shared"
+                          },
+                          "scheduler-policy": {
+                            "overrides": {
+                              "scheduler": [
+                                {
+                                  "parent": {
+                                    "cir-weight": 1,
+                                    "weight": 1
+                                  },
+                                  "rate": {
+                                    "cir": "40",
+                                    "pir": "50"
+                                  },
+                                  "scheduler-name": "Scheduler_Ingress_1"
+                                }
+                              ]
+                            },
+                            "policy-name": "Scheduler_Policy_1"
+                          }
+                        },
+                        "scheduler-mode": "fourPriority",
+                        "vlan-manipulation": {
+                          "action": "preserve",
+                          "inner-tag": 1,
+                          "outer-tag": 1
+                        }
+                      },
+                      "inner-vlan-tag": 600,
+                      "oper-group": "10",
+                      "outer-vlan-tag": 600,
+                      "pim-snooping": {
+                        "maximum-number-groups": 1
+                      },
+                      "port-id": "1/1/9",
+                      "split-horizon-group": "test"
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "egress": {
+                        "agg-rate": {
+                          "cir": "60",
+                          "rate": "80"
+                        },
+                        "filter": {
+                          "mac": "test-macfilter"
+                        }
+                      },
+                      "enable-filter": true,
+                      "enable-qos": true,
+                      "igmp-snooping": {
+                        "static": {
+                          "group": {
+                            "group-address": "224.0.12.21",
+                            "starg": [
+                              null
+                            ]
+                          }
+                        }
+                      },
+                      "ingress": {
+                        "agg-rate": {
+                          "cir": "60",
+                          "rate": "80"
+                        },
+                        "filter": {
+                          "mac": "test-macfilter"
+                        }
+                      },
+                      "inner-vlan-tag": 601,
+                      "outer-vlan-tag": 600,
+                      "port-id": "1/1/9"
+                    }
+                  ]
+                },
+                "site-name": "test",
+                "split-horizon-group": [
+                  {
+                    "description": "test",
+                    "shg-name": "test"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "evpn-vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc",
+      "template-name": "evpn-vplsGapAnalysis"
+    }
+  ]
+}

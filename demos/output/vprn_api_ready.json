@@ -1,0 +1,203 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "service-name": "VPRN-100-DataCenter",
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "VPRNServiceTemplate",
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 5,
+          "sdp-details": {},
+          "site-details": {
+            "site": [
+              {
+                "route-aggregation": {},
+                "site-name": "VPRN-100-DataCenter",
+                "enable-rip": false,
+                "route-distinguisher-type": "type0",
+                "bgp-evpn": {
+                  "enable-evpn-mpls": false
+                },
+                "interface-details": {
+                  "interface": [
+                    {
+                      "sap": {
+                        "enable-filter": false,
+                        "cpu-protection": {},
+                        "outer-vlan-tag": 0,
+                        "port-id": "1/2/c4/1",
+                        "admin-state": "unlocked",
+                        "enable-qos": false,
+                        "encap-type": "dot1q",
+                        "inner-vlan-tag": -1
+                      },
+                      "ingress-stats": true,
+                      "ipv4": {
+                        "bfd": {},
+                        "neighbor-discovery": {
+                          "host-route": {},
+                          "limit": {}
+                        },
+                        "icmp": {
+                          "redirects": {},
+                          "unreachables": {}
+                        },
+                        "dhcp": {},
+                        "primary": {
+                          "prefix-length": 24,
+                          "address": "10.100.1.1"
+                        }
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static-route-tag": 0,
+                            "advertise-static": false,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "ingress": {
+                          "routed-override-filter": {}
+                        },
+                        "evpn-tunnel": false,
+                        "egress": {
+                          "routed-override-filter": {}
+                        }
+                      },
+                      "cflowd-parameters": {},
+                      "interface-name": "GPU-Cluster-Compute",
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ipv6-details": {
+                        "bfd": {},
+                        "neighbor-discovery": {},
+                        "link-local-address": {}
+                      },
+                      "loopback": false
+                    },
+                    {
+                      "sap": {
+                        "enable-filter": false,
+                        "cpu-protection": {},
+                        "outer-vlan-tag": 0,
+                        "port-id": "1/2/c5/1",
+                        "admin-state": "unlocked",
+                        "enable-qos": false,
+                        "encap-type": "dot1q",
+                        "inner-vlan-tag": -1
+                      },
+                      "ingress-stats": true,
+                      "ipv4": {
+                        "bfd": {},
+                        "neighbor-discovery": {
+                          "host-route": {},
+                          "limit": {}
+                        },
+                        "icmp": {
+                          "redirects": {},
+                          "unreachables": {}
+                        },
+                        "dhcp": {},
+                        "primary": {
+                          "prefix-length": 24,
+                          "address": "10.100.2.1"
+                        }
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static-route-tag": 0,
+                            "advertise-static": false,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "ingress": {
+                          "routed-override-filter": {}
+                        },
+                        "evpn-tunnel": false,
+                        "egress": {
+                          "routed-override-filter": {}
+                        }
+                      },
+                      "cflowd-parameters": {},
+                      "interface-name": "GPU-Cluster-Storage",
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ipv6-details": {
+                        "bfd": {},
+                        "neighbor-discovery": {},
+                        "link-local-address": {}
+                      },
+                      "loopback": false
+                    }
+                  ]
+                },
+                "device-id": "192.168.0.16",
+                "vrf-import": [
+                  "DC-VRF-Import"
+                ],
+                "enable-isis": false,
+                "ne-service-id": 100,
+                "bgp-vpn-backup": {},
+                "bgp-ipvpn-admin-state": "unlocked",
+                "ip-transports": {},
+                "enable-static-route": false,
+                "ipv6": {
+                  "router-advertisement": {}
+                },
+                "enable-ospf": false,
+                "auto-bind-tunnel": {
+                  "resolution-filter": {
+                    "bgp": true
+                  },
+                  "resolution": "filter",
+                  "enforce-strict-tunnel-tagging": false
+                },
+                "vrf-export": [
+                  "DC-VRF-Export"
+                ],
+                "enable-max-routes": false,
+                "enable-ebgp": false,
+                "route-distinguisher": "65000:100",
+                "confederation": {}
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

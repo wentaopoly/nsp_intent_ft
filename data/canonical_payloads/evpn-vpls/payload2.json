@@ -1,0 +1,106 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "evpn-vpls:evpn-vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "test",
+          "job-id": "test",
+          "mtu": 1,
+          "ne-service-id": 600,
+          "site-details": {
+            "site": [
+              {
+                "cfm-mac": true,
+                "description": "test",
+                "device-id": "15.15.15.15",
+                "ecmp": 1,
+                "evi": 1,
+                "evpn-type": "vxlan",
+                "fdb": {
+                  "discard-unknown": true,
+                  "mac-learning": {
+                    "aging": true,
+                    "learning": true,
+                    "local-age-time": 60,
+                    "remote-age-time": 60
+                  },
+                  "table": {
+                    "high-wmark": 1,
+                    "low-wmark": 1,
+                    "size": 1
+                  }
+                },
+                "mac-duplication": {
+                  "blackhole": true,
+                  "detect": {
+                    "num-moves": 3,
+                    "window": 1
+                  },
+                  "retry": 2
+                },
+                "mac-flush": {
+                  "tldp": {
+                    "propagate": true,
+                    "send-on-failure": true
+                  }
+                },
+                "mtu": 1,
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": {
+                    "connection-profile-id": 20,
+                    "encap-type": "dot1q",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": -1,
+                    "port-id": "1/1/8"
+                  }
+                },
+                "site-name": "test",
+                "split-horizon-group": [
+                  {
+                    "description": "test",
+                    "shg-name": "test"
+                  }
+                ],
+                "vxlan": {
+                  "admin-state": "unlocked",
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:600",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65001:600"
+                      }
+                    ],
+                    "vsi-export": [
+                      "bgp-export"
+                    ],
+                    "vsi-import": [
+                      "bgp-import"
+                    ]
+                  },
+                  "mh-mode": "access",
+                  "routes": {
+                    "auto-disc": {
+                      "advertise": true
+                    }
+                  },
+                  "tunnel-interface": "test",
+                  "vni": 1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "evpn-vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc",
+      "template-name": "evpn-vplsGapAnalysis"
+    }
+  ]
+}

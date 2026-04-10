@@ -1,0 +1,69 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "evpn-epipe",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "evpn-epipe-default",
+      "intent-specific-data": {
+        "evpn-epipe:evpn-epipe": {
+          "customer-id": 40,
+          "ne-service-id": 700,
+          "evpn-type": "mpls",
+          "site-a": {
+            "device-id": "192.168.0.16",
+            "evi": 700,
+            "local-ac": {
+              "name": "AC-DC-local",
+              "eth-tag": 700
+            },
+            "remote-ac": {
+              "name": "AC-DC-remote",
+              "eth-tag": 700
+            },
+            "sap-details": {
+              "sap": [
+                {
+                  "port-id": "1/2/c4/1",
+                  "outer-vlan-tag": 700,
+                  "inner-vlan-tag": -1
+                }
+              ]
+            },
+            "mtu": 1500,
+            "ecmp": 4,
+            "description": "EVPN-Epipe-700-DC site-a",
+            "mpls": {
+              "bgp-instance": {
+                "route-distinguisher": "65000:700",
+                "route-target": [
+                  {
+                    "target-type": "import-export",
+                    "target-value": "65000:700"
+                  }
+                ],
+                "vsi-import": [
+                  "EVPN-Epipe-700-DC-import"
+                ],
+                "vsi-export": [
+                  "EVPN-Epipe-700-DC-export"
+                ]
+              },
+              "auto-bind-tunnel": {
+                "resolution": "filter",
+                "resolution-filter": {
+                  "bgp": true,
+                  "ldp": true,
+                  "sr-isis": true
+                }
+              }
+            }
+          },
+          "mtu": 1500,
+          "description": "EVPN-Epipe-700-DC EVPN service"
+        }
+      },
+      "service-name": "EVPN-Epipe-700-DC"
+    }
+  ]
+}

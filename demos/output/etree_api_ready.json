@@ -1,0 +1,79 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "etree",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "etree-default",
+      "intent-specific-data": {
+        "etree:etree": {
+          "customer-id": 25,
+          "ne-service-id": 400,
+          "mtu": 1500,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "sap": [
+                  {
+                    "port-id": "1/2/c4/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": false
+                  }
+                ]
+              },
+              {
+                "device-id": "192.168.0.37",
+                "sap": [
+                  {
+                    "port-id": "1/2/c5/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": true
+                  }
+                ]
+              },
+              {
+                "device-id": "192.168.0.38",
+                "sap": [
+                  {
+                    "port-id": "1/2/c6/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": true
+                  }
+                ]
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              },
+              {
+                "sdp-id": "1638",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.38"
+              },
+              {
+                "sdp-id": "3816",
+                "source-device-id": "192.168.0.38",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "ETree-400-HubSpoke"
+    }
+  ]
+}

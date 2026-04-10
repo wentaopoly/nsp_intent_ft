@@ -1,0 +1,120 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "sdp-details": {},
+          "site-details": {
+            "site": [
+              {
+                "auto-bind-tunnel": {
+                  "enforce-strict-tunnel-tagging": false,
+                  "resolution": "none",
+                  "resolution-filter": {}
+                },
+                "autonomous-system": 65000,
+                "bgp-evpn": {
+                  "enable-evpn-mpls": true,
+                  "mpls": {
+                    "admin-state": "unlocked",
+                    "auto-bind-tunnel": {
+                      "enforce-strict-tunnel-tagging": true,
+                      "resolution": "filter",
+                      "resolution-filter": {
+                        "bgp": true,
+                        "ldp": true,
+                        "mpls-fwd-policy": true,
+                        "rib-api": true,
+                        "rsvp": true,
+                        "sr-isis": true,
+                        "sr-ospf": true,
+                        "sr-ospf3": true,
+                        "sr-policy": true,
+                        "sr-te": true,
+                        "udp": true
+                      }
+                    },
+                    "route-distinguisher": "65005:135",
+                    "route-target": [
+                      {
+                        "target-type": "exp",
+                        "target-value": "65004:30135"
+                      },
+                      {
+                        "target-type": "imp",
+                        "target-value": "65004:135"
+                      }
+                    ],
+                    "vrf-export-policy": [
+                      "vrf-export"
+                    ],
+                    "vrf-import-policy": [
+                      "vrf-import"
+                    ]
+                  }
+                },
+                "bgp-ipvpn-admin-state": "locked",
+                "bgp-vpn-backup": {},
+                "device-id": "15.15.15.15",
+                "interface-details": {
+                  "interface": [
+                    {
+                      "admin-state": "unlocked",
+                      "interface-name": "int1",
+                      "ipv4": {
+                        "primary": {
+                          "address": "10.206.1.1",
+                          "prefix-length": 24
+                        }
+                      },
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "cpu-protection": {},
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "encap-type": "qinq",
+                        "inner-vlan-tag": 206,
+                        "outer-vlan-tag": 206,
+                        "port-id": "1/1/9"
+                      },
+                      "vpls": {
+                        "egress": {
+                          "routed-override-filter": {}
+                        },
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": true,
+                            "advertise-dynamic-route-tag": 120,
+                            "advertise-static": true,
+                            "advertise-static-route-tag": 126,
+                            "learn-dynamic": false
+                          }
+                        },
+                        "evpn-tunnel": false,
+                        "ingress": {
+                          "routed-override-filter": {}
+                        }
+                      }
+                    }
+                  ]
+                },
+                "ip-transports": {},
+                "ne-service-id": 135,
+                "route-aggregation": {},
+                "site-name": "vprnEvpn135"
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "vprnEvpn135",
+      "template-name": "vprnGapAnalysis"
+    }
+  ]
+}

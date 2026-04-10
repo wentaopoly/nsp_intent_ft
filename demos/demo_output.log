@@ -1,0 +1,1185 @@
+
+═══════════════════════════════════════════════════
+Loading fine-tuned NSP intent model ...
+═══════════════════════════════════════════════════
+
+Loading tokenizer from Qwen/Qwen3.5-9B...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading base model Qwen/Qwen3.5-9B...
+`torch_dtype` is deprecated! Use `dtype` instead!
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 43690.67it/s]
+The fast path is not available because one of the required library is not installed. Falling back to torch implementation. To install follow https://github.com/fla-org/flash-linear-attention#installation and https://github.com/Dao-AILab/causal-conv1d
+Loading weights:   0%|          | 0/427 [00:00<?, ?it/s]Loading weights:   0%|          | 1/427 [00:00<01:05,  6.46it/s]Loading weights:   7%|▋         | 29/427 [00:00<00:02, 134.94it/s]Loading weights:  11%|█         | 47/427 [00:00<00:02, 151.47it/s]Loading weights:  18%|█▊        | 76/427 [00:00<00:01, 195.57it/s]Loading weights:  23%|██▎       | 97/427 [00:00<00:01, 172.35it/s]Loading weights:  27%|██▋       | 116/427 [00:00<00:01, 175.09it/s]Loading weights:  32%|███▏      | 135/427 [00:00<00:01, 159.38it/s]Loading weights:  36%|███▌      | 152/427 [00:00<00:01, 161.37it/s]Loading weights:  41%|████      | 173/427 [00:01<00:01, 168.44it/s]Loading weights:  45%|████▍     | 191/427 [00:01<00:01, 169.38it/s]Loading weights:  49%|████▉     | 209/427 [00:01<00:01, 154.90it/s]Loading weights:  53%|█████▎    | 227/427 [00:01<00:01, 159.28it/s]Loading weights:  59%|█████▊    | 250/427 [00:01<00:01, 175.64it/s]Loading weights:  63%|██████▎   | 268/427 [00:01<00:01, 157.13it/s]Loading weights:  68%|██████▊   | 289/427 [00:01<00:00, 168.87it/s]Loading weights:  72%|███████▏  | 307/427 [00:01<00:00, 159.89it/s]Loading weights:  76%|███████▌  | 324/427 [00:02<00:00, 157.72it/s]Loading weights:  81%|████████  | 345/427 [00:02<00:00, 165.30it/s]Loading weights:  85%|████████▍ | 362/427 [00:02<00:00, 156.87it/s]Loading weights:  90%|████████▉ | 383/427 [00:02<00:00, 168.22it/s]Loading weights:  94%|█████████▍| 401/427 [00:02<00:00, 153.69it/s]Loading weights:  98%|█████████▊| 417/427 [00:02<00:00, 154.11it/s]Loading weights: 100%|██████████| 427/427 [00:02<00:00, 159.47it/s]
+Loading LoRA adapter from /home/nextron/nsp_intent_ft/inference/../output/qwen3-nsp-intent-adapter...
+
+Model loaded in 8.8s
+
+
+═══════════════════════════════════════════════════
+[1/9] epipe — E-Pipe 点对点以太网服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create an E-Pipe service named 'Epipe-VLAN-1001-demo' for customer 10 with NE service ID 2001. Connect device 192.168.0.37 on port 1/2/c4/1 to device 192.168.0.16 on port 1/2/c5/1 using VLAN 1001. MTU is 1492. Use SDP 3716 and 1637.
+
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+🔍 模型输出 (fill_values):  [13.7s]
+{
+  "intent_type": "epipe",
+  "template_name": "ePIPE-Service-Using-SDP",
+  "fill_values": {
+    "service-name": "Epipe-VLAN-1001-demo",
+    "customer-id": 10,
+    "ne-service-id": 2001,
+    "mtu": 1492,
+    "site-a.device-id": "192.168.0.37",
+    "site-a.endpoint[0].port-id": "1/2/c4/1",
+    "site-a.endpoint[0].outer-vlan-tag": 1001,
+    "site-b.device-id": "192.168.0.16",
+    "site-b.endpoint[0].port-id": "1/2/c5/1",
+    "site-b.endpoint[0].outer-vlan-tag": 1001,
+    "sdp[0].sdp-id": "3716",
+    "sdp[0].source-device-id": "192.168.0.37",
+    "sdp[0].destination-device-id": "192.168.0.16",
+    "sdp[1].sdp-id": "1637",
+    "sdp[1].source-device-id": "192.168.0.16",
+    "sdp[1].destination-device-id": "192.168.0.37"
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   13/16 known  (3 novel)
+    novel: site-b.device-id
+    novel: site-b.endpoint[0].outer-vlan-tag
+    novel: site-b.endpoint[0].port-id
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "epipe:epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 10,
+          "mtu": 1492,
+          "ne-service-id": 2001,
+          "sdp-details": {
+            "sdp": [
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "192.168.0.16",
+                "override-vc-id": false,
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "vc-type": "ether"
+              },
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "192.168.0.37",
+                "override-vc-id": false,
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "vc-type": "ether"
+              }
+            ]
+          },
+          "site-a": {
+            "device-id": "192.168.0.37",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 1001,
+                "port-id": "1/2/c4/1"
+              }
+            ]
+          },
+          "site-b": {
+            "device-id": "192.168.0.16",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 1001,
+                "port-id": "1/2/c5/1"
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "Epipe-VLAN-1001-demo",
+      "template-name": "ePIPE-Service-Using-SDP"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/epipe_api_ready.json
+
+═══════════════════════════════════════════════════
+[2/9] tunnel — MPLS 隧道 / SDP
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create an MPLS tunnel from 192.168.0.16 to 192.168.0.37 with SDP ID 1637. Name it 'SDP-from-C2U16-to-C2U37'. Use BGP signaling with TLDP.
+
+🔍 模型输出 (fill_values):  [4.3s]
+{
+  "intent_type": "tunnel",
+  "template_name": "MPLSTunnelsWithBGP",
+  "fill_values": {
+    "source-ne-id": "192.168.0.16",
+    "sdp-id": "1637",
+    "destination-ne-id": "192.168.0.37",
+    "name": "SDP-from-C2U16-to-C2U37"
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   N/A (no canonical payloads)
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-tunnel-intent:intent": [
+    {
+      "source-ne-id": "192.168.0.16",
+      "sdp-id": "1637",
+      "intent-type": "tunnel",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "MPLSTunnelsWithBGP",
+      "intent-specific-data": {
+        "tunnel:tunnel": {
+          "destination-ne-id": "192.168.0.37",
+          "admin-state": "unlocked",
+          "transport-type": "mpls",
+          "signaling": "tldp",
+          "mpls": {
+            "mixed-lsp-mode": false,
+            "enable-ldp": false,
+            "enable-bgp-tunnel": true,
+            "sr-isis": false,
+            "sr-ospf": false,
+            "lsp": ""
+          },
+          "hello-parameters": {
+            "keep-alive-enabled": false
+          },
+          "name": "SDP-from-C2U16-to-C2U37"
+        }
+      }
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/tunnel_api_ready.json
+
+═══════════════════════════════════════════════════
+[3/9] vprn — VPRN L3 VPN 服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create a VPRN L3 VPN service 'VPRN-100-DataCenter' for customer 5. Configure site on device 192.168.0.16 with service ID 100. Route distinguisher 65000:100. VRF import: DC-VRF-Import, VRF export: DC-VRF-Export. Interface GPU-Cluster-Compute on port 1/2/c4/1 with IP 10.100.1.1/24. Interface GPU-Cluster-Storage on port 1/2/c5/1 with IP 10.100.2.1/24.
+
+🔍 模型输出 (fill_values):  [14.2s]
+{
+  "intent_type": "vprn",
+  "template_name": "VPRNServiceTemplate",
+  "fill_values": {
+    "service-name": "VPRN-100-DataCenter",
+    "customer-id": 5,
+    "site[0].site-name": "VPRN-100-DataCenter",
+    "site[0].device-id": "192.168.0.16",
+    "site[0].ne-service-id": 100,
+    "site[0].route-distinguisher": "65000:100",
+    "site[0].vrf-import": [
+      "DC-VRF-Import"
+    ],
+    "site[0].vrf-export": [
+      "DC-VRF-Export"
+    ],
+    "site[0].interface[0].interface-name": "GPU-Cluster-Compute",
+    "site[0].interface[0].sap.port-id": "1/2/c4/1",
+    "site[0].interface[0].ipv4.primary.address": "10.100.1.1",
+    "site[0].interface[0].ipv4.primary.prefix-length": 24,
+    "site[0].interface[1].interface-name": "GPU-Cluster-Storage",
+    "site[0].interface[1].sap.port-id": "1/2/c5/1",
+    "site[0].interface[1].ipv4.primary.address": "10.100.2.1",
+    "site[0].interface[1].ipv4.primary.prefix-length": 24
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   16/16 known
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "service-name": "VPRN-100-DataCenter",
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "template-name": "VPRNServiceTemplate",
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 5,
+          "sdp-details": {},
+          "site-details": {
+            "site": [
+              {
+                "route-aggregation": {},
+                "site-name": "VPRN-100-DataCenter",
+                "enable-rip": false,
+                "route-distinguisher-type": "type0",
+                "bgp-evpn": {
+                  "enable-evpn-mpls": false
+                },
+                "interface-details": {
+                  "interface": [
+                    {
+                      "sap": {
+                        "enable-filter": false,
+                        "cpu-protection": {},
+                        "outer-vlan-tag": 0,
+                        "port-id": "1/2/c4/1",
+                        "admin-state": "unlocked",
+                        "enable-qos": false,
+                        "encap-type": "dot1q",
+                        "inner-vlan-tag": -1
+                      },
+                      "ingress-stats": true,
+                      "ipv4": {
+                        "bfd": {},
+                        "neighbor-discovery": {
+                          "host-route": {},
+                          "limit": {}
+                        },
+                        "icmp": {
+                          "redirects": {},
+                          "unreachables": {}
+                        },
+                        "dhcp": {},
+                        "primary": {
+                          "prefix-length": 24,
+                          "address": "10.100.1.1"
+                        }
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static-route-tag": 0,
+                            "advertise-static": false,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "ingress": {
+                          "routed-override-filter": {}
+                        },
+                        "evpn-tunnel": false,
+                        "egress": {
+                          "routed-override-filter": {}
+                        }
+                      },
+                      "cflowd-parameters": {},
+                      "interface-name": "GPU-Cluster-Compute",
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ipv6-details": {
+                        "bfd": {},
+                        "neighbor-discovery": {},
+                        "link-local-address": {}
+                      },
+                      "loopback": false
+                    },
+                    {
+                      "sap": {
+                        "enable-filter": false,
+                        "cpu-protection": {},
+                        "outer-vlan-tag": 0,
+                        "port-id": "1/2/c5/1",
+                        "admin-state": "unlocked",
+                        "enable-qos": false,
+                        "encap-type": "dot1q",
+                        "inner-vlan-tag": -1
+                      },
+                      "ingress-stats": true,
+                      "ipv4": {
+                        "bfd": {},
+                        "neighbor-discovery": {
+                          "host-route": {},
+                          "limit": {}
+                        },
+                        "icmp": {
+                          "redirects": {},
+                          "unreachables": {}
+                        },
+                        "dhcp": {},
+                        "primary": {
+                          "prefix-length": 24,
+                          "address": "10.100.2.1"
+                        }
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static-route-tag": 0,
+                            "advertise-static": false,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "ingress": {
+                          "routed-override-filter": {}
+                        },
+                        "evpn-tunnel": false,
+                        "egress": {
+                          "routed-override-filter": {}
+                        }
+                      },
+                      "cflowd-parameters": {},
+                      "interface-name": "GPU-Cluster-Storage",
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "up": {},
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ipv6-details": {
+                        "bfd": {},
+                        "neighbor-discovery": {},
+                        "link-local-address": {}
+                      },
+                      "loopback": false
+                    }
+                  ]
+                },
+                "device-id": "192.168.0.16",
+                "vrf-import": [
+                  "DC-VRF-Import"
+                ],
+                "enable-isis": false,
+                "ne-service-id": 100,
+                "bgp-vpn-backup": {},
+                "bgp-ipvpn-admin-state": "unlocked",
+                "ip-transports": {},
+                "enable-static-route": false,
+                "ipv6": {
+                  "router-advertisement": {}
+                },
+                "enable-ospf": false,
+                "auto-bind-tunnel": {
+                  "resolution-filter": {
+                    "bgp": true
+                  },
+                  "resolution": "filter",
+                  "enforce-strict-tunnel-tagging": false
+                },
+                "vrf-export": [
+                  "DC-VRF-Export"
+                ],
+                "enable-max-routes": false,
+                "enable-ebgp": false,
+                "route-distinguisher": "65000:100",
+                "confederation": {}
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/vprn_api_ready.json
+
+═══════════════════════════════════════════════════
+[4/9] vpls — VPLS 虚拟专用LAN服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create a VPLS service 'VPLS-500-Campus' for customer 20, NE service ID 500, MTU 1500. Site 1: device 192.168.0.16 on port 1/2/c4/1 with VLAN 500. Site 2: device 192.168.0.37 on port 1/2/c5/1 with VLAN 500.
+
+🔍 模型输出 (fill_values):  [14.8s]
+{
+  "intent_type": "vpls",
+  "template_name": "VPLSServiceTemplate",
+  "fill_values": {
+    "service-name": "VPLS-500-Campus",
+    "customer-id": 20,
+    "ne-service-id": 500,
+    "mtu": 1500,
+    "site[0].device-id": "192.168.0.16",
+    "site[0].sap[0].port-id": "1/2/c4/1",
+    "site[0].sap[0].inner-vlan-tag": -1,
+    "site[0].sap[0].outer-vlan-tag": 500,
+    "site[1].device-id": "192.168.0.37",
+    "site[1].sap[0].port-id": "1/2/c5/1",
+    "site[1].sap[0].inner-vlan-tag": -1,
+    "site[1].sap[0].outer-vlan-tag": 500,
+    "sdp[0].sdp-id": "1637",
+    "sdp[0].source-device-id": "192.168.0.16",
+    "sdp[0].destination-device-id": "192.168.0.37",
+    "sdp[1].sdp-id": "3716",
+    "sdp[1].source-device-id": "192.168.0.37",
+    "sdp[1].destination-device-id": "192.168.0.16"
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   18/18 known
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "vpls",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "vpls-default",
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "customer-id": 20,
+          "ne-service-id": 500,
+          "mtu": 1500,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c4/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 500
+                    }
+                  ]
+                }
+              },
+              {
+                "device-id": "192.168.0.37",
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c5/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 500
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "VPLS-500-Campus"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/vpls_api_ready.json
+
+═══════════════════════════════════════════════════
+[5/9] ies — IES 互联网增强服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Set up an IES service 'IES-300-Access' for customer 15 with NE service ID 300 on device 192.168.0.16. Interface AccessPort1 on port 1/2/c4/1 with IP 10.30.1.1/24. Interface AccessPort2 on port 1/2/c5/1 with IP 10.30.2.1/24.
+
+🔍 模型输出 (fill_values):  [10.9s]
+{
+  "intent_type": "ies",
+  "template_name": "IESServiceTemplate",
+  "fill_values": {
+    "service-name": "IES-300-Access",
+    "customer-id": 15,
+    "ne-service-id": 300,
+    "site[0].device-id": "192.168.0.16",
+    "site[0].site-name": "IES-300-Access",
+    "site[0].interface[0].interface-name": "AccessPort1",
+    "site[0].interface[0].sap.port-id": "1/2/c4/1",
+    "site[0].interface[0].ipv4.primary.address": "10.30.1.1",
+    "site[0].interface[0].ipv4.primary.prefix-length": 24,
+    "site[0].interface[1].interface-name": "AccessPort2",
+    "site[0].interface[1].sap.port-id": "1/2/c5/1",
+    "site[0].interface[1].ipv4.primary.address": "10.30.2.1",
+    "site[0].interface[1].ipv4.primary.prefix-length": 24
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   13/13 known
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "ies",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "ies-default",
+      "intent-specific-data": {
+        "ies:ies": {
+          "customer-id": 15,
+          "ne-service-id": 300,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "site-name": "IES-300-Access",
+                "interface": [
+                  {
+                    "interface-name": "AccessPort1",
+                    "sap": {
+                      "port-id": "1/2/c4/1"
+                    },
+                    "ipv4": {
+                      "primary": {
+                        "address": "10.30.1.1",
+                        "prefix-length": 24
+                      }
+                    }
+                  },
+                  {
+                    "interface-name": "AccessPort2",
+                    "sap": {
+                      "port-id": "1/2/c5/1"
+                    },
+                    "ipv4": {
+                      "primary": {
+                        "address": "10.30.2.1",
+                        "prefix-length": 24
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "IES-300-Access"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/ies_api_ready.json
+
+═══════════════════════════════════════════════════
+[6/9] etree — E-Tree 根叶以太网服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create an E-Tree service 'ETree-400-HubSpoke' for customer 25 with NE service ID 400, MTU 1500. Root device 192.168.0.16 on port 1/2/c4/1. Leaves: device 192.168.0.37 on port 1/2/c5/1; device 192.168.0.38 on port 1/2/c6/1. VLAN 400.
+
+🔍 模型输出 (fill_values):  [25.2s]
+{
+  "intent_type": "etree",
+  "template_name": "ETreeServiceTemplate",
+  "fill_values": {
+    "service-name": "ETree-400-HubSpoke",
+    "customer-id": 25,
+    "ne-service-id": 400,
+    "mtu": 1500,
+    "site[0].device-id": "192.168.0.16",
+    "site[0].sap[0].port-id": "1/2/c4/1",
+    "site[0].sap[0].inner-vlan-tag": -1,
+    "site[0].sap[0].outer-vlan-tag": 400,
+    "site[0].sap[0].etree-leaf": false,
+    "site[1].device-id": "192.168.0.37",
+    "site[1].sap[0].port-id": "1/2/c5/1",
+    "site[1].sap[0].inner-vlan-tag": -1,
+    "site[1].sap[0].outer-vlan-tag": 400,
+    "site[1].sap[0].etree-leaf": true,
+    "site[2].device-id": "192.168.0.38",
+    "site[2].sap[0].port-id": "1/2/c6/1",
+    "site[2].sap[0].inner-vlan-tag": -1,
+    "site[2].sap[0].outer-vlan-tag": 400,
+    "site[2].sap[0].etree-leaf": true,
+    "sdp[0].sdp-id": "1637",
+    "sdp[0].source-device-id": "192.168.0.16",
+    "sdp[0].destination-device-id": "192.168.0.37",
+    "sdp[1].sdp-id": "3716",
+    "sdp[1].source-device-id": "192.168.0.37",
+    "sdp[1].destination-device-id": "192.168.0.16",
+    "sdp[2].sdp-id": "1638",
+    "sdp[2].source-device-id": "192.168.0.16",
+    "sdp[2].destination-device-id": "192.168.0.38",
+    "sdp[3].sdp-id": "3816",
+    "sdp[3].source-device-id": "192.168.0.38",
+    "sdp[3].destination-device-id": "192.168.0.16"
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   N/A (no canonical payloads)
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "etree",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "etree-default",
+      "intent-specific-data": {
+        "etree:etree": {
+          "customer-id": 25,
+          "ne-service-id": 400,
+          "mtu": 1500,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "sap": [
+                  {
+                    "port-id": "1/2/c4/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": false
+                  }
+                ]
+              },
+              {
+                "device-id": "192.168.0.37",
+                "sap": [
+                  {
+                    "port-id": "1/2/c5/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": true
+                  }
+                ]
+              },
+              {
+                "device-id": "192.168.0.38",
+                "sap": [
+                  {
+                    "port-id": "1/2/c6/1",
+                    "inner-vlan-tag": -1,
+                    "outer-vlan-tag": 400,
+                    "etree-leaf": true
+                  }
+                ]
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              },
+              {
+                "sdp-id": "1638",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.38"
+              },
+              {
+                "sdp-id": "3816",
+                "source-device-id": "192.168.0.38",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "ETree-400-HubSpoke"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/etree_api_ready.json
+
+═══════════════════════════════════════════════════
+[7/9] cpipe — Cpipe TDM 电路仿真服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create a Cpipe TDM service 'Cpipe-600-TDM' for customer 35 with NE service ID 600. vc-type cesopsn. Site A: device 192.168.0.16, port 1/2/c4/1, time-slots 1-32. Site B: device 192.168.0.37, port 1/2/c5/1, time-slots 1-32.
+
+🔍 模型输出 (fill_values):  [13.0s]
+{
+  "intent_type": "cpipe",
+  "template_name": "CpipeTDMService",
+  "fill_values": {
+    "service-name": "Cpipe-600-TDM",
+    "customer-id": 35,
+    "ne-service-id": 600,
+    "vc-type": "cesopsn",
+    "site-a.device-id": "192.168.0.16",
+    "site-a.endpoint[0].port-id": "1/2/c4/1",
+    "site-a.endpoint[0].time-slots": "1-32",
+    "site-b.device-id": "192.168.0.37",
+    "site-b.endpoint[0].port-id": "1/2/c5/1",
+    "site-b.endpoint[0].time-slots": "1-32",
+    "sdp[0].sdp-id": "1637",
+    "sdp[0].source-device-id": "192.168.0.16",
+    "sdp[0].destination-device-id": "192.168.0.37",
+    "sdp[1].sdp-id": "3716",
+    "sdp[1].source-device-id": "192.168.0.37",
+    "sdp[1].destination-device-id": "192.168.0.16"
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   N/A (no canonical payloads)
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "cpipe",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "cpipe-default",
+      "intent-specific-data": {
+        "cpipe:cpipe": {
+          "customer-id": 35,
+          "ne-service-id": 600,
+          "vc-type": "cesopsn",
+          "site-a": {
+            "device-id": "192.168.0.16",
+            "endpoint": [
+              {
+                "port-id": "1/2/c4/1",
+                "time-slots": "1-32"
+              }
+            ]
+          },
+          "site-b": {
+            "device-id": "192.168.0.37",
+            "endpoint": [
+              {
+                "port-id": "1/2/c5/1",
+                "time-slots": "1-32"
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "Cpipe-600-TDM"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/cpipe_api_ready.json
+
+═══════════════════════════════════════════════════
+[8/9] evpn-epipe — EVPN E-Line (mpls) 服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create an mpls-EVPN E-Line service 'EVPN-Epipe-700-DC' for customer 40 with NE service ID 700 and EVI 700. Configure on device 192.168.0.16, port 1/2/c4/1, VLAN 700. Local AC 'AC-DC-local', remote AC 'AC-DC-remote'.
+
+🔍 模型输出 (fill_values):  [19.8s]
+{
+  "intent_type": "evpn-epipe",
+  "template_name": "EVPNEpipeService",
+  "fill_values": {
+    "service-name": "EVPN-Epipe-700-DC",
+    "customer-id": 40,
+    "ne-service-id": 700,
+    "evpn-type": "mpls",
+    "site-a.device-id": "192.168.0.16",
+    "site-a.evi": 700,
+    "site-a.local-ac.name": "AC-DC-local",
+    "site-a.remote-ac.name": "AC-DC-remote",
+    "site-a.sap[0].port-id": "1/2/c4/1",
+    "site-a.sap[0].outer-vlan-tag": 700,
+    "mtu": 1500,
+    "site-a.mtu": 1500,
+    "site-a.ecmp": 4,
+    "site-a.sap[0].inner-vlan-tag": -1,
+    "description": "EVPN-Epipe-700-DC EVPN service",
+    "site-a.description": "EVPN-Epipe-700-DC site-a",
+    "site-a.local-ac.eth-tag": 700,
+    "site-a.remote-ac.eth-tag": 700,
+    "site-a.mpls.bgp-instance.route-distinguisher": "65000:700",
+    "site-a.mpls.bgp-instance.route-target[0].target-type": "import-export",
+    "site-a.mpls.bgp-instance.route-target[0].target-value": "65000:700",
+    "site-a.mpls.bgp-instance.vsi-import": [
+      "EVPN-Epipe-700-DC-import"
+    ],
+    "site-a.mpls.bgp-instance.vsi-export": [
+      "EVPN-Epipe-700-DC-export"
+    ],
+    "site-a.mpls.auto-bind-tunnel.resolution": "filter",
+    "site-a.mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+    "site-a.mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+    "site-a.mpls.auto-bind-tunnel.resolution-filter.sr-isis": true
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   27/27 known
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "evpn-epipe",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "evpn-epipe-default",
+      "intent-specific-data": {
+        "evpn-epipe:evpn-epipe": {
+          "customer-id": 40,
+          "ne-service-id": 700,
+          "evpn-type": "mpls",
+          "site-a": {
+            "device-id": "192.168.0.16",
+            "evi": 700,
+            "local-ac": {
+              "name": "AC-DC-local",
+              "eth-tag": 700
+            },
+            "remote-ac": {
+              "name": "AC-DC-remote",
+              "eth-tag": 700
+            },
+            "sap-details": {
+              "sap": [
+                {
+                  "port-id": "1/2/c4/1",
+                  "outer-vlan-tag": 700,
+                  "inner-vlan-tag": -1
+                }
+              ]
+            },
+            "mtu": 1500,
+            "ecmp": 4,
+            "description": "EVPN-Epipe-700-DC site-a",
+            "mpls": {
+              "bgp-instance": {
+                "route-distinguisher": "65000:700",
+                "route-target": [
+                  {
+                    "target-type": "import-export",
+                    "target-value": "65000:700"
+                  }
+                ],
+                "vsi-import": [
+                  "EVPN-Epipe-700-DC-import"
+                ],
+                "vsi-export": [
+                  "EVPN-Epipe-700-DC-export"
+                ]
+              },
+              "auto-bind-tunnel": {
+                "resolution": "filter",
+                "resolution-filter": {
+                  "bgp": true,
+                  "ldp": true,
+                  "sr-isis": true
+                }
+              }
+            }
+          },
+          "mtu": 1500,
+          "description": "EVPN-Epipe-700-DC EVPN service"
+        }
+      },
+      "service-name": "EVPN-Epipe-700-DC"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/evpn-epipe_api_ready.json
+
+═══════════════════════════════════════════════════
+[9/9] evpn-vpls — EVPN VPLS (mpls) 服务
+═══════════════════════════════════════════════════
+
+📝 用户指令:
+Create a mpls-EVPN VPLS service 'EVPN-VPLS-800-Campus' for customer 45 with NE service ID 800, EVI 800, MTU 1500. Site 1: 192.168.0.16 on port 1/2/c4/1 with VLAN 800. Site 2: 192.168.0.37 on port 1/2/c5/1 with VLAN 800.
+
+🔍 模型输出 (fill_values):  [36.5s]
+{
+  "intent_type": "evpn-vpls",
+  "template_name": "EVPNVPLSService",
+  "fill_values": {
+    "service-name": "EVPN-VPLS-800-Campus",
+    "customer-id": 45,
+    "ne-service-id": 800,
+    "mtu": 1500,
+    "description": "EVPN-VPLS-800-Campus bridge domain",
+    "site[0].device-id": "192.168.0.16",
+    "site[0].description": "EVPN-VPLS-800-Campus site-1",
+    "site[0].mtu": 1500,
+    "site[0].evi": 800,
+    "site[0].ecmp": 4,
+    "site[0].evpn-type": "mpls",
+    "site[0].routed-vpls": false,
+    "site[0].sap[0].port-id": "1/2/c4/1",
+    "site[0].sap[0].inner-vlan-tag": -1,
+    "site[0].sap[0].outer-vlan-tag": 800,
+    "site[0].mpls.bgp-instance.bgp-instance-id": 1,
+    "site[0].mpls.bgp-instance.route-distinguisher": "65000:800",
+    "site[0].mpls.bgp-instance.route-target[0].target-type": "import-export",
+    "site[0].mpls.bgp-instance.route-target[0].target-value": "65000:800",
+    "site[0].mpls.bgp-instance.vsi-import": [
+      "EVPN-VPLS-800-Campus-import"
+    ],
+    "site[0].mpls.bgp-instance.vsi-export": [
+      "EVPN-VPLS-800-Campus-export"
+    ],
+    "site[0].mpls.auto-bind-tunnel.resolution": "filter",
+    "site[0].mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+    "site[0].mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+    "site[0].mpls.auto-bind-tunnel.resolution-filter.sr-isis": true,
+    "site[1].device-id": "192.168.0.37",
+    "site[1].description": "EVPN-VPLS-800-Campus site-2",
+    "site[1].mtu": 1500,
+    "site[1].evi": 800,
+    "site[1].ecmp": 4,
+    "site[1].evpn-type": "mpls",
+    "site[1].routed-vpls": false,
+    "site[1].sap[0].port-id": "1/2/c5/1",
+    "site[1].sap[0].inner-vlan-tag": -1,
+    "site[1].sap[0].outer-vlan-tag": 800,
+    "site[1].mpls.bgp-instance.bgp-instance-id": 1,
+    "site[1].mpls.bgp-instance.route-distinguisher": "65000:800",
+    "site[1].mpls.bgp-instance.route-target[0].target-type": "import-export",
+    "site[1].mpls.bgp-instance.route-target[0].target-value": "65000:800",
+    "site[1].mpls.bgp-instance.vsi-import": [
+      "EVPN-VPLS-800-Campus-import"
+    ],
+    "site[1].mpls.bgp-instance.vsi-export": [
+      "EVPN-VPLS-800-Campus-export"
+    ],
+    "site[1].mpls.auto-bind-tunnel.resolution": "filter",
+    "site[1].mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+    "site[1].mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+    "site[1].mpls.auto-bind-tunnel.resolution-filter.sr-isis": true
+  }
+}
+
+✅ 验证结果:
+  Tier 1+2 (YANG path/type): PASS
+  Tier 3 (merged structure):  PASS
+  Tier 4 (semantic rules):    PASS
+  Tier 6 (canonical match):   45/45 known
+
+📦 NSP API-Ready JSON:
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "evpn-vpls",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "evpn-vpls-default",
+      "intent-specific-data": {
+        "evpn-vpls:evpn-vpls": {
+          "customer-id": 45,
+          "ne-service-id": 800,
+          "mtu": 1500,
+          "description": "EVPN-VPLS-800-Campus bridge domain",
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "description": "EVPN-VPLS-800-Campus site-1",
+                "mtu": 1500,
+                "evi": 800,
+                "ecmp": 4,
+                "evpn-type": "mpls",
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c4/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 800
+                    }
+                  ]
+                },
+                "mpls": {
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:800",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65000:800"
+                      }
+                    ],
+                    "vsi-import": [
+                      "EVPN-VPLS-800-Campus-import"
+                    ],
+                    "vsi-export": [
+                      "EVPN-VPLS-800-Campus-export"
+                    ]
+                  },
+                  "auto-bind-tunnel": {
+                    "resolution": "filter",
+                    "resolution-filter": {
+                      "bgp": true,
+                      "ldp": true,
+                      "sr-isis": true
+                    }
+                  }
+                }
+              },
+              {
+                "device-id": "192.168.0.37",
+                "description": "EVPN-VPLS-800-Campus site-2",
+                "mtu": 1500,
+                "evi": 800,
+                "ecmp": 4,
+                "evpn-type": "mpls",
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c5/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 800
+                    }
+                  ]
+                },
+                "mpls": {
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:800",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65000:800"
+                      }
+                    ],
+                    "vsi-import": [
+                      "EVPN-VPLS-800-Campus-import"
+                    ],
+                    "vsi-export": [
+                      "EVPN-VPLS-800-Campus-export"
+                    ]
+                  },
+                  "auto-bind-tunnel": {
+                    "resolution": "filter",
+                    "resolution-filter": {
+                      "bgp": true,
+                      "ldp": true,
+                      "sr-isis": true
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "EVPN-VPLS-800-Campus"
+    }
+  ]
+}
+
+  -> saved to /home/nextron/nsp_intent_ft/demos/output/evpn-vpls_api_ready.json
+
+
+═══════════════════════════════════════════════════
+DEMO 总结
+═══════════════════════════════════════════════════
+  类型              验证       JSON有效      API-Ready
+  epipe           ✅        ✅           ✅
+  tunnel          ✅        ✅           ✅
+  vprn            ✅        ✅           ✅
+  vpls            ✅        ✅           ✅
+  ies             ✅        ✅           ✅
+  etree           ✅        ✅           ✅
+  cpipe           ✅        ✅           ✅
+  evpn-epipe      ✅        ✅           ✅
+  evpn-vpls       ✅        ✅           ✅
+
+  全部 9/9 通过
+

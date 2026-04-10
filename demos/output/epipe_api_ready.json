@@ -1,0 +1,65 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "epipe:epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 10,
+          "mtu": 1492,
+          "ne-service-id": 2001,
+          "sdp-details": {
+            "sdp": [
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "192.168.0.16",
+                "override-vc-id": false,
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "vc-type": "ether"
+              },
+              {
+                "admin-state": "unlocked",
+                "destination-device-id": "192.168.0.37",
+                "override-vc-id": false,
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "vc-type": "ether"
+              }
+            ]
+          },
+          "site-a": {
+            "device-id": "192.168.0.37",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 1001,
+                "port-id": "1/2/c4/1"
+              }
+            ]
+          },
+          "site-b": {
+            "device-id": "192.168.0.16",
+            "endpoint": [
+              {
+                "admin-state": "unlocked",
+                "enable-filter": false,
+                "enable-qos": false,
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": 1001,
+                "port-id": "1/2/c5/1"
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "Epipe-VLAN-1001-demo",
+      "template-name": "ePIPE-Service-Using-SDP"
+    }
+  ]
+}

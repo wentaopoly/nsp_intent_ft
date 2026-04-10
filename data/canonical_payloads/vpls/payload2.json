@@ -1,0 +1,30 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "is-management-vpls": false,
+          "ne-service-id": 326,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15",
+                "pbb": {
+                  "source-bmac": "7e:45:ba:72:03:2f"
+                }
+              }
+            ]
+          },
+          "vpls-type": "bvpls"
+        }
+      },
+      "intent-type": "vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "vplsBsite",
+      "template-name": "vplsGapAnalysis"
+    }
+  ]
+}

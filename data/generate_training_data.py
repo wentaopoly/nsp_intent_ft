@@ -12,6 +12,7 @@ from field_definitions import (
     generate_epipe_values, generate_tunnel_values, generate_vprn_values,
     generate_vpls_values, generate_ies_values, generate_etree_values,
     generate_cpipe_values, generate_evpn_epipe_values, generate_evpn_vpls_values,
+    _roll_evpn_epipe_args, _roll_evpn_vpls_args,
 )
 from value_generators import random_project_name
 from instruction_templates import (
@@ -198,10 +199,9 @@ def build_ies_sample(interfaces_per_site=2):
     return instruction, output
 
 
-def build_etree_sample(num_root_sites=1, num_leaf_sites=2):
-    """Generate one E-Tree training sample."""
-    values = generate_etree_values(num_root_sites=num_root_sites,
-                                    num_leaf_sites=num_leaf_sites)
+def build_etree_sample(num_leaf_sites=2):
+    """Generate one E-Tree training sample (1 root + N leaves)."""
+    values = generate_etree_values(num_leaf_sites=num_leaf_sites)
     template = random.choice(ETREE_TEMPLATES)
 
     args = {
@@ -212,7 +212,7 @@ def build_etree_sample(num_root_sites=1, num_leaf_sites=2):
         "vlan":          values["site[0].sap[0].outer-vlan-tag"],
         "root0_device":  values["site[0].device-id"],
         "root0_port":    values["site[0].sap[0].port-id"],
-        "leaves_desc":   format_etree_leaves_desc(values, num_root_sites, num_leaf_sites),
+        "leaves_desc":   format_etree_leaves_desc(values, 1, num_leaf_sites),
     }
     instruction = template.format(**args)
     output = {
@@ -249,21 +249,17 @@ def build_cpipe_sample():
 
 
 def build_evpn_epipe_sample():
-    """Generate one EVPN-Epipe training sample."""
-    values = generate_evpn_epipe_values()
-    template = random.choice(EVPN_EPIPE_TEMPLATES)
+    """Generate one EVPN-Epipe training sample.
 
-    args = {
-        "service_name":  values["service-name"],
-        "customer_id":   values["customer-id"],
-        "ne_service_id": values["ne-service-id"],
-        "evi":           values["site-a.evi"],
-        "vlan":          values["site-a.sap[0].outer-vlan-tag"],
-        "site_a_device": values["site-a.device-id"],
-        "site_a_port":   values["site-a.sap[0].port-id"],
-        "site_b_device": values["site-b.device-id"],
-        "site_b_port":   values["site-b.sap[0].port-id"],
-    }
+    M3.5-fix: now uses the pure-function generator. We roll instruction-arg
+    values once, then pass them to BOTH the generator (which converts them
+    into fill_values via deterministic rules) AND the instruction template
+    formatter. This guarantees every value the model has to predict is
+    derivable from the instruction it sees.
+    """
+    args = _roll_evpn_epipe_args()
+    values = generate_evpn_epipe_values(**args)
+    template = random.choice(EVPN_EPIPE_TEMPLATES)
     instruction = template.format(**args)
     output = {
         "intent_type": "evpn-epipe",
@@ -274,22 +270,29 @@ def build_evpn_epipe_sample():
 
 
 def build_evpn_vpls_sample(num_sites=2):
-    """Generate one EVPN-VPLS training sample."""
-    values = generate_evpn_vpls_values(num_sites=num_sites)
-    template = random.choice(EVPN_VPLS_TEMPLATES_2SITE)
+    """Generate one EVPN-VPLS training sample.
 
-    args = {
-        "service_name":  values["service-name"],
-        "customer_id":   values["customer-id"],
-        "ne_service_id": values["ne-service-id"],
-        "mtu":           values["mtu"],
-        "vlan":          values["site[0].sap[0].outer-vlan-tag"],
-        "site0_device":  values["site[0].device-id"],
-        "site0_port":    values["site[0].sap[0].port-id"],
-        "site1_device":  values["site[1].device-id"],
-        "site1_port":    values["site[1].sap[0].port-id"],
-    }
-    instruction = template.format(**args)
+    M3.5-fix: pure-function generator + arg-rolling helper, same pattern
+    as evpn-epipe. The instruction template only uses site0/site1, so
+    num_sites=2 is the supported case; the rolling helper handles higher
+    counts but the template would need a matching format placeholder set.
+    """
+    args = _roll_evpn_vpls_args(num_sites=num_sites)
+    values = generate_evpn_vpls_values(**args)
+    template = random.choice(EVPN_VPLS_TEMPLATES_2SITE)
+    instruction = template.format(
+        service_name=args["service_name"],
+        customer_id=args["customer_id"],
+        ne_service_id=args["ne_service_id"],
+        mtu=args["mtu"],
+        evi=args["evi"],
+        evpn_type=args["evpn_type"],
+        vlan=args["vlan"],
+        site0_device=args["site_devices"][0],
+        site0_port=args["site_ports"][0],
+        site1_device=args["site_devices"][1],
+        site1_port=args["site_ports"][1],
+    )
     output = {
         "intent_type": "evpn-vpls",
         "template_name": "EVPNVPLSService",
@@ -354,9 +357,8 @@ def generate_all_samples(
 
     print(f"Generating {n_etree} E-Tree samples...")
     for _ in range(n_etree):
-        n_root = random.choice([1, 1, 2])
-        n_leaf = random.choice([2, 2, 3])
-        instruction, output = build_etree_sample(num_root_sites=n_root, num_leaf_sites=n_leaf)
+        n_leaf = random.choice([2, 2, 3])  # 1 root + 2-3 leaves
+        instruction, output = build_etree_sample(num_leaf_sites=n_leaf)
         samples.append(make_chat_sample(instruction, output))
 
     print(f"Generating {n_cpipe} Cpipe samples...")
@@ -609,11 +611,12 @@ def build_golden_tests():
         },
     ))
 
-    # Golden 8: E-Tree (1 root, 2 leaves)
+    # Golden 8: E-Tree (1 root, 2 leaves — root↔leaf SDPs only, no leaf↔leaf)
     golden.append(make_chat_sample(
         "Create an E-Tree service named 'ETree-5001-OurAI' for customer 50 with NE service ID 5001, "
         "MTU 1500. Root site: 192.168.0.16 on port 1/2/c4/1. "
-        "Leaf sites: 192.168.0.37/1/2/c5/1, 192.168.0.38/1/2/c6/1. All SAPs use VLAN 200.",
+        "Leaf sites: device 192.168.0.37 on port 1/2/c5/1; device 192.168.0.38 on port 1/2/c6/1. "
+        "All SAPs use VLAN 200.",
         {
             "intent_type": "etree",
             "template_name": "ETreeServiceTemplate",
@@ -640,21 +643,15 @@ def build_golden_tests():
                 "sdp[0].sdp-id": "1637",
                 "sdp[0].source-device-id": "192.168.0.16",
                 "sdp[0].destination-device-id": "192.168.0.37",
-                "sdp[1].sdp-id": "1638",
-                "sdp[1].source-device-id": "192.168.0.16",
-                "sdp[1].destination-device-id": "192.168.0.38",
-                "sdp[2].sdp-id": "3716",
-                "sdp[2].source-device-id": "192.168.0.37",
-                "sdp[2].destination-device-id": "192.168.0.16",
-                "sdp[3].sdp-id": "3738",
-                "sdp[3].source-device-id": "192.168.0.37",
-                "sdp[3].destination-device-id": "192.168.0.38",
-                "sdp[4].sdp-id": "3816",
-                "sdp[4].source-device-id": "192.168.0.38",
-                "sdp[4].destination-device-id": "192.168.0.16",
-                "sdp[5].sdp-id": "3837",
-                "sdp[5].source-device-id": "192.168.0.38",
-                "sdp[5].destination-device-id": "192.168.0.37",
+                "sdp[1].sdp-id": "3716",
+                "sdp[1].source-device-id": "192.168.0.37",
+                "sdp[1].destination-device-id": "192.168.0.16",
+                "sdp[2].sdp-id": "1638",
+                "sdp[2].source-device-id": "192.168.0.16",
+                "sdp[2].destination-device-id": "192.168.0.38",
+                "sdp[3].sdp-id": "3816",
+                "sdp[3].source-device-id": "192.168.0.38",
+                "sdp[3].destination-device-id": "192.168.0.16",
             },
         },
     ))
@@ -689,54 +686,52 @@ def build_golden_tests():
         },
     ))
 
-    # Golden 10: EVPN-Epipe
+    # Golden 10: EVPN-Epipe (M3.5-fix: pure-function generator output, MPLS variant)
+    golden_evpn_epipe_args = {
+        "service_name": "EVPN-Epipe-7001-OurAI",
+        "customer_id": 70,
+        "ne_service_id": 7001,
+        "evi": 7001,
+        "evpn_type": "mpls",
+        "vlan": 300,
+        "device": "192.168.0.16",
+        "port": "1/2/c4/1",
+        "local_ac": "AC-OurAI-local",
+        "remote_ac": "AC-OurAI-remote",
+    }
     golden.append(make_chat_sample(
-        "Create an EVPN-Epipe service 'EVPN-Epipe-7001-OurAI' for customer 70 with NE service ID 7001 "
-        "and EVI 7001. Site A: device 192.168.0.16, port 1/2/c4/1, VLAN 300. "
-        "Site B: device 192.168.0.37, port 1/2/c5/1, VLAN 300.",
+        "Create an mpls-EVPN E-Line service 'EVPN-Epipe-7001-OurAI' for customer 70 "
+        "with NE service ID 7001 and EVI 7001. "
+        "Configure on device 192.168.0.16, port 1/2/c4/1, VLAN 300. "
+        "Local attachment circuit 'AC-OurAI-local', remote AC 'AC-OurAI-remote'.",
         {
             "intent_type": "evpn-epipe",
             "template_name": "EVPNEpipeService",
-            "fill_values": {
-                "service-name": "EVPN-Epipe-7001-OurAI",
-                "customer-id": 70,
-                "ne-service-id": 7001,
-                "site-a.device-id": "192.168.0.16",
-                "site-a.evi": 7001,
-                "site-a.sap[0].port-id": "1/2/c4/1",
-                "site-a.sap[0].inner-vlan-tag": -1,
-                "site-a.sap[0].outer-vlan-tag": 300,
-                "site-b.device-id": "192.168.0.37",
-                "site-b.evi": 7001,
-                "site-b.sap[0].port-id": "1/2/c5/1",
-                "site-b.sap[0].inner-vlan-tag": -1,
-                "site-b.sap[0].outer-vlan-tag": 300,
-            },
+            "fill_values": generate_evpn_epipe_values(**golden_evpn_epipe_args),
         },
     ))
 
-    # Golden 11: EVPN-VPLS
+    # Golden 11: EVPN-VPLS (M3.5-fix: pure-function generator output, "both" variant)
+    golden_evpn_vpls_args = {
+        "service_name": "EVPN-VPLS-8001-OurAI",
+        "customer_id": 80,
+        "ne_service_id": 8001,
+        "mtu": 1500,
+        "evi": 8001,
+        "evpn_type": "both",
+        "vlan": 400,
+        "site_devices": ["192.168.0.16", "192.168.0.37"],
+        "site_ports": ["1/2/c4/1", "1/2/c5/1"],
+    }
     golden.append(make_chat_sample(
-        "Create an EVPN-VPLS service 'EVPN-VPLS-8001-OurAI' for customer 80 "
-        "with NE service ID 8001 and MTU 1500. Site 1: 192.168.0.16 on port 1/2/c4/1 with VLAN 400. "
+        "Create a both-EVPN VPLS service 'EVPN-VPLS-8001-OurAI' for customer 80 "
+        "with NE service ID 8001, EVI 8001, MTU 1500. "
+        "Site 1: 192.168.0.16 on port 1/2/c4/1 with VLAN 400. "
         "Site 2: 192.168.0.37 on port 1/2/c5/1 with VLAN 400.",
         {
             "intent_type": "evpn-vpls",
             "template_name": "EVPNVPLSService",
-            "fill_values": {
-                "service-name": "EVPN-VPLS-8001-OurAI",
-                "customer-id": 80,
-                "ne-service-id": 8001,
-                "mtu": 1500,
-                "site[0].device-id": "192.168.0.16",
-                "site[0].sap[0].port-id": "1/2/c4/1",
-                "site[0].sap[0].inner-vlan-tag": -1,
-                "site[0].sap[0].outer-vlan-tag": 400,
-                "site[1].device-id": "192.168.0.37",
-                "site[1].sap[0].port-id": "1/2/c5/1",
-                "site[1].sap[0].inner-vlan-tag": -1,
-                "site[1].sap[0].outer-vlan-tag": 400,
-            },
+            "fill_values": generate_evpn_vpls_values(**golden_evpn_vpls_args),
         },
     ))
 

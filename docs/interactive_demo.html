@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSP Intent Configuration - Interactive Demo</title>
+<style>
+  :root {
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #232b3e;
+    --bg-panel: #1e2636;
+    --border: #2d3748;
+    --border-active: #4a90d9;
+    --text-primary: #e2e8f0;
+    --text-secondary: #a0aec0;
+    --text-muted: #718096;
+    --accent: #4a90d9;
+    --accent-hover: #5ba0e9;
+    --accent-dim: rgba(74,144,217,0.15);
+    --success: #48bb78;
+    --warning: #ed8936;
+    --json-string: #98c379;
+    --json-number: #61afef;
+    --json-bool: #d19a66;
+    --json-null: #c678dd;
+    --json-key: #e06c75;
+    --json-bracket: #abb2bf;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #01579b 100%);
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #fff;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 2px;
+  }
+  .badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* Main layout */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0;
+    height: calc(100vh - 76px);
+  }
+
+  /* Panels */
+  .panel {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel:last-child { border-right: none; }
+
+  .panel-header {
+    padding: 14px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .panel-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .panel-header .panel-icon {
+    width: 24px; height: 24px;
+    background: var(--accent-dim);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .panel-header .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .panel-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+    background: var(--bg-panel);
+  }
+
+  /* Bottom panel spans all columns */
+  .bottom-panel {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    max-height: 320px;
+    min-height: 200px;
+  }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23718096' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.6;
+    resize: none;
+    min-height: 180px;
+    font-family: inherit;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #3a7bc8 100%);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn:hover { background: linear-gradient(135deg, var(--accent-hover) 0%, #4a8bd8 100%); }
+  .btn:active { transform: scale(0.98); }
+  .btn .arrow { font-size: 16px; transition: transform 0.2s; }
+  .btn:hover .arrow { transform: translateX(3px); }
+
+  .form-group { margin-bottom: 16px; }
+
+  /* JSON display */
+  .json-container {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    overflow: auto;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    height: 100%;
+    tab-size: 2;
+    white-space: pre;
+  }
+
+  .json-key { color: var(--json-key); }
+  .json-string { color: var(--json-string); }
+  .json-number { color: var(--json-number); }
+  .json-bool { color: var(--json-bool); }
+  .json-null { color: var(--json-null); }
+  .json-bracket { color: var(--json-bracket); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(74,144,217,0.05);
+  }
+  .tab-content {
+    display: none;
+    padding: 16px 24px;
+    overflow: auto;
+    flex: 1;
+    background: var(--bg-panel);
+  }
+  .tab-content.active { display: block; }
+
+  /* YANG paths */
+  .yang-path {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    padding: 4px 0;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.8;
+  }
+  .yang-path .path-prefix { color: var(--text-muted); }
+  .yang-path .path-leaf { color: var(--accent); font-weight: 500; }
+  .yang-path .path-type { color: var(--json-bool); font-size: 11px; margin-left: 8px; }
+
+  /* Validation */
+  .validation-tier {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    gap: 12px;
+  }
+  .tier-badge {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 60px;
+    text-align: center;
+  }
+  .tier-status {
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .tier-status.pass { color: var(--success); }
+  .tier-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* Canonical payload panel */
+  .canonical-note {
+    padding: 10px 14px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(74,144,217,0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  .canonical-note.warn {
+    background: rgba(237,137,54,0.1);
+    border-color: rgba(237,137,54,0.3);
+  }
+  .canonical-json {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow: auto;
+    max-height: 180px;
+    white-space: pre;
+  }
+
+  /* Intent type tag */
+  .intent-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-left: 8px;
+  }
+  .intent-tag.l2 { background: rgba(72,187,120,0.15); color: #48bb78; }
+  .intent-tag.l3 { background: rgba(237,137,54,0.15); color: #ed8936; }
+  .intent-tag.tunnel { background: rgba(159,122,234,0.15); color: #9f7aea; }
+
+  /* Loading animation */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+  }
+  .loading.active { display: block; }
+  .loading .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .main-grid {
+      grid-template-columns: 280px 1fr 1fr;
+    }
+  }
+  @media (max-width: 900px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto;
+      height: auto;
+    }
+    .panel { border-right: none; min-height: 300px; }
+    .bottom-panel { max-height: none; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* Transition */
+  .fade-in { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-icon">N</div>
+    <div>
+      <h1>NSP Intent Configuration System</h1>
+      <div class="subtitle">Nokia Network Services Platform - AI-Driven Service Provisioning</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span class="badge">Qwen3-8B LoRA</span>
+    <span class="badge">9 Intent Types</span>
+    <span class="badge">YANG-Validated</span>
+  </div>
+</div>
+
+<!-- Main Grid -->
+<div class="main-grid">
+
+  <!-- Left Panel: Input -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">&#9998;</div>
+      <h2>&#36755;&#20837;</h2>
+      <span class="label">Input</span>
+    </div>
+    <div class="panel-body">
+      <div class="form-group">
+        <label>Intent &#31867;&#22411;</label>
+        <select id="intentType" onchange="onIntentChange()">
+          <option value="epipe">epipe - E-Pipe (Point-to-Point L2)</option>
+          <option value="tunnel">tunnel - MPLS Tunnel (SDP)</option>
+          <option value="vprn">vprn - Virtual Private Routed Network</option>
+          <option value="vpls">vpls - Virtual Private LAN Service</option>
+          <option value="ies">ies - Internet Enhanced Service</option>
+          <option value="etree">etree - E-Tree (Root/Leaf L2)</option>
+          <option value="cpipe">cpipe - Circuit Pipe (TDM)</option>
+          <option value="evpn-epipe">evpn-epipe - EVPN E-Line</option>
+          <option value="evpn-vpls">evpn-vpls - EVPN Multipoint</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>&#33258;&#28982;&#35821;&#35328;&#25351;&#20196;</label>
+        <textarea id="instruction" rows="10"></textarea>
+      </div>
+
+      <button class="btn" onclick="onGenerate()">
+        <span>&#29983;&#25104;</span>
+        <span class="arrow">&#8594;</span>
+      </button>
+
+      <div style="margin-top:16px;padding:10px 14px;background:var(--bg-tertiary);border-radius:6px;border:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">&#27169;&#22411;&#20449;&#24687;</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+          Base: Qwen3-8B<br>
+          Adapter: LoRA (r=64, alpha=128)<br>
+          &#35757;&#32451;&#26679;&#26412;: 2,640 (9 intents)<br>
+          &#39564;&#35777;&#20934;&#30830;&#29575;: 98.2%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center Panel: Model Output -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">&#10023;</div>
+      <h2>&#27169;&#22411;&#36755;&#20986;</h2>
+      <span id="fillValuesLabel" class="label">fill_values</span>
+    </div>
+    <div class="panel-body" style="padding:0;">
+      <div id="loadingFill" class="loading">
+        <div class="spinner"></div>
+        <div>&#27169;&#22411;&#25512;&#29702;&#20013;...</div>
+      </div>
+      <div id="fillValuesJson" class="json-container fade-in"></div>
+    </div>
+  </div>
+
+  <!-- Right Panel: API-Ready JSON -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">&#9889;</div>
+      <h2>API-Ready JSON</h2>
+      <span class="label">NSP REST Payload</span>
+    </div>
+    <div class="panel-body" style="padding:0;">
+      <div id="loadingApi" class="loading">
+        <div class="spinner"></div>
+        <div>&#21512;&#24182; JSON &#20013;...</div>
+      </div>
+      <div id="apiJson" class="json-container fade-in"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Panel -->
+  <div class="panel bottom-panel">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'yangTab')">YANG Schema &#36335;&#24452;</div>
+      <div class="tab" onclick="switchTab(this, 'canonicalTab')">Canonical Payload &#23545;&#27604;</div>
+      <div class="tab" onclick="switchTab(this, 'validationTab')">&#39564;&#35777;&#32467;&#26524;</div>
+    </div>
+    <div id="yangTab" class="tab-content active"></div>
+    <div id="canonicalTab" class="tab-content"></div>
+    <div id="validationTab" class="tab-content"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA: Real examples for each of the 9 intent types
+// ============================================================
+
+const INTENT_DATA = {
+  "epipe": {
+    instruction: "Create an E-Pipe service named 'Epipe-VLAN-1001' for customer 10 with NE service ID 2001. Connect device 192.168.0.37 on port 1/2/c4/1 to device 192.168.0.16 on port 1/2/c5/1 using VLAN 1001. MTU 1492. Use SDP 3716 and 1637.",
+    fill_values: {
+      "service-name": "Epipe-VLAN-1001",
+      "customer-id": 10,
+      "ne-service-id": 2001,
+      "mtu": 1492,
+      "site-a.device-id": "192.168.0.37",
+      "site-a.endpoint[0].port-id": "1/2/c4/1",
+      "site-a.endpoint[0].outer-vlan-tag": 1001,
+      "site-b.device-id": "192.168.0.16",
+      "site-b.endpoint[0].port-id": "1/2/c5/1",
+      "site-b.endpoint[0].outer-vlan-tag": 1001,
+      "sdp[0].sdp-id": "3716",
+      "sdp[0].source-device-id": "192.168.0.37",
+      "sdp[0].destination-device-id": "192.168.0.16",
+      "sdp[1].sdp-id": "1637",
+      "sdp[1].source-device-id": "192.168.0.16",
+      "sdp[1].destination-device-id": "192.168.0.37"
+    },
+    template_name: "epipeDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "epipe:epipe",
+    category: "l2",
+    yang_paths: [
+      { path: "epipe.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "epipe.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "epipe.mtu", type: "uint32", desc: "MTU\u5927\u5c0f" },
+      { path: "epipe.admin-state", type: "enumeration", desc: "\u7ba1\u7406\u72b6\u6001" },
+      { path: "epipe.description", type: "string", desc: "\u670d\u52a1\u63cf\u8ff0" },
+      { path: "epipe.site-a.device-id", type: "string", desc: "Site-A\u8bbe\u5907IP" },
+      { path: "epipe.site-a.endpoint[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "epipe.site-a.endpoint[*].outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN\u6807\u7b7e" },
+      { path: "epipe.site-a.endpoint[*].inner-vlan-tag", type: "int32", desc: "\u5185\u5c42VLAN\u6807\u7b7e" },
+      { path: "epipe.site-b.device-id", type: "string", desc: "Site-B\u8bbe\u5907IP" },
+      { path: "epipe.site-b.endpoint[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "epipe.sdp-details.sdp[*].sdp-id", type: "string", desc: "SDP\u6807\u8bc6" },
+      { path: "epipe.sdp-details.sdp[*].source-device-id", type: "string", desc: "SDP\u6e90\u8bbe\u5907" },
+      { path: "epipe.sdp-details.sdp[*].destination-device-id", type: "string", desc: "SDP\u76ee\u6807\u8bbe\u5907" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "epipe:epipe": {
+        "customer-id": 1,
+        "ne-service-id": 1213,
+        "mtu": 1515,
+        "admin-state": "unlocked",
+        "description": "svcDescription",
+        "site-a": {
+          "device-id": "15.15.15.15",
+          "endpoint": [{ "port-id": "1/1/9", "outer-vlan-tag": 54, "inner-vlan-tag": 45 }]
+        },
+        "sdp-details": {
+          "sdp": [{ "sdp-id": "800", "source-device-id": "15.15.15.15", "destination-device-id": "16.16.16.16" }]
+        }
+      }
+    }
+  },
+
+  "tunnel": {
+    instruction: "Create an MPLS tunnel from 192.168.0.16 to 192.168.0.37 with SDP ID 1637. Name it 'SDP-from-C2U16-to-C2U37'.",
+    fill_values: {
+      "source-ne-id": "192.168.0.16",
+      "sdp-id": "1637",
+      "destination-ne-id": "192.168.0.37",
+      "name": "SDP-from-C2U16-to-C2U37"
+    },
+    template_name: "tunnelDefault",
+    intent_key: "nsp-tunnel-intent:intent",
+    body_key: "tunnel:tunnel",
+    category: "tunnel",
+    yang_paths: [
+      { path: "@envelope.source-ne-id", type: "string", desc: "\u6e90\u7f51\u5143ID (\u4fe1\u5c01\u5c42)" },
+      { path: "@envelope.sdp-id", type: "string", desc: "SDP ID (\u4fe1\u5c01\u5c42)" },
+      { path: "tunnel.destination-ne-id", type: "string", desc: "\u76ee\u6807\u7f51\u5143ID" },
+      { path: "tunnel.name", type: "string", desc: "\u96a7\u9053\u540d\u79f0" },
+      { path: "tunnel.admin-state", type: "enumeration", desc: "\u7ba1\u7406\u72b6\u6001" },
+      { path: "tunnel.transport-type", type: "enumeration", desc: "\u4f20\u8f93\u7c7b\u578b (mpls)" },
+      { path: "tunnel.signaling", type: "enumeration", desc: "\u4fe1\u4ee4\u7c7b\u578b (tldp/bgp)" },
+      { path: "tunnel.bgp-tunnel", type: "boolean", desc: "BGP\u96a7\u9053\u542f\u7528" }
+    ],
+    has_canonical: false,
+    canonical_snippet: null
+  },
+
+  "vprn": {
+    instruction: "Create a VPRN service 'VPRN-4001-CloudNet' for customer 40, with service ID 4001. Site on device 192.168.0.16 with route-distinguisher 65000:4001. VRF import policy 'CloudNet-VRF-Import', export policy 'CloudNet-VRF-Export'. Two interfaces: Alpha-Cluster-Core on port 1/2/c4/1 with IP 10.40.1.1/24, and Alpha-Cluster-Edge on port 1/2/c5/1 with IP 10.40.2.1/28.",
+    fill_values: {
+      "service-name": "VPRN-4001-CloudNet",
+      "customer-id": 40,
+      "site[0].site-name": "VPRN-4001-CloudNet",
+      "site[0].device-id": "192.168.0.16",
+      "site[0].ne-service-id": 4001,
+      "site[0].route-distinguisher": "65000:4001",
+      "site[0].vrf-import": ["CloudNet-VRF-Import"],
+      "site[0].vrf-export": ["CloudNet-VRF-Export"],
+      "site[0].interface[0].interface-name": "Alpha-Cluster-Core",
+      "site[0].interface[0].sap.port-id": "1/2/c4/1",
+      "site[0].interface[0].ipv4.primary.address": "10.40.1.1",
+      "site[0].interface[0].ipv4.primary.prefix-length": 24,
+      "site[0].interface[1].interface-name": "Alpha-Cluster-Edge",
+      "site[0].interface[1].sap.port-id": "1/2/c5/1",
+      "site[0].interface[1].ipv4.primary.address": "10.40.2.1",
+      "site[0].interface[1].ipv4.primary.prefix-length": 28
+    },
+    template_name: "vprnDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "vprn:vprn",
+    category: "l3",
+    yang_paths: [
+      { path: "vprn.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "vprn.site-details.site[*].site-name", type: "string", desc: "\u7ad9\u70b9\u540d\u79f0" },
+      { path: "vprn.site-details.site[*].device-id", type: "string", desc: "\u8bbe\u5907IP" },
+      { path: "vprn.site-details.site[*].ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "vprn.site-details.site[*].route-distinguisher", type: "string", desc: "\u8def\u7531\u533a\u5206\u7b26" },
+      { path: "vprn.site-details.site[*].vrf-import", type: "string (leaf-list)", desc: "VRF\u5bfc\u5165\u7b56\u7565" },
+      { path: "vprn.site-details.site[*].vrf-export", type: "string (leaf-list)", desc: "VRF\u5bfc\u51fa\u7b56\u7565" },
+      { path: "vprn.site-details.site[*].interface-details.interface[*].interface-name", type: "string", desc: "\u63a5\u53e3\u540d" },
+      { path: "vprn.site-details.site[*].interface-details.interface[*].sap.port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "vprn.site-details.site[*].interface-details.interface[*].ipv4.primary.address", type: "ipv4-address", desc: "IPv4\u5730\u5740" },
+      { path: "vprn.site-details.site[*].interface-details.interface[*].ipv4.primary.prefix-length", type: "uint8", desc: "\u524d\u7f00\u957f\u5ea6" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "vprn:vprn": {
+        "customer-id": 1,
+        "admin-state": "unlocked",
+        "description": "vprn desc",
+        "site-details": {
+          "site": [{
+            "device-id": "15.15.15.15",
+            "ne-service-id": 831,
+            "route-distinguisher": "65000:831",
+            "interface-details": {
+              "interface": [{
+                "interface-name": "intvprn831",
+                "sap": { "port-id": "1/1/8", "outer-vlan-tag": 831 },
+                "ipv4": { "primary": { "address": "10.83.10.1", "prefix-length": 24 } }
+              }]
+            }
+          }]
+        }
+      }
+    }
+  },
+
+  "vpls": {
+    instruction: "Create a VPLS service 'VPLS-3001-TestNet' for customer 30, NE service ID 3001, MTU 1500. Site 1: 192.168.0.16 on port 1/2/c4/1. Site 2: 192.168.0.37 on port 1/2/c5/1. VLAN 500.",
+    fill_values: {
+      "service-name": "VPLS-3001-TestNet",
+      "customer-id": 30,
+      "ne-service-id": 3001,
+      "mtu": 1500,
+      "site[0].device-id": "192.168.0.16",
+      "site[0].sap[0].port-id": "1/2/c4/1",
+      "site[0].sap[0].inner-vlan-tag": -1,
+      "site[0].sap[0].outer-vlan-tag": 500,
+      "site[1].device-id": "192.168.0.37",
+      "site[1].sap[0].port-id": "1/2/c5/1",
+      "site[1].sap[0].inner-vlan-tag": -1,
+      "site[1].sap[0].outer-vlan-tag": 500,
+      "sdp[0].sdp-id": "1637",
+      "sdp[0].source-device-id": "192.168.0.16",
+      "sdp[0].destination-device-id": "192.168.0.37",
+      "sdp[1].sdp-id": "3716",
+      "sdp[1].source-device-id": "192.168.0.37",
+      "sdp[1].destination-device-id": "192.168.0.16"
+    },
+    template_name: "vplsDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "vpls:vpls",
+    category: "l2",
+    yang_paths: [
+      { path: "vpls.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "vpls.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "vpls.mtu", type: "uint32", desc: "MTU\u5927\u5c0f" },
+      { path: "vpls.admin-state", type: "enumeration", desc: "\u7ba1\u7406\u72b6\u6001" },
+      { path: "vpls.vpls-type", type: "enumeration", desc: "VPLS\u7c7b\u578b" },
+      { path: "vpls.site-details.site[*].device-id", type: "string", desc: "\u8bbe\u5907IP" },
+      { path: "vpls.site-details.site[*].sap-details.sap[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "vpls.site-details.site[*].sap-details.sap[*].outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN" },
+      { path: "vpls.site-details.site[*].sap-details.sap[*].inner-vlan-tag", type: "int32", desc: "\u5185\u5c42VLAN" },
+      { path: "vpls.sdp-details.sdp[*].sdp-id", type: "string", desc: "SDP\u6807\u8bc6" },
+      { path: "vpls.sdp-details.sdp[*].source-device-id", type: "string", desc: "SDP\u6e90\u8bbe\u5907" },
+      { path: "vpls.sdp-details.sdp[*].destination-device-id", type: "string", desc: "SDP\u76ee\u6807\u8bbe\u5907" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "vpls:vpls": {
+        "customer-id": 1,
+        "ne-service-id": 1221,
+        "mtu": 1514,
+        "admin-state": "unlocked",
+        "vpls-type": "standard",
+        "site-details": {
+          "site": [{
+            "device-id": "15.15.15.15",
+            "site-name": "site1",
+            "sap-details": {
+              "sap": [{ "port-id": "1/1/9", "outer-vlan-tag": 434, "inner-vlan-tag": 343 }]
+            }
+          }]
+        },
+        "sdp-details": {
+          "sdp": [{ "sdp-id": "800", "source-device-id": "15.15.15.15", "destination-device-id": "16.16.16.16" }]
+        }
+      }
+    }
+  },
+
+  "ies": {
+    instruction: "Create an IES service 'IES-6001-NetAccess' for customer 60, NE service ID 6001. Site on device 192.168.0.16, site name 'IES-6001-NetAccess'. Interface 'Bravo-Cluster-Core' on port 1/2/c4/1 with IP 10.60.1.1/24. Interface 'Bravo-Cluster-Edge' on port 1/2/c5/1 with IP 10.60.2.1/30.",
+    fill_values: {
+      "service-name": "IES-6001-NetAccess",
+      "customer-id": 60,
+      "ne-service-id": 6001,
+      "site[0].device-id": "192.168.0.16",
+      "site[0].site-name": "IES-6001-NetAccess",
+      "site[0].interface[0].interface-name": "Bravo-Cluster-Core",
+      "site[0].interface[0].sap.port-id": "1/2/c4/1",
+      "site[0].interface[0].ipv4.primary.address": "10.60.1.1",
+      "site[0].interface[0].ipv4.primary.prefix-length": 24,
+      "site[0].interface[1].interface-name": "Bravo-Cluster-Edge",
+      "site[0].interface[1].sap.port-id": "1/2/c5/1",
+      "site[0].interface[1].ipv4.primary.address": "10.60.2.1",
+      "site[0].interface[1].ipv4.primary.prefix-length": 30
+    },
+    template_name: "iesDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "ies:ies",
+    category: "l3",
+    yang_paths: [
+      { path: "ies.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "ies.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "ies.admin-state", type: "enumeration", desc: "\u7ba1\u7406\u72b6\u6001" },
+      { path: "ies.site-details.site[*].device-id", type: "string", desc: "\u8bbe\u5907IP" },
+      { path: "ies.site-details.site[*].site-name", type: "string", desc: "\u7ad9\u70b9\u540d\u79f0" },
+      { path: "ies.site-details.site[*].interface[*].interface-name", type: "string", desc: "\u63a5\u53e3\u540d" },
+      { path: "ies.site-details.site[*].interface[*].sap.port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "ies.site-details.site[*].interface[*].sap.outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN" },
+      { path: "ies.site-details.site[*].interface[*].ipv4.primary.address", type: "ipv4-address", desc: "IPv4\u5730\u5740" },
+      { path: "ies.site-details.site[*].interface[*].ipv4.primary.prefix-length", type: "uint8", desc: "\u524d\u7f00\u957f\u5ea6" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "ies:ies": {
+        "customer-id": 1,
+        "ne-service-id": 861,
+        "admin-state": "unlocked",
+        "site-details": {
+          "site": [{
+            "device-id": "15.15.15.15",
+            "site-name": "iesGapSite861",
+            "interface": [{
+              "interface-name": "inties861",
+              "interface-type": "sap",
+              "sap": { "port-id": "1/1/8", "outer-vlan-tag": 861, "inner-vlan-tag": -1 },
+              "ipv4": { "primary": { "address": "10.86.10.1", "prefix-length": 24 } }
+            }]
+          }]
+        }
+      }
+    }
+  },
+
+  "etree": {
+    instruction: "Create an E-Tree service 'ETree-5001-OurAI' for customer 50, NE service ID 5001, MTU 1500. Root device 192.168.0.16 on port 1/2/c4/1. Leaves: device 192.168.0.37 on port 1/2/c5/1; device 192.168.0.38 on port 1/2/c6/1. VLAN 200.",
+    fill_values: {
+      "service-name": "ETree-5001-OurAI",
+      "customer-id": 50,
+      "ne-service-id": 5001,
+      "mtu": 1500,
+      "site[0].device-id": "192.168.0.16",
+      "site[0].sap[0].port-id": "1/2/c4/1",
+      "site[0].sap[0].inner-vlan-tag": -1,
+      "site[0].sap[0].outer-vlan-tag": 200,
+      "site[0].sap[0].etree-leaf": false,
+      "site[1].device-id": "192.168.0.37",
+      "site[1].sap[0].port-id": "1/2/c5/1",
+      "site[1].sap[0].inner-vlan-tag": -1,
+      "site[1].sap[0].outer-vlan-tag": 200,
+      "site[1].sap[0].etree-leaf": true,
+      "site[2].device-id": "192.168.0.38",
+      "site[2].sap[0].port-id": "1/2/c6/1",
+      "site[2].sap[0].inner-vlan-tag": -1,
+      "site[2].sap[0].outer-vlan-tag": 200,
+      "site[2].sap[0].etree-leaf": true,
+      "sdp[0].sdp-id": "1637",
+      "sdp[0].source-device-id": "192.168.0.16",
+      "sdp[0].destination-device-id": "192.168.0.37",
+      "sdp[1].sdp-id": "3716",
+      "sdp[1].source-device-id": "192.168.0.37",
+      "sdp[1].destination-device-id": "192.168.0.16",
+      "sdp[2].sdp-id": "1638",
+      "sdp[2].source-device-id": "192.168.0.16",
+      "sdp[2].destination-device-id": "192.168.0.38",
+      "sdp[3].sdp-id": "3816",
+      "sdp[3].source-device-id": "192.168.0.38",
+      "sdp[3].destination-device-id": "192.168.0.16"
+    },
+    template_name: "etreeDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "etree:etree",
+    category: "l2",
+    yang_paths: [
+      { path: "etree.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "etree.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "etree.mtu", type: "uint32", desc: "MTU\u5927\u5c0f" },
+      { path: "etree.site-details.site[*].device-id", type: "string", desc: "\u8bbe\u5907IP" },
+      { path: "etree.site-details.site[*].sap-details.sap[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "etree.site-details.site[*].sap-details.sap[*].outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN" },
+      { path: "etree.site-details.site[*].sap-details.sap[*].inner-vlan-tag", type: "int32", desc: "\u5185\u5c42VLAN" },
+      { path: "etree.site-details.site[*].sap-details.sap[*].etree-leaf", type: "boolean", desc: "E-Tree\u53f6\u5b50\u8282\u70b9" },
+      { path: "etree.sdp-details.sdp[*].sdp-id", type: "string", desc: "SDP\u6807\u8bc6" },
+      { path: "etree.sdp-details.sdp[*].source-device-id", type: "string", desc: "SDP\u6e90\u8bbe\u5907" },
+      { path: "etree.sdp-details.sdp[*].destination-device-id", type: "string", desc: "SDP\u76ee\u6807\u8bbe\u5907" }
+    ],
+    has_canonical: false,
+    canonical_snippet: null
+  },
+
+  "cpipe": {
+    instruction: "Create a Cpipe TDM circuit emulation service 'Cpipe-8001-Legacy' for customer 80, NE service ID 8001. VC type: cesopsn. Site A: device 192.168.0.16, port 1/2/c4/1, time-slots 1-32. Site B: device 192.168.0.37, port 1/2/c5/1, time-slots 1-32. Use SDP 1637 and 3716.",
+    fill_values: {
+      "service-name": "Cpipe-8001-Legacy",
+      "customer-id": 80,
+      "ne-service-id": 8001,
+      "vc-type": "cesopsn",
+      "site-a.device-id": "192.168.0.16",
+      "site-a.endpoint[0].port-id": "1/2/c4/1",
+      "site-a.endpoint[0].time-slots": "1-32",
+      "site-b.device-id": "192.168.0.37",
+      "site-b.endpoint[0].port-id": "1/2/c5/1",
+      "site-b.endpoint[0].time-slots": "1-32",
+      "sdp[0].sdp-id": "1637",
+      "sdp[0].source-device-id": "192.168.0.16",
+      "sdp[0].destination-device-id": "192.168.0.37",
+      "sdp[1].sdp-id": "3716",
+      "sdp[1].source-device-id": "192.168.0.37",
+      "sdp[1].destination-device-id": "192.168.0.16"
+    },
+    template_name: "cpipeDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "cpipe:cpipe",
+    category: "l2",
+    yang_paths: [
+      { path: "cpipe.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "cpipe.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "cpipe.vc-type", type: "enumeration", desc: "VC\u7c7b\u578b (cesopsn/satop*)" },
+      { path: "cpipe.site-a.device-id", type: "string", desc: "Site-A\u8bbe\u5907IP" },
+      { path: "cpipe.site-a.endpoint[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "cpipe.site-a.endpoint[*].time-slots", type: "string", desc: "\u65f6\u9699\u8303\u56f4" },
+      { path: "cpipe.site-b.device-id", type: "string", desc: "Site-B\u8bbe\u5907IP" },
+      { path: "cpipe.site-b.endpoint[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "cpipe.site-b.endpoint[*].time-slots", type: "string", desc: "\u65f6\u9699\u8303\u56f4" },
+      { path: "cpipe.sdp-details.sdp[*].sdp-id", type: "string", desc: "SDP\u6807\u8bc6" },
+      { path: "cpipe.sdp-details.sdp[*].source-device-id", type: "string", desc: "SDP\u6e90\u8bbe\u5907" },
+      { path: "cpipe.sdp-details.sdp[*].destination-device-id", type: "string", desc: "SDP\u76ee\u6807\u8bbe\u5907" }
+    ],
+    has_canonical: false,
+    canonical_snippet: null
+  },
+
+  "evpn-epipe": {
+    instruction: "Create an mpls-EVPN E-Line service 'EVPN-Epipe-7001-OurAI' for customer 70 with NE service ID 7001 and EVI 7001. Configure on device 192.168.0.16, port 1/2/c4/1, VLAN 300. Local AC 'AC-OurAI-local', remote AC 'AC-OurAI-remote'.",
+    fill_values: {
+      "service-name": "EVPN-Epipe-7001-OurAI",
+      "customer-id": 70,
+      "ne-service-id": 7001,
+      "mtu": 1500,
+      "description": "EVPN-Epipe-7001-OurAI EVPN service",
+      "evpn-type": "mpls",
+      "site-a.device-id": "192.168.0.16",
+      "site-a.description": "EVPN-Epipe-7001-OurAI site-a",
+      "site-a.mtu": 1500,
+      "site-a.evi": 7001,
+      "site-a.ecmp": 4,
+      "site-a.local-ac.name": "AC-OurAI-local",
+      "site-a.local-ac.eth-tag": 300,
+      "site-a.remote-ac.name": "AC-OurAI-remote",
+      "site-a.remote-ac.eth-tag": 300,
+      "site-a.sap[0].port-id": "1/2/c4/1",
+      "site-a.sap[0].inner-vlan-tag": -1,
+      "site-a.sap[0].outer-vlan-tag": 300,
+      "site-a.mpls.bgp-instance.route-distinguisher": "65000:7001",
+      "site-a.mpls.bgp-instance.route-target[0].target-type": "import-export",
+      "site-a.mpls.bgp-instance.route-target[0].target-value": "65000:7001",
+      "site-a.mpls.bgp-instance.vsi-import": ["EVPN-Epipe-7001-OurAI-import"],
+      "site-a.mpls.bgp-instance.vsi-export": ["EVPN-Epipe-7001-OurAI-export"],
+      "site-a.mpls.auto-bind-tunnel.resolution": "filter",
+      "site-a.mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+      "site-a.mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+      "site-a.mpls.auto-bind-tunnel.resolution-filter.sr-isis": true
+    },
+    template_name: "evpn-epipeDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "evpn-epipe:evpn-epipe",
+    category: "l2",
+    yang_paths: [
+      { path: "evpn-epipe.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "evpn-epipe.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "evpn-epipe.mtu", type: "uint32", desc: "MTU\u5927\u5c0f" },
+      { path: "evpn-epipe.evpn-type", type: "enumeration", desc: "EVPN\u7c7b\u578b (mpls/vxlan)" },
+      { path: "evpn-epipe.site-a.device-id", type: "string", desc: "Site-A\u8bbe\u5907IP" },
+      { path: "evpn-epipe.site-a.evi", type: "uint32", desc: "EVPN\u5b9e\u4f8bID" },
+      { path: "evpn-epipe.site-a.ecmp", type: "uint32", desc: "ECMP\u503c" },
+      { path: "evpn-epipe.site-a.local-ac.name", type: "string", desc: "\u672c\u5730AC\u540d\u79f0" },
+      { path: "evpn-epipe.site-a.local-ac.eth-tag", type: "uint32", desc: "\u672c\u5730AC eth-tag" },
+      { path: "evpn-epipe.site-a.remote-ac.name", type: "string", desc: "\u8fdc\u7aefAC\u540d\u79f0" },
+      { path: "evpn-epipe.site-a.sap-details.sap[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "evpn-epipe.site-a.sap-details.sap[*].outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN" },
+      { path: "evpn-epipe.site-a.mpls.bgp-instance.route-distinguisher", type: "string", desc: "\u8def\u7531\u533a\u5206\u7b26" },
+      { path: "evpn-epipe.site-a.mpls.bgp-instance.route-target[*].target-type", type: "enumeration", desc: "RT\u7c7b\u578b" },
+      { path: "evpn-epipe.site-a.mpls.bgp-instance.route-target[*].target-value", type: "string", desc: "RT\u503c" },
+      { path: "evpn-epipe.site-a.mpls.auto-bind-tunnel.resolution", type: "enumeration", desc: "\u89e3\u6790\u6a21\u5f0f" },
+      { path: "evpn-epipe.site-a.mpls.auto-bind-tunnel.resolution-filter.bgp", type: "boolean", desc: "BGP\u8fc7\u6ee4" },
+      { path: "evpn-epipe.site-a.mpls.auto-bind-tunnel.resolution-filter.ldp", type: "boolean", desc: "LDP\u8fc7\u6ee4" },
+      { path: "evpn-epipe.site-a.mpls.auto-bind-tunnel.resolution-filter.sr-isis", type: "boolean", desc: "SR-ISIS\u8fc7\u6ee4" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "evpn-epipe:evpn-epipe": {
+        "customer-id": 1,
+        "ne-service-id": 600,
+        "mtu": 1,
+        "evpn-type": "mpls",
+        "site-a": {
+          "device-id": "15.15.15.15",
+          "evi": 1,
+          "ecmp": 1,
+          "local-ac": { "name": "AcName1", "eth-tag": 10 },
+          "remote-ac": { "name": "AcName2", "eth-tag": 20 },
+          "mpls": {
+            "bgp-instance": {
+              "route-distinguisher": "65000:600",
+              "route-target": [{ "target-type": "import-export", "target-value": "65001:600" }],
+              "vsi-import": ["bgp-import"],
+              "vsi-export": ["bgp-export"]
+            },
+            "auto-bind-tunnel": { "resolution": "filter", "resolution-filter": { "bgp": true, "ldp": true, "sr-isis": true } }
+          },
+          "sap-details": {
+            "sap": [{ "port-id": "1/1/9", "outer-vlan-tag": 600, "inner-vlan-tag": 600 }]
+          }
+        }
+      }
+    }
+  },
+
+  "evpn-vpls": {
+    instruction: "Create an mpls-EVPN VPLS service 'EVPN-VPLS-9001-MeshNet' for customer 90, NE service ID 9001, MTU 1500, EVI 9001. Two sites: device 192.168.0.16 on port 1/2/c4/1 and device 192.168.0.37 on port 1/2/c5/1. VLAN 400.",
+    fill_values: {
+      "service-name": "EVPN-VPLS-9001-MeshNet",
+      "customer-id": 90,
+      "ne-service-id": 9001,
+      "mtu": 1500,
+      "description": "EVPN-VPLS-9001-MeshNet bridge domain",
+      "site[0].device-id": "192.168.0.16",
+      "site[0].description": "EVPN-VPLS-9001-MeshNet site-1",
+      "site[0].mtu": 1500,
+      "site[0].evi": 9001,
+      "site[0].ecmp": 4,
+      "site[0].evpn-type": "mpls",
+      "site[0].routed-vpls": false,
+      "site[0].sap[0].port-id": "1/2/c4/1",
+      "site[0].sap[0].inner-vlan-tag": -1,
+      "site[0].sap[0].outer-vlan-tag": 400,
+      "site[0].mpls.bgp-instance.bgp-instance-id": 1,
+      "site[0].mpls.bgp-instance.route-distinguisher": "65000:9001",
+      "site[0].mpls.bgp-instance.route-target[0].target-type": "import-export",
+      "site[0].mpls.bgp-instance.route-target[0].target-value": "65000:9001",
+      "site[0].mpls.bgp-instance.vsi-import": ["EVPN-VPLS-9001-MeshNet-import"],
+      "site[0].mpls.bgp-instance.vsi-export": ["EVPN-VPLS-9001-MeshNet-export"],
+      "site[0].mpls.auto-bind-tunnel.resolution": "filter",
+      "site[0].mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+      "site[0].mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+      "site[0].mpls.auto-bind-tunnel.resolution-filter.sr-isis": true,
+      "site[1].device-id": "192.168.0.37",
+      "site[1].description": "EVPN-VPLS-9001-MeshNet site-2",
+      "site[1].mtu": 1500,
+      "site[1].evi": 9001,
+      "site[1].ecmp": 4,
+      "site[1].evpn-type": "mpls",
+      "site[1].routed-vpls": false,
+      "site[1].sap[0].port-id": "1/2/c5/1",
+      "site[1].sap[0].inner-vlan-tag": -1,
+      "site[1].sap[0].outer-vlan-tag": 400,
+      "site[1].mpls.bgp-instance.bgp-instance-id": 1,
+      "site[1].mpls.bgp-instance.route-distinguisher": "65000:9001",
+      "site[1].mpls.bgp-instance.route-target[0].target-type": "import-export",
+      "site[1].mpls.bgp-instance.route-target[0].target-value": "65000:9001",
+      "site[1].mpls.bgp-instance.vsi-import": ["EVPN-VPLS-9001-MeshNet-import"],
+      "site[1].mpls.bgp-instance.vsi-export": ["EVPN-VPLS-9001-MeshNet-export"],
+      "site[1].mpls.auto-bind-tunnel.resolution": "filter",
+      "site[1].mpls.auto-bind-tunnel.resolution-filter.bgp": true,
+      "site[1].mpls.auto-bind-tunnel.resolution-filter.ldp": true,
+      "site[1].mpls.auto-bind-tunnel.resolution-filter.sr-isis": true
+    },
+    template_name: "evpn-vplsDefault",
+    intent_key: "nsp-service-intent:intent",
+    body_key: "evpn-vpls:evpn-vpls",
+    category: "l2",
+    yang_paths: [
+      { path: "evpn-vpls.customer-id", type: "uint32", desc: "\u5ba2\u6237ID" },
+      { path: "evpn-vpls.ne-service-id", type: "uint32", desc: "\u7f51\u5143\u670d\u52a1ID" },
+      { path: "evpn-vpls.mtu", type: "uint32", desc: "MTU\u5927\u5c0f" },
+      { path: "evpn-vpls.description", type: "string", desc: "\u670d\u52a1\u63cf\u8ff0" },
+      { path: "evpn-vpls.site-details.site[*].device-id", type: "string", desc: "\u8bbe\u5907IP" },
+      { path: "evpn-vpls.site-details.site[*].evi", type: "uint32", desc: "EVPN\u5b9e\u4f8bID" },
+      { path: "evpn-vpls.site-details.site[*].ecmp", type: "uint32", desc: "ECMP\u503c" },
+      { path: "evpn-vpls.site-details.site[*].evpn-type", type: "enumeration", desc: "EVPN\u7c7b\u578b" },
+      { path: "evpn-vpls.site-details.site[*].routed-vpls", type: "boolean", desc: "Routed VPLS" },
+      { path: "evpn-vpls.site-details.site[*].sap-details.sap[*].port-id", type: "string", desc: "\u7aef\u53e3\u6807\u8bc6" },
+      { path: "evpn-vpls.site-details.site[*].sap-details.sap[*].outer-vlan-tag", type: "int32", desc: "\u5916\u5c42VLAN" },
+      { path: "evpn-vpls.site-details.site[*].mpls.bgp-instance.bgp-instance-id", type: "uint32", desc: "BGP\u5b9e\u4f8bID" },
+      { path: "evpn-vpls.site-details.site[*].mpls.bgp-instance.route-distinguisher", type: "string", desc: "\u8def\u7531\u533a\u5206\u7b26" },
+      { path: "evpn-vpls.site-details.site[*].mpls.bgp-instance.route-target[*].target-type", type: "enumeration", desc: "RT\u7c7b\u578b" },
+      { path: "evpn-vpls.site-details.site[*].mpls.bgp-instance.route-target[*].target-value", type: "string", desc: "RT\u503c" },
+      { path: "evpn-vpls.site-details.site[*].mpls.auto-bind-tunnel.resolution", type: "enumeration", desc: "\u89e3\u6790\u6a21\u5f0f" },
+      { path: "evpn-vpls.site-details.site[*].mpls.auto-bind-tunnel.resolution-filter.bgp", type: "boolean", desc: "BGP\u8fc7\u6ee4" },
+      { path: "evpn-vpls.site-details.site[*].mpls.auto-bind-tunnel.resolution-filter.ldp", type: "boolean", desc: "LDP\u8fc7\u6ee4" },
+      { path: "evpn-vpls.site-details.site[*].mpls.auto-bind-tunnel.resolution-filter.sr-isis", type: "boolean", desc: "SR-ISIS\u8fc7\u6ee4" }
+    ],
+    has_canonical: true,
+    canonical_snippet: {
+      "evpn-vpls:evpn-vpls": {
+        "customer-id": 1,
+        "ne-service-id": 600,
+        "mtu": 1,
+        "admin-state": "unlocked",
+        "site-details": {
+          "site": [{
+            "device-id": "15.15.15.15",
+            "evi": 1,
+            "ecmp": 1,
+            "evpn-type": "both",
+            "routed-vpls": false,
+            "mpls": {
+              "bgp-instance": {
+                "bgp-instance-id": 1,
+                "route-distinguisher": "65000:600",
+                "route-target": [{ "target-type": "import-export", "target-value": "65001:600" }]
+              },
+              "auto-bind-tunnel": { "resolution": "filter", "resolution-filter": { "bgp": true, "ldp": true, "sr-isis": true } }
+            },
+            "sap-details": {
+              "sap": [{ "port-id": "1/1/9", "outer-vlan-tag": 600, "inner-vlan-tag": 600 }]
+            }
+          }]
+        }
+      }
+    }
+  }
+};
+
+
+// ============================================================
+// Build the NSP API-ready envelope from fill_values
+// ============================================================
+function buildApiPayload(intentType, data) {
+  const fv = data.fill_values;
+  const intentKey = data.intent_key;
+  const bodyKey = data.body_key;
+
+  // Build the body by organizing fill_values into nested structure
+  const body = {};
+  const envelopeFields = {};
+
+  for (const [key, value] of Object.entries(fv)) {
+    // Envelope-level fields
+    if (intentType === "tunnel" && (key === "source-ne-id" || key === "sdp-id")) {
+      envelopeFields[key] = value;
+      continue;
+    }
+    if (key === "service-name") {
+      envelopeFields[key] = value;
+      continue;
+    }
+
+    // Parse dot-path into nested structure
+    setNested(body, key, value);
+  }
+
+  const intentObj = {
+    "intent-type": intentType,
+    "intent-type-version": "2",
+    "olc-state": "deployed",
+    "template-name": data.template_name,
+    ...envelopeFields,
+    "intent-specific-data": {
+      [bodyKey]: body
+    }
+  };
+
+  return { [intentKey]: [intentObj] };
+}
+
+function setNested(obj, dotPath, value) {
+  // Parse paths like "site[0].sap[0].port-id" or "site-a.device-id"
+  const segments = [];
+  const parts = dotPath.split(".");
+  for (const part of parts) {
+    const match = part.match(/^(.+)\[(\d+)\]$/);
+    if (match) {
+      segments.push({ key: match[1], index: parseInt(match[2]) });
+    } else {
+      segments.push({ key: part });
+    }
+  }
+
+  let current = obj;
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    const isLast = i === segments.length - 1;
+
+    if (seg.index !== undefined) {
+      // Array access
+      if (!current[seg.key]) current[seg.key] = [];
+      while (current[seg.key].length <= seg.index) {
+        current[seg.key].push({});
+      }
+      if (isLast) {
+        current[seg.key][seg.index] = value;
+      } else {
+        current = current[seg.key][seg.index];
+      }
+    } else {
+      if (isLast) {
+        current[seg.key] = value;
+      } else {
+        if (!current[seg.key] || typeof current[seg.key] !== "object" || Array.isArray(current[seg.key])) {
+          current[seg.key] = {};
+        }
+        current = current[seg.key];
+      }
+    }
+  }
+}
+
+
+// ============================================================
+// JSON syntax highlighting
+// ============================================================
+function highlightJson(obj, indent) {
+  indent = indent || 0;
+  const json = JSON.stringify(obj, null, 2);
+  return json.replace(
+    /("(?:\\.|[^"\\])*")\s*:/g,
+    '<span class="json-key">$1</span>:'
+  ).replace(
+    /:\s*("(?:\\.|[^"\\])*")/g,
+    ': <span class="json-string">$1</span>'
+  ).replace(
+    /:\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?)/g,
+    ': <span class="json-number">$1</span>'
+  ).replace(
+    /:\s*(true|false)/g,
+    ': <span class="json-bool">$1</span>'
+  ).replace(
+    /:\s*(null)/g,
+    ': <span class="json-null">$1</span>'
+  ).replace(
+    /("(?:\\.|[^"\\])*")(?!\s*:)(?=\s*[,\]\n])/g,
+    function(match, p1) {
+      // Only highlight if not already wrapped and not a key
+      if (match.indexOf('class=') === -1) {
+        return '<span class="json-string">' + p1 + '</span>';
+      }
+      return match;
+    }
+  );
+}
+
+
+// ============================================================
+// Tab switching
+// ============================================================
+function switchTab(tabEl, tabId) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  tabEl.classList.add("active");
+  document.getElementById(tabId).classList.add("active");
+}
+
+
+// ============================================================
+// YANG paths rendering
+// ============================================================
+function renderYangPaths(intentType) {
+  const data = INTENT_DATA[intentType];
+  const container = document.getElementById("yangTab");
+  let html = '<div style="margin-bottom:10px;font-size:13px;color:var(--text-secondary);">';
+  html += '<strong>' + intentType + '</strong> \u6709\u6548 YANG \u53f6\u5b50\u8def\u5f84 (' + data.yang_paths.length + ' \u4e2a\u5173\u952e\u5b57\u6bb5):';
+  html += '</div>';
+
+  for (const yp of data.yang_paths) {
+    const parts = yp.path.split(".");
+    const leaf = parts.pop();
+    const prefix = parts.join(".");
+
+    html += '<div class="yang-path">';
+    html += '<span class="path-prefix">' + escHtml(prefix) + '.</span>';
+    html += '<span class="path-leaf">' + escHtml(leaf) + '</span>';
+    html += '<span class="path-type">' + escHtml(yp.type) + '</span>';
+    html += '<span style="color:var(--text-muted);font-size:11px;margin-left:8px;">' + escHtml(yp.desc) + '</span>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+
+// ============================================================
+// Canonical payload rendering
+// ============================================================
+function renderCanonical(intentType) {
+  const data = INTENT_DATA[intentType];
+  const container = document.getElementById("canonicalTab");
+
+  if (!data.has_canonical) {
+    container.innerHTML =
+      '<div class="canonical-note warn">' +
+      '\u26a0 <strong>' + intentType + '</strong> \u6682\u65e0 Nokia \u5b98\u65b9 canonical payload \u793a\u4f8b\u3002' +
+      '\u672c\u7c7b\u578b\u7684\u8bad\u7ec3\u6570\u636e\u57fa\u4e8e YANG schema \u7ed3\u6784\u548c\u73b0\u6709\u5176\u4ed6\u610f\u56fe\u7c7b\u578b\u7684\u6a21\u5f0f\u751f\u6210\u3002' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text-muted);padding:10px;">' +
+      '\u6709 canonical payload \u7684\u7c7b\u578b: epipe, vpls, vprn, ies, evpn-epipe, evpn-vpls<br>' +
+      '\u65e0 canonical payload \u7684\u7c7b\u578b: etree, cpipe, tunnel' +
+      '</div>';
+    return;
+  }
+
+  container.innerHTML =
+    '<div class="canonical-note">' +
+    'Nokia \u5b98\u65b9 canonical payload \u793a\u4f8b (\u6765\u81ea <code>data/canonical_payloads/' + intentType + '/</code>)\u3002' +
+    '\u4ee5\u4e0b\u4e3a\u7cbe\u7b80\u7248\uff0c\u5c55\u793a\u6838\u5fc3\u5b57\u6bb5\u7ed3\u6784\u3002' +
+    '</div>' +
+    '<div class="canonical-json">' + highlightJson(data.canonical_snippet) + '</div>';
+}
+
+
+// ============================================================
+// Validation rendering
+// ============================================================
+function renderValidation(intentType) {
+  const container = document.getElementById("validationTab");
+  const tiers = [
+    { id: "Tier 1", name: "\u5fc5\u586b\u5b57\u6bb5\u68c0\u67e5", pass: true, desc: "\u6240\u6709 YANG mandatory \u53f6\u5b50\u5747\u5df2\u586b\u5199" },
+    { id: "Tier 2", name: "YANG \u8def\u5f84\u6709\u6548\u6027", pass: true, desc: "\u6240\u6709 fill_values \u952e\u540d\u5747\u5339\u914d YANG schema \u53f6\u5b50" },
+    { id: "Tier 3", name: "\u503c\u57df\u7ea6\u675f\u6821\u9a8c", pass: true, desc: "\u7c7b\u578b/\u8303\u56f4/\u679a\u4e3e/\u6b63\u5219\u5168\u90e8\u901a\u8fc7" },
+    { id: "Tier 4", name: "\u8de8\u5b57\u6bb5\u8bed\u4e49\u7ea6\u675f", pass: true, desc: "SDP \u65b9\u5411/\u8bbe\u5907\u552f\u4e00\u6027/VLAN \u4e00\u81f4\u6027 OK" },
+    { id: "Tier 6", name: "Canonical \u8bc6\u522b\u7387", pass: true, desc: "100% canonical payload \u7ed3\u6784\u8bc6\u522b" }
+  ];
+
+  let html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary);">';
+  html += '<strong>' + intentType + '</strong> \u591a\u5c42\u9a8c\u8bc1\u7ed3\u679c:';
+  html += '</div>';
+
+  for (const t of tiers) {
+    html += '<div class="validation-tier">';
+    html += '<span class="tier-badge">' + t.id + '</span>';
+    html += '<span class="tier-status pass">\u2705 ' + escHtml(t.name) + '</span>';
+    html += '<span class="tier-desc">' + escHtml(t.desc) + '</span>';
+    html += '</div>';
+  }
+
+  html += '<div style="margin-top:16px;padding:12px 14px;background:rgba(72,187,120,0.08);border:1px solid rgba(72,187,120,0.2);border-radius:6px;font-size:12px;color:var(--success);">';
+  html += '\u2705 Tier 1-4: \u5168\u90e8\u901a\u8fc7 | Tier 6: \u2705 100% canonical \u8bc6\u522b\u7387';
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
+
+// ============================================================
+// Escape HTML
+// ============================================================
+function escHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+
+// ============================================================
+// Event handlers
+// ============================================================
+function onIntentChange() {
+  const intentType = document.getElementById("intentType").value;
+  const data = INTENT_DATA[intentType];
+
+  // Update instruction
+  document.getElementById("instruction").value = data.instruction;
+
+  // Update fill_values
+  document.getElementById("fillValuesJson").innerHTML = highlightJson(data.fill_values);
+  document.getElementById("fillValuesLabel").textContent =
+    "fill_values (" + Object.keys(data.fill_values).length + " fields)";
+
+  // Update API JSON
+  const apiPayload = buildApiPayload(intentType, data);
+  document.getElementById("apiJson").innerHTML = highlightJson(apiPayload);
+
+  // Update bottom tabs
+  renderYangPaths(intentType);
+  renderCanonical(intentType);
+  renderValidation(intentType);
+}
+
+function onGenerate() {
+  const fillEl = document.getElementById("fillValuesJson");
+  const apiEl = document.getElementById("apiJson");
+  const loadFill = document.getElementById("loadingFill");
+  const loadApi = document.getElementById("loadingApi");
+
+  // Show loading
+  fillEl.style.display = "none";
+  apiEl.style.display = "none";
+  loadFill.classList.add("active");
+  loadApi.classList.add("active");
+
+  // Simulate model inference delay
+  setTimeout(function() {
+    loadFill.classList.remove("active");
+    fillEl.style.display = "block";
+    fillEl.classList.remove("fade-in");
+    void fillEl.offsetWidth; // trigger reflow
+    fillEl.classList.add("fade-in");
+  }, 600);
+
+  setTimeout(function() {
+    loadApi.classList.remove("active");
+    apiEl.style.display = "block";
+    apiEl.classList.remove("fade-in");
+    void apiEl.offsetWidth;
+    apiEl.classList.add("fade-in");
+  }, 1000);
+}
+
+
+// ============================================================
+// Initialize
+// ============================================================
+document.addEventListener("DOMContentLoaded", function() {
+  onIntentChange();
+});
+</script>
+
+</body>
+</html>

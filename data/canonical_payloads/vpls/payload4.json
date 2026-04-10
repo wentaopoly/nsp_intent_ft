@@ -1,0 +1,77 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "is-management-vpls": false,
+          "ne-service-id": 359,
+          "sdp-details": {
+            "sdp": [
+              {
+                "admin-state": "unlocked",
+                "collect-stats": false,
+                "destination-device-id": "16.16.16.16",
+                "entropy-label": [
+                  null
+                ],
+                "fdb": {
+                  "mac-learning": {
+                    "aging": true,
+                    "learning": true
+                  },
+                  "maximum-mac-addresses": 6
+                },
+                "force-vc-forwarding": "vlan",
+                "override-vc-id": false,
+                "pim-snooping": {
+                  "maximum-number-groups": 4
+                },
+                "sdp-id": "800",
+                "sdp-type": "spoke",
+                "source-device-id": "15.15.15.15",
+                "vc-type": "ether"
+              }
+            ]
+          },
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15",
+                "is-routed-vpls": false,
+                "mac-flush": {
+                  "tldp": {
+                    "send-on-failure": true
+                  }
+                },
+                "pim-snooping": {
+                  "hold-time": 26,
+                  "ipv4": {
+                    "admin-state": "unlocked"
+                  },
+                  "ipv6": {
+                    "admin-state": "unlocked"
+                  },
+                  "mode": "snoop"
+                },
+                "proxy-nd": {
+                  "admin-state": "unlocked",
+                  "evpn": {
+                    "advertise-neighbor-type": "router"
+                  }
+                }
+              }
+            ]
+          },
+          "vpls-type": "standard"
+        }
+      },
+      "intent-type": "vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "vplsProxyNd",
+      "template-name": "vplsGapAnalysis"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "evpn-vpls:evpn-vpls": {
+          "customer-id": 1,
+          "ne-service-id": 600,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15",
+                "evpn-type": "mpls",
+                "routed-vpls": true,
+                "site-name": "test"
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "evpn-vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc",
+      "template-name": "evpn-vplsGapAnalysis"
+    }
+  ]
+}

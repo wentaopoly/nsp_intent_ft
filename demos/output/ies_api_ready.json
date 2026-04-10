@@ -1,0 +1,51 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "ies",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "ies-default",
+      "intent-specific-data": {
+        "ies:ies": {
+          "customer-id": 15,
+          "ne-service-id": 300,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "site-name": "IES-300-Access",
+                "interface": [
+                  {
+                    "interface-name": "AccessPort1",
+                    "sap": {
+                      "port-id": "1/2/c4/1"
+                    },
+                    "ipv4": {
+                      "primary": {
+                        "address": "10.30.1.1",
+                        "prefix-length": 24
+                      }
+                    }
+                  },
+                  {
+                    "interface-name": "AccessPort2",
+                    "sap": {
+                      "port-id": "1/2/c5/1"
+                    },
+                    "ipv4": {
+                      "primary": {
+                        "address": "10.30.2.1",
+                        "prefix-length": 24
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "IES-300-Access"
+    }
+  ]
+}

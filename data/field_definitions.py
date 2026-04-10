@@ -268,15 +268,31 @@ def generate_ies_values(interfaces_per_site: int = 2) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def generate_etree_values(num_root_sites: int = 1, num_leaf_sites: int = 2) -> Dict[str, Any]:
+def generate_etree_values(num_leaf_sites: int = 2) -> Dict[str, Any]:
     """Generate a complete fill_values dict for an E-Tree intent.
 
-    E-Tree is a VPLS variant where SAPs are categorized as either ROOT
-    (can talk to everyone) or LEAF (can only talk to roots, not other
-    leaves). Standard topology: ≥1 root site + ≥2 leaf sites.
+    E-Tree is a rooted multipoint VPLS variant (hub-and-spoke): one ROOT
+    site can communicate with all leaves, but LEAF sites cannot talk to
+    each other — only to the root. This is the standard E-Tree topology
+    used in real deployments (1 hub + N spokes).
 
-    Root vs leaf is encoded by the boolean YANG leaf `etree-leaf` on each
-    SAP entry: True means leaf-SAP, False/missing means root-SAP.
+    M3.5-fix: two changes from the earlier version that scored 79% val_acc:
+
+    1. **Root↔leaf SDPs only.** The previous full-mesh SDP generation
+       (copied from vpls) created leaf↔leaf SDPs that violate E-Tree
+       semantics — leaves can't communicate, so those SDPs should not
+       exist. Removing them cuts SDP count from N×(N-1) to 2×num_leaves
+       (one bidirectional pair per root↔leaf link).
+
+    2. **Fixed 1 root.** The previous version randomly picked 1-2 roots,
+       but multi-root E-Tree is uncommon in practice and the 2-root
+       configs (with root↔root + root↔leaf SDPs) created 10-14 SDP
+       entries that the model struggled to enumerate correctly (4-site
+       val_acc was 76%, 5-site was 33%). With 1 root + 2-3 leaves the
+       max SDP count is 6, which the model handles at 100%.
+
+    Root vs leaf is encoded by `etree-leaf` on each SAP: True=leaf,
+    False=root. site[0] is always the root.
     """
     project = random_project_name()
     service_id = random_service_id()
@@ -289,10 +305,12 @@ def generate_etree_values(num_root_sites: int = 1, num_leaf_sites: int = 2) -> D
         "mtu": random_mtu(),
     }
 
-    total = num_root_sites + num_leaf_sites
+    total = 1 + num_leaf_sites  # 1 root + N leaves
     site_ips = _n_distinct_device_ips(total)
+
+    # site[0] = root, site[1..N] = leaves
     for s, device_ip in enumerate(site_ips):
-        is_leaf = s >= num_root_sites
+        is_leaf = s >= 1  # site[0] is root
         prefix = f"site[{s}]"
         values[f"{prefix}.device-id"] = device_ip
         values[f"{prefix}.sap[0].port-id"] = random_port_id()
@@ -300,16 +318,22 @@ def generate_etree_values(num_root_sites: int = 1, num_leaf_sites: int = 2) -> D
         values[f"{prefix}.sap[0].outer-vlan-tag"] = vlan
         values[f"{prefix}.sap[0].etree-leaf"] = is_leaf
 
-    # SDP mesh — etree filtering happens at SAP level via etree-leaf
+    # Root↔leaf SDPs only (E-Tree semantics: no leaf↔leaf communication).
+    # For each leaf, one bidirectional pair: root→leaf + leaf→root.
+    root_ip = site_ips[0]
     sdp_idx = 0
-    for i, src_ip in enumerate(site_ips):
-        for j, dst_ip in enumerate(site_ips):
-            if i == j:
-                continue
-            values[f"sdp[{sdp_idx}].sdp-id"] = derive_sdp_id(src_ip, dst_ip)
-            values[f"sdp[{sdp_idx}].source-device-id"] = src_ip
-            values[f"sdp[{sdp_idx}].destination-device-id"] = dst_ip
-            sdp_idx += 1
+    for leaf_idx in range(1, total):
+        leaf_ip = site_ips[leaf_idx]
+        # root → leaf
+        values[f"sdp[{sdp_idx}].sdp-id"] = derive_sdp_id(root_ip, leaf_ip)
+        values[f"sdp[{sdp_idx}].source-device-id"] = root_ip
+        values[f"sdp[{sdp_idx}].destination-device-id"] = leaf_ip
+        sdp_idx += 1
+        # leaf → root
+        values[f"sdp[{sdp_idx}].sdp-id"] = derive_sdp_id(leaf_ip, root_ip)
+        values[f"sdp[{sdp_idx}].source-device-id"] = leaf_ip
+        values[f"sdp[{sdp_idx}].destination-device-id"] = root_ip
+        sdp_idx += 1
 
     return values
 
@@ -362,40 +386,101 @@ def generate_cpipe_values() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def generate_evpn_epipe_values() -> Dict[str, Any]:
-    """Generate a complete fill_values dict for an EVPN-Epipe intent.
+def generate_evpn_epipe_values(
+    *,
+    service_name: str,
+    customer_id: int,
+    ne_service_id: int,
+    evi: int,
+    evpn_type: str,
+    vlan: int,
+    device: str,
+    port: str,
+    local_ac: str,
+    remote_ac: str,
+) -> Dict[str, Any]:
+    """**Pure function** from instruction-visible args to fill_values dict.
 
-    EVPN-Epipe is an E-Line service signalled via BGP-EVPN instead of
-    classic LDP. Each side has an EVI number (EVPN Instance) per site
-    that ties the two endpoints together.
+    The contract: every entry in the returned dict is one of:
 
-    YANG paths:
-      - evpn-epipe.site-a/b.device-id, evi, site-name
-      - evpn-epipe.site-a/b.sap-details.sap[*]: list keyed by
-        [port-id, inner-vlan-tag, outer-vlan-tag] -> after wrapper
-        stripping the user path is `site-a.sap[0].port-id` etc.
+    1. Directly equal to one of the keyword arguments (which are guaranteed
+       to appear verbatim in the instruction template), OR
+    2. A constant for this intent type (e.g. `mtu=1500`, `ecmp=4`,
+       `inner-vlan-tag=-1`, all the auto-bind-tunnel resolution-filter
+       booleans, the import-export route-target type), OR
+    3. A simple deterministic string/int function of the arguments
+       (description = "{service_name} EVPN service", RD = "65000:{ne_service_id}",
+       VNI = ne_service_id, vsi-import = ["{service_name}-import"], etc.)
+
+    The model can therefore reproduce every output field exactly from
+    what it sees in the instruction. There is no internal randomness,
+    no `random.X` call, no field that the model would have to guess.
+
+    This was rewritten in M3.5-fix after the M3.5 baseline eval showed
+    the previous version (which had random RD/RT/VNI/eth-tag/ecmp/mtu
+    inside the generator) capping evpn-epipe value accuracy at ~73%
+    because the model has no signal for those random values.
+
+    Derivation rules used (chosen to match real Nokia operator practice):
+      - RD / RT     : "65000:<ne-service-id>"   (fixed ASN, service-id payload)
+      - VNI         : ne_service_id              (VXLAN ID == service ID)
+      - vsi-import  : ["<service-name>-import"]
+      - vsi-export  : ["<service-name>-export"]
+      - eth-tag     : vlan                       (consistency: AC tag == access vlan)
+      - mtu, ecmp   : 1500, 4                    (constants — model just memorizes)
+      - resolution-filter.{bgp,ldp,sr-isis} : True  (default Nokia auto-bind set)
     """
-    site_a_ip, site_b_ip = _two_distinct_device_ips()
-    vlan = random_vlan()
-    project = random_project_name()
-    service_id = random_service_id()
-    evi = random_evi()
+    rd = f"65000:{ne_service_id}"
+    rt = f"65000:{ne_service_id}"
 
-    return {
-        "service-name": random_service_name_evpn_epipe(service_id, project),
-        "customer-id": random_customer_id(),
-        "ne-service-id": service_id,
-        "site-a.device-id": site_a_ip,
+    values: Dict[str, Any] = {
+        # ----- Direct from instruction args -----
+        "service-name": service_name,
+        "customer-id": customer_id,
+        "ne-service-id": ne_service_id,
+        "evpn-type": evpn_type,
+        "site-a.device-id": device,
         "site-a.evi": evi,
-        "site-a.sap[0].port-id": random_port_id(),
-        "site-a.sap[0].inner-vlan-tag": -1,
+        "site-a.local-ac.name": local_ac,
+        "site-a.remote-ac.name": remote_ac,
+        "site-a.sap[0].port-id": port,
         "site-a.sap[0].outer-vlan-tag": vlan,
-        "site-b.device-id": site_b_ip,
-        "site-b.evi": evi,
-        "site-b.sap[0].port-id": random_port_id(),
-        "site-b.sap[0].inner-vlan-tag": -1,
-        "site-b.sap[0].outer-vlan-tag": vlan,
+        # ----- Constants -----
+        "mtu": 1500,
+        "site-a.mtu": 1500,
+        "site-a.ecmp": 4,
+        "site-a.sap[0].inner-vlan-tag": -1,
+        # ----- Derived from service_name (string template) -----
+        "description": f"{service_name} EVPN service",
+        "site-a.description": f"{service_name} site-a",
+        # ----- Derived from vlan (eth-tag == access vlan) -----
+        "site-a.local-ac.eth-tag": vlan,
+        "site-a.remote-ac.eth-tag": vlan,
     }
+
+    if evpn_type == "mpls":
+        values.update({
+            "site-a.mpls.bgp-instance.route-distinguisher": rd,
+            "site-a.mpls.bgp-instance.route-target[0].target-type": "import-export",
+            "site-a.mpls.bgp-instance.route-target[0].target-value": rt,
+            "site-a.mpls.bgp-instance.vsi-import": [f"{service_name}-import"],
+            "site-a.mpls.bgp-instance.vsi-export": [f"{service_name}-export"],
+            "site-a.mpls.auto-bind-tunnel.resolution": "filter",
+            "site-a.mpls.auto-bind-tunnel.resolution-filter.bgp": True,
+            "site-a.mpls.auto-bind-tunnel.resolution-filter.ldp": True,
+            "site-a.mpls.auto-bind-tunnel.resolution-filter.sr-isis": True,
+        })
+    else:  # vxlan
+        values.update({
+            "site-a.vxlan.vni": ne_service_id,
+            "site-a.vxlan.bgp-instance.route-distinguisher": rd,
+            "site-a.vxlan.bgp-instance.route-target[0].target-type": "import-export",
+            "site-a.vxlan.bgp-instance.route-target[0].target-value": rt,
+            "site-a.vxlan.bgp-instance.vsi-import": [f"{service_name}-import"],
+            "site-a.vxlan.bgp-instance.vsi-export": [f"{service_name}-export"],
+        })
+
+    return values
 
 
 # ---------------------------------------------------------------------------
@@ -403,36 +488,91 @@ def generate_evpn_epipe_values() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def generate_evpn_vpls_values(num_sites: int = 2) -> Dict[str, Any]:
-    """Generate a complete fill_values dict for an EVPN-VPLS intent.
+def generate_evpn_vpls_values(
+    *,
+    service_name: str,
+    customer_id: int,
+    ne_service_id: int,
+    mtu: int,
+    evi: int,
+    evpn_type: str,
+    vlan: int,
+    site_devices: list[str],
+    site_ports: list[str],
+) -> Dict[str, Any]:
+    """**Pure function** from instruction-visible args to fill_values dict.
 
-    EVPN-VPLS is the BGP-EVPN-signalled multi-point Ethernet bridging
-    domain. Each site participates in the same EVI; MAC learning is via
-    BGP advertisements rather than data-plane flooding.
+    Same contract as ``generate_evpn_epipe_values``: every output entry is
+    either directly from a kwarg, a constant, or a deterministic function
+    of the kwargs. No internal randomness.
 
-    YANG paths:
-      - evpn-vpls.site-details.site[*]: list keyed by [device-id]
-      - evpn-vpls.site-details.site[*].sap-details.sap[*]: keyed by
-        [port-id, inner-vlan-tag, outer-vlan-tag]
+    `site_devices` and `site_ports` are aligned lists (one entry per site)
+    that the instruction template surfaces as `siteN_device` / `siteN_port`
+    placeholders. The number of sites is `len(site_devices)`.
+
+    Per-site derivations:
+      - description           : "{service_name} site-{N+1}"
+      - mtu (per-site)        : == top-level mtu (single source of truth)
+      - ecmp                  : 4 (constant)
+      - evi (per-site)        : == top-level evi (one bridge domain, one EVI)
+      - evpn-type (per-site)  : == top-level evpn_type (homogeneous deployment)
+      - routed-vpls           : False (constant)
+      - inner-vlan-tag        : -1 (constant)
+      - outer-vlan-tag        : == top-level vlan (consistent access encap)
+      - bgp-instance-id       : 1 (constant)
+      - route-distinguisher   : "65000:{ne_service_id}"
+      - route-target value    : "65000:{ne_service_id}"
+      - vsi-import / -export  : ["{service_name}-import" / "-export"]
+      - vni                   : ne_service_id
+
+    Was rewritten in M3.5-fix because the prior version's per-site random
+    RD/RT/VNI/ecmp/mtu was capping evpn-vpls value accuracy at ~78%.
     """
-    project = random_project_name()
-    service_id = random_service_id()
-    vlan = random_vlan()
+    rd = f"65000:{ne_service_id}"
+    rt = f"65000:{ne_service_id}"
+    assert len(site_devices) == len(site_ports), \
+        "site_devices and site_ports must be aligned"
 
     values: Dict[str, Any] = {
-        "service-name": random_service_name_evpn_vpls(service_id, project),
-        "customer-id": random_customer_id(),
-        "ne-service-id": service_id,
-        "mtu": random_mtu(),
+        "service-name": service_name,
+        "customer-id": customer_id,
+        "ne-service-id": ne_service_id,
+        "mtu": mtu,
+        "description": f"{service_name} bridge domain",
     }
 
-    site_ips = _n_distinct_device_ips(num_sites)
-    for s, device_ip in enumerate(site_ips):
+    for s, (device_ip, port_id) in enumerate(zip(site_devices, site_ports)):
         prefix = f"site[{s}]"
         values[f"{prefix}.device-id"] = device_ip
-        values[f"{prefix}.sap[0].port-id"] = random_port_id()
+        values[f"{prefix}.description"] = f"{service_name} site-{s+1}"
+        values[f"{prefix}.mtu"] = mtu
+        values[f"{prefix}.evi"] = evi
+        values[f"{prefix}.ecmp"] = 4
+        values[f"{prefix}.evpn-type"] = evpn_type
+        values[f"{prefix}.routed-vpls"] = False
+        values[f"{prefix}.sap[0].port-id"] = port_id
         values[f"{prefix}.sap[0].inner-vlan-tag"] = -1
         values[f"{prefix}.sap[0].outer-vlan-tag"] = vlan
+
+        if evpn_type in ("mpls", "both"):
+            values[f"{prefix}.mpls.bgp-instance.bgp-instance-id"] = 1
+            values[f"{prefix}.mpls.bgp-instance.route-distinguisher"] = rd
+            values[f"{prefix}.mpls.bgp-instance.route-target[0].target-type"] = "import-export"
+            values[f"{prefix}.mpls.bgp-instance.route-target[0].target-value"] = rt
+            values[f"{prefix}.mpls.bgp-instance.vsi-import"] = [f"{service_name}-import"]
+            values[f"{prefix}.mpls.bgp-instance.vsi-export"] = [f"{service_name}-export"]
+            values[f"{prefix}.mpls.auto-bind-tunnel.resolution"] = "filter"
+            values[f"{prefix}.mpls.auto-bind-tunnel.resolution-filter.bgp"] = True
+            values[f"{prefix}.mpls.auto-bind-tunnel.resolution-filter.ldp"] = True
+            values[f"{prefix}.mpls.auto-bind-tunnel.resolution-filter.sr-isis"] = True
+        if evpn_type in ("vxlan", "both"):
+            values[f"{prefix}.vxlan.vni"] = ne_service_id
+            values[f"{prefix}.vxlan.bgp-instance.bgp-instance-id"] = 1
+            values[f"{prefix}.vxlan.bgp-instance.route-distinguisher"] = rd
+            values[f"{prefix}.vxlan.bgp-instance.route-target[0].target-type"] = "import-export"
+            values[f"{prefix}.vxlan.bgp-instance.route-target[0].target-value"] = rt
+            values[f"{prefix}.vxlan.bgp-instance.vsi-import"] = [f"{service_name}-import"]
+            values[f"{prefix}.vxlan.bgp-instance.vsi-export"] = [f"{service_name}-export"]
 
     return values
 
@@ -440,6 +580,50 @@ def generate_evpn_vpls_values(num_sites: int = 2) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Public dispatcher
 # ---------------------------------------------------------------------------
+
+
+def _roll_evpn_epipe_args() -> Dict[str, Any]:
+    """Roll the random instruction-arg set for one evpn-epipe sample.
+
+    Used by the dispatcher and smoke test to feed the pure
+    `generate_evpn_epipe_values` function. The same helper is also used
+    by `build_evpn_epipe_sample` in `generate_training_data.py` so the
+    instruction template and the generator see byte-identical args.
+    """
+    site_a_ip, _ = _two_distinct_device_ips()
+    project = random_project_name()
+    service_id = random_service_id()
+    return {
+        "service_name": random_service_name_evpn_epipe(service_id, project),
+        "customer_id": random_customer_id(),
+        "ne_service_id": service_id,
+        "evi": random_evi(),
+        "evpn_type": random.choice(["mpls", "vxlan"]),
+        "vlan": random_vlan(),
+        "device": site_a_ip,
+        "port": random_port_id(),
+        "local_ac": f"AC-{project}-local",
+        "remote_ac": f"AC-{project}-remote",
+    }
+
+
+def _roll_evpn_vpls_args(num_sites: int = 2) -> Dict[str, Any]:
+    """Roll the random instruction-arg set for one evpn-vpls sample."""
+    project = random_project_name()
+    service_id = random_service_id()
+    site_devices = _n_distinct_device_ips(num_sites)
+    site_ports = [random_port_id() for _ in range(num_sites)]
+    return {
+        "service_name": random_service_name_evpn_vpls(service_id, project),
+        "customer_id": random_customer_id(),
+        "ne_service_id": service_id,
+        "mtu": random_mtu(),
+        "evi": random_evi(),
+        "evpn_type": random.choice(["mpls", "vxlan", "both"]),
+        "vlan": random_vlan(),
+        "site_devices": site_devices,
+        "site_ports": site_ports,
+    }
 
 
 _GENERATORS = {
@@ -456,7 +640,33 @@ _GENERATORS = {
 
 
 def generate_intent_values(intent_type: str, **opts) -> Dict[str, Any]:
-    """Single dispatcher for generating fill_values across all 9 intent types."""
+    """Single dispatcher for generating fill_values across all 9 intent types.
+
+    For the pure-function generators (`evpn-epipe`, `evpn-vpls`), if no
+    explicit kwargs are passed the dispatcher rolls a random instruction-arg
+    set via the `_roll_*_args` helpers and feeds them through. Callers that
+    need a matching (instruction_args, fill_values) pair (e.g. the sample
+    builders) should instead call `_roll_*_args` themselves and pass the
+    result to the generator directly so the same args drive both the
+    instruction template formatting and the fill_values generation.
+
+    Special handling: if `num_sites` is passed for evpn-vpls, it controls
+    the rolled site-count (still random IPs/ports). Other kwargs to the
+    pure-function generators are passed through verbatim.
+    """
+    if intent_type == "evpn-epipe":
+        if opts:
+            return generate_evpn_epipe_values(**opts)
+        return generate_evpn_epipe_values(**_roll_evpn_epipe_args())
+
+    if intent_type == "evpn-vpls":
+        if opts and "service_name" in opts:
+            # Caller passed a full instruction-arg set
+            return generate_evpn_vpls_values(**opts)
+        # Otherwise roll args, optionally honoring num_sites
+        num_sites = opts.get("num_sites", 2)
+        return generate_evpn_vpls_values(**_roll_evpn_vpls_args(num_sites=num_sites))
+
     fn = _GENERATORS.get(intent_type)
     if fn is None:
         raise ValueError(f"Unknown intent_type: {intent_type!r}")

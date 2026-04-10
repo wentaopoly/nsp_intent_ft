@@ -1,0 +1,60 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "vpls",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "vpls-default",
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "customer-id": 20,
+          "ne-service-id": 500,
+          "mtu": 1500,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c4/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 500
+                    }
+                  ]
+                }
+              },
+              {
+                "device-id": "192.168.0.37",
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c5/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 500
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "sdp-details": {
+            "sdp": [
+              {
+                "sdp-id": "1637",
+                "source-device-id": "192.168.0.16",
+                "destination-device-id": "192.168.0.37"
+              },
+              {
+                "sdp-id": "3716",
+                "source-device-id": "192.168.0.37",
+                "destination-device-id": "192.168.0.16"
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "VPLS-500-Campus"
+    }
+  ]
+}

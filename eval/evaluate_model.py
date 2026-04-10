@@ -30,6 +30,7 @@ from intent_validator import (
     validate_fill_values as _validate_fill_values_yang,
     validate_merged_intent as _validate_merged_intent,
     validate_semantic as _validate_semantic,
+    validate_canonical_similarity as _validate_canonical_similarity,
 )
 # validate_sample (the legacy shim) is imported lazily inside evaluate_single
 # so the import set stays free of dead names.
@@ -52,6 +53,11 @@ def evaluate_single(prediction_text, ground_truth):
         "all_tiers_valid": False, # all three tiers AND merge succeeds
         "yang_errors": [],
         "tier_errors": {},
+        # Tier 6 — canonical-payload similarity (M3.5 polish). Informational
+        # only; doesn't gate any of the *_valid booleans.
+        "tier6_known": 0,
+        "tier6_novel": 0,
+        "tier6_has_canonical": False,
     }
 
     # 1. JSON validity
@@ -134,6 +140,15 @@ def evaluate_single(prediction_text, ground_truth):
 
             scores["all_tiers_valid"] = ok12 and ok3 and ok4
             scores["tier_errors"] = tier_errors
+
+            # Tier 6 — canonical-payload similarity (informational).
+            try:
+                n_known, n_novel, _ = _validate_canonical_similarity(pred_type, pred_fv)
+                scores["tier6_known"] = n_known
+                scores["tier6_novel"] = n_novel
+                scores["tier6_has_canonical"] = (n_known + n_novel) > 0
+            except Exception:
+                pass
         except Exception as exc:
             scores["tier1_2_valid"] = False
             scores["yang_valid"] = False
@@ -219,6 +234,15 @@ def run_evaluation(model, tokenizer, test_file, label="Test"):
         "Tier 4 Valid (semantic)": sum(s["tier4_valid"] for s in all_scores) / n,
         "All Tiers Valid": sum(s["all_tiers_valid"] for s in all_scores) / n,
     }
+
+    # Tier 6 — canonical-payload similarity, restricted to samples whose
+    # intent type has fixtures vendored (otherwise the metric is meaningless).
+    t6_scored = [s for s in all_scores if s["tier6_has_canonical"]]
+    if t6_scored:
+        tot_known = sum(s["tier6_known"] for s in t6_scored)
+        tot_novel = sum(s["tier6_novel"] for s in t6_scored)
+        denom = tot_known + tot_novel
+        metrics["Tier 6 Canonical Recognition"] = (tot_known / denom) if denom else 0.0
 
     # SDP check (epipe only)
     sdp_scores = [s["sdp_bidirectional"] for s in all_scores if s["sdp_bidirectional"] is not None]

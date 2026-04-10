@@ -1,0 +1,33 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "ne-service-id": 381,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15",
+                "mtu": 1400,
+                "pbb": {
+                  "backbone-vpls": {
+                    "backbone-vpls-service-name": "referenceBvpls",
+                    "isid": 345
+                  }
+                }
+              }
+            ]
+          },
+          "vpls-type": "ivpls"
+        }
+      },
+      "intent-type": "vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "vplsIsite",
+      "template-name": "vplsGapAnalysis"
+    }
+  ]
+}

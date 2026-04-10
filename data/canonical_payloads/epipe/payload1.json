@@ -1,0 +1,266 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "epipe:epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "svcDescription",
+          "job-id": "1111",
+          "mtu": 1515,
+          "ne-service-id": 1213,
+          "sdp-details": {
+            "sdp": [
+              {
+                "accounting-policy-id": 10,
+                "admin-state": "unlocked",
+                "collect-stats": true,
+                "control-word": true,
+                "description": "newDesc",
+                "destination-device-id": "16.16.16.16",
+                "hash-label": {
+                  "signal-capability": [
+                    null
+                  ]
+                },
+                "override-vc-id": true,
+                "pw-status": {
+                  "signaling": true,
+                  "standby-signaling-slave": true
+                },
+                "sdp-id": "800",
+                "source-device-id": "15.15.15.15",
+                "steering-parameter": "12",
+                "vc-id": "1213",
+                "vc-type": "vlan",
+                "vlan-vc-tag": 63
+              }
+            ]
+          },
+          "site-a": {
+            "description": "siteADesc",
+            "device-id": "15.15.15.15",
+            "endpoint": [
+              {
+                "accounting-policy-id": 1,
+                "admin-state": "unlocked",
+                "collect-stats": true,
+                "cpu-protection": {
+                  "policy-id": "255"
+                },
+                "description": "portDesc",
+                "egress": {
+                  "percent-agg-rate": {
+                    "cir": "40",
+                    "pir": "50"
+                  },
+                  "filter": {
+                    "ip": "test-ipfilter",
+                    "ipv6": "test-ipv6filter"
+                  },
+                  "qos": {
+                    "egress-remark-policy": {
+                      "policy-name": "EgressRemarkPolicy"
+                    },
+                    "policer-control-policy": {
+                      "overrides": {
+                        "root": {
+                          "max-rate": 342,
+                          "priority-mbs-thresholds": {
+                            "min-thresh-separation": 34,
+                            "priority": [
+                              {
+                                "mbs-contribution": 43,
+                                "priority-level": 3
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "policy-name": "policerPol"
+                    },
+                    "qinq-mark-top-only": true,
+                    "sap-egress": {
+                      "overrides": {
+                        "policer": [
+                          {
+                            "cbs": "1000",
+                            "mbs": "2000",
+                            "policer-id": 1,
+                            "rate": {
+                              "cir": "5000",
+                              "pir": "6000"
+                            },
+                            "stat-mode": "minimal"
+                          },
+                          {
+                            "cbs": "2000",
+                            "mbs": "3000",
+                            "percent-rate": {
+                              "cir": "30",
+                              "pir": "70"
+                            },
+                            "policer-id": 2
+                          }
+                        ],
+                        "queue": [
+                          {
+                            "cbs": "34",
+                            "mbs": "43",
+                            "queue-id": 2,
+                            "rate": {
+                              "cir": "34",
+                              "pir": "43"
+                            }
+                          }
+                        ]
+                      },
+                      "policy-name": "sapEgr988"
+                    },
+                    "scheduler-policy": {
+                      "overrides": {
+                        "scheduler": [
+                          {
+                            "parent": {
+                              "cir-weight": 90,
+                              "weight": 70
+                            },
+                            "rate": {
+                              "cir": "7000",
+                              "pir": "8000"
+                            },
+                            "scheduler-name": "Scheduler_Ingress_1"
+                          }
+                        ]
+                      },
+                      "policy-name": "Scheduler_Policy_1"
+                    },
+                    "vlan-qos-policy": {
+                      "policy-name": "VlanQosPolicyName",
+                      "port-redirect": true
+                    }
+                  },
+                  "scheduler-mode": "fourPriority",
+                  "vlan-manipulation": {
+                    "action": "translate-1-to-2",
+                    "tag": "use-sap-vlan"
+                  }
+                },
+                "enable-filter": true,
+                "enable-qos": true,
+                "ingress": {
+                  "percent-agg-rate": {
+                    "cir": "40",
+                    "pir": "50"
+                  },
+                  "filter": {
+                    "ip": "test-ipfilter",
+                    "ipv6": "test-ipv6filter"
+                  },
+                  "aggregate-policer": {
+                    "burst": 4344,
+                    "cbs": 43,
+                    "cir": 4343,
+                    "rate": 434
+                  },
+                  "qos": {
+                    "match-qinq-dot1p": "top",
+                    "policer-control-policy": {
+                      "overrides": {
+                        "root": {
+                          "max-rate": "max",
+                          "priority-mbs-thresholds": {
+                            "min-thresh-separation": "auto",
+                            "priority": [
+                              {
+                                "mbs-contribution": 32,
+                                "priority-level": 2
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "policy-name": "policerPol"
+                    },
+                    "sap-ingress": {
+                      "overrides": {
+                        "policer": [
+                          {
+                            "cbs": "1000",
+                            "mbs": "2000",
+                            "policer-id": 1,
+                            "rate": {
+                              "cir": "5000",
+                              "pir": "6000"
+                            },
+                            "stat-mode": "minimal"
+                          },
+                          {
+                            "cbs": "2000",
+                            "mbs": "3000",
+                            "percent-rate": {
+                              "cir": "30",
+                              "pir": "70"
+                            },
+                            "policer-id": 2
+                          }
+                        ],
+                        "queue": [
+                          {
+                            "cbs": "32",
+                            "mbs": "32",
+                            "queue-id": 1,
+                            "rate": {
+                              "cir": "32",
+                              "pir": "32"
+                            }
+                          }
+                        ]
+                      },
+                      "policy-name": "sapIng987",
+                      "queuing-type": "shared"
+                    },
+                    "scheduler-policy": {
+                      "overrides": {
+                        "scheduler": [
+                          {
+                            "parent": {
+                              "cir-weight": 90,
+                              "weight": 70
+                            },
+                            "rate": {
+                              "cir": "7000",
+                              "pir": "8000"
+                            },
+                            "scheduler-name": "Scheduler_Ingress_1"
+                          }
+                        ]
+                      },
+                      "policy-name": "Scheduler_Policy_1"
+                    }
+                  },
+                  "scheduler-mode": "fourPriority",
+                  "vlan-manipulation": {
+                    "action": "translate-1-to-1",
+                    "inner-tag": 43,
+                    "outer-tag": 43
+                  }
+                },
+                "inner-vlan-tag": 45,
+                "outer-vlan-tag": 54,
+                "port-id": "1/1/9"
+              }
+            ],
+            "mtu": 1516,
+            "site-name": "siteA"
+          }
+        }
+      },
+      "intent-type": "epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "EpipeService",
+      "template-name": "epipeGapAnalysis"
+    }
+  ]
+}

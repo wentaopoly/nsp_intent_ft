@@ -1,0 +1,40 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vpls:vpls": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "ne-service-id": 360,
+          "site-details": {
+            "site": [
+              {
+                "device-id": "15.15.15.15",
+                "sap-details": {
+                  "sap": [
+                    {
+                      "admin-state": "unlocked",
+                      "connection-profile-id": 20,
+                      "enable-filter": false,
+                      "enable-qos": false,
+                      "encap-type": "dot1q",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": -1,
+                      "port-id": "1/1/8"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "vpls-type": "standard"
+        }
+      },
+      "intent-type": "vpls",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "vplsCP",
+      "template-name": "vplsGapAnalysis"
+    }
+  ]
+}

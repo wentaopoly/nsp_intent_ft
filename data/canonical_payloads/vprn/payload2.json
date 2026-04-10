@@ -1,0 +1,46 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "site-details": {
+            "site": [
+              {
+                "auto-bind-tunnel": {
+                  "enforce-strict-tunnel-tagging": true,
+                  "resolution": "filter",
+                  "resolution-filter": {
+                    "ldp": true
+                  }
+                },
+                "autonomous-system": 65000,
+                "bgp-ipvpn-admin-state": "unlocked",
+                "confederation": {
+                  "confed-as-num": 45001,
+                  "members": [
+                    {
+                      "as-number": 45002
+                    }
+                  ]
+                },
+                "device-id": "15.15.15.15",
+                "mtu": 1506,
+                "ne-service-id": 457,
+                "route-distinguisher": "65001:457",
+                "route-distinguisher-type": "type0",
+                "site-name": "exampleSvc2"
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc2",
+      "template-name": "vprnGapAnalysis"
+    }
+  ]
+}

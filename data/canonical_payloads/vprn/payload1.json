@@ -1,0 +1,1281 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "vprn:vprn": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "sample",
+          "job-id": "566",
+          "sdp-details": {
+            "sdp": [
+              {
+                "description": "tunnel binding desc",
+                "destination-device-id": "16.16.16.16",
+                "interface-name": "intsdp",
+                "override-vc-id": true,
+                "sdp-id": "800",
+                "source-device-id": "15.15.15.15",
+                "steering-parameter": "gold",
+                "vc-id": 456
+              }
+            ]
+          },
+          "site-details": {
+            "site": [
+              {
+                "auto-bind-tunnel": {
+                  "enforce-strict-tunnel-tagging": true,
+                  "resolution": "filter",
+                  "resolution-filter": {
+                    "bgp": true,
+                    "gre": true,
+                    "ldp": true,
+                    "mpls-fwd-policy": true,
+                    "rib-api": true,
+                    "rsvp": true,
+                    "sr-isis": true,
+                    "sr-ospf": true,
+                    "sr-ospf3": true,
+                    "sr-policy": true,
+                    "sr-te": true,
+                    "udp": true
+                  }
+                },
+                "autonomous-system": 65000,
+                "bgp-details": {
+                  "backup-path": {
+                    "ipv4": true,
+                    "ipv6": true,
+                    "label-ipv4": true,
+                    "label-ipv6": true
+                  },
+                  "best-path-selection": {
+                    "always-compare-med": {
+                      "med-value": "missing-med-zero",
+                      "strict-as": true
+                    },
+                    "as-path-ignore": {
+                      "ipv4": true,
+                      "ipv6": true,
+                      "label-ipv4": true
+                    },
+                    "compare-origin-validation-state": true,
+                    "deterministic-med": true,
+                    "ebgp-ibgp-equal": {
+                      "ipv4": true,
+                      "ipv6": true,
+                      "label-ipv4": true
+                    },
+                    "ignore-nh-metric": true,
+                    "ignore-router-id": true,
+                    "origin-invalid-unusable": true
+                  },
+                  "error-handling": {
+                    "update-fault-tolerance": true
+                  },
+                  "graceful-restart": {
+                    "gr-notification": true,
+                    "long-lived": {
+                      "advertise-stale-to-all-neighbors": true,
+                      "advertised-stale-time": 86200,
+                      "family": [
+                        {
+                          "advertised-stale-time": 86300,
+                          "family-type": "ipv6",
+                          "helper-override-stale-time": 86200
+                        }
+                      ],
+                      "forwarding-bits-set": "all",
+                      "helper-override-restart-time": 3001,
+                      "helper-override-stale-time": 2001,
+                      "without-no-export": true
+                    },
+                    "restart-time": 120,
+                    "stale-routes-time": 360
+                  },
+                  "group": [
+                    {
+                      "admin-state": "unlocked",
+                      "authentication-key": "key",
+                      "bfd-liveness": true,
+                      "damping": true,
+                      "export": {
+                        "policy": [
+                          "bgp-export"
+                        ]
+                      },
+                      "family": {
+                        "flow-ipv4": true,
+                        "flow-ipv6": true,
+                        "ipv4": true,
+                        "ipv6": true,
+                        "label-ipv4": true,
+                        "mcast-ipv4": true,
+                        "mcast-ipv6": true
+                      },
+                      "group-name": "g1",
+                      "import": {
+                        "policy": [
+                          "bgp-import"
+                        ]
+                      },
+                      "local-address": "101.1.1.5",
+                      "local-as": {
+                        "as-number": 6200,
+                        "prepend-global-as": true,
+                        "private": true
+                      },
+                      "next-hop-self": true,
+                      "peer-as": 65008,
+                      "peer-ip-tracking": true,
+                      "prefix-limit": [
+                        {
+                          "family": "ipv4",
+                          "idle-timeout": 35,
+                          "maximum": 200,
+                          "threshold": 89
+                        }
+                      ],
+                      "remove-private": {
+                        "limited": true,
+                        "replace": true,
+                        "skip-peer-as": true
+                      },
+                      "split-horizon": true,
+                      "type": "internal"
+                    }
+                  ],
+                  "local-as": {
+                    "as-number": 65007,
+                    "prepend-global-as": true,
+                    "private": true
+                  },
+                  "loop-detect": "drop-peer",
+                  "min-route-advertisement": 33,
+                  "neighbor": [
+                    {
+                      "admin-state": "unlocked",
+                      "as-override": true,
+                      "authentication-key": "key2",
+                      "bfd-liveness": true,
+                      "description": "peeripv6",
+                      "disable-standard-send-communities": true,
+                      "family": {
+                        "flow-ipv4": true,
+                        "flow-ipv6": true,
+                        "ipv4": true,
+                        "ipv6": true,
+                        "label-ipv4": true,
+                        "mcast-ipv4": true,
+                        "mcast-ipv6": true
+                      },
+                      "group-name": "g1",
+                      "hold-time": {
+                        "minimum-hold-time": 15,
+                        "seconds": 45
+                      },
+                      "ip-address": "2600::10",
+                      "keepalive": 25,
+                      "local-address": "2600::1",
+                      "local-preference": "8",
+                      "med-out": "igp-cost",
+                      "peer-as": 65011,
+                      "remove-private": {
+                        "limited": true,
+                        "replace": true,
+                        "skip-peer-as": true
+                      },
+                      "split-horizon": true,
+                      "ttl-security": 199,
+                      "type": "external"
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "as-override": true,
+                      "authentication-key": "key2",
+                      "description": "peer1",
+                      "disable-standard-send-communities": true,
+                      "export-policy": [
+                        "bgp-export"
+                      ],
+                      "family": {
+                        "flow-ipv4": true,
+                        "flow-ipv6": true,
+                        "ipv4": true,
+                        "ipv6": true,
+                        "label-ipv4": true,
+                        "mcast-ipv4": true,
+                        "mcast-ipv6": true
+                      },
+                      "group-name": "g1",
+                      "hold-time": {
+                        "minimum-hold-time": 0
+                      },
+                      "import-policy": [
+                        "bgp-import"
+                      ],
+                      "ip-address": "10.0.0.10",
+                      "peer-as": 60010,
+                      "remove-private": {
+                        "limited": false,
+                        "replace": false,
+                        "skip-peer-as": false
+                      },
+                      "split-horizon": true,
+                      "type": "external"
+                    }
+                  ],
+                  "next-hop-resolution": true,
+                  "path-mtu-discovery": true,
+                  "peer-ip-tracking": true,
+                  "preference": 170,
+                  "rapid-withdrawal": true,
+                  "router-id": "150.150.150.150"
+                },
+                "bgp-evpn": {
+                  "enable-evpn-mpls": false
+                },
+                "bgp-ipvpn-admin-state": "unlocked",
+                "bgp-vpn-backup": {
+                  "ipv4": true,
+                  "ipv6": true
+                },
+                "description": "sample",
+                "device-id": "15.15.15.15",
+                "ecmp": 33,
+                "enable-ebgp": true,
+                "enable-isis": true,
+                "enable-max-routes": true,
+                "enable-ospf": true,
+                "enable-rip": true,
+                "enable-static-route": true,
+                "export-inactive-bgp": true,
+                "ignore-nh-metric": true,
+                "interface-details": {
+                  "interface": [
+                    {
+                      "admin-state": "unlocked",
+                      "cflowd-parameters": {
+                        "sampling": [
+                          {
+                            "direction": "ingress-only",
+                            "sample-profile": 3,
+                            "sampling-type": "unicast",
+                            "type": "acl"
+                          }
+                        ]
+                      },
+                      "description": "int1desc",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": true,
+                            "seconds": 6
+                          },
+                          "up": {
+                            "seconds": 6
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": true,
+                            "seconds": 8
+                          },
+                          "up": {
+                            "seconds": 7
+                          }
+                        }
+                      },
+                      "ingress-stats": true,
+                      "interface-name": "int1",
+                      "ip-mtu": 1515,
+                      "ipv4": {
+                        "bfd": {
+                          "admin-state": "unlocked",
+                          "echo-receive": 121,
+                          "multiplier": 18,
+                          "receive": 2556,
+                          "transmit-interval": 2555,
+                          "type": "auto"
+                        },
+                        "dhcp": {
+                          "admin-state": "unlocked",
+                          "server": [
+                            "30.3.3.3"
+                          ]
+                        },
+                        "icmp": {
+                          "redirects": {
+                            "admin-state": "unlocked",
+                            "number": 980,
+                            "seconds": 54
+                          },
+                          "unreachables": {
+                            "admin-state": "unlocked",
+                            "number": 1990,
+                            "seconds": 55
+                          }
+                        },
+                        "neighbor-discovery": {
+                          "proxy-arp-policy": [
+                            "import_1"
+                          ],
+                          "host-route": {
+                            "populate": [
+                              {
+                                "route-tag": 101,
+                                "route-type": "dynamic"
+                              }
+                            ]
+                          },
+                          "learn-unsolicited": true,
+                          "limit": {
+                            "log-only": true,
+                            "max-entries": 8,
+                            "threshold": 94
+                          },
+                          "local-proxy-arp": true,
+                          "populate": true,
+                          "proactive-refresh": true,
+                          "retry-timer": 289,
+                          "timeout": 45
+                        },
+                        "primary": {
+                          "address": "10.0.0.1",
+                          "prefix-length": 24
+                        },
+                        "secondary": [
+                          {
+                            "address": "20.0.0.1",
+                            "prefix-length": 24
+                          }
+                        ],
+                        "urpf-check": {
+                          "mode": "strict-no-ecmp"
+                        },
+                        "vrrp": [
+                          {
+                            "admin-state": "unlocked",
+                            "backup": [
+                              "10.0.0.2"
+                            ],
+                            "message-interval": 100,
+                            "passive": false,
+                            "ping-reply": true,
+                            "preempt": true,
+                            "priority": 200,
+                            "standby-forwarding": true,
+                            "traceroute-reply": true,
+                            "virtual-router-id": 3
+                          },
+                          {
+                            "admin-state": "unlocked",
+                            "passive": true,
+                            "ping-reply": false,
+                            "preempt": true,
+                            "traceroute-reply": false,
+                            "virtual-router-id": 4
+                          }
+                        ]
+                      },
+                      "ipv6-details": {
+                        "bfd": {
+                          "admin-state": "enable",
+                          "multiplier": 3,
+                          "receive": 310,
+                          "transmit-interval": 290
+                        },
+                        "ipv6": [
+                          {
+                            "duplicate-address-detection": false,
+                            "ipv6-address": "2600::1",
+                            "prefix-length": 64
+                          }
+                        ],
+                        "link-local-address": {
+                          "address": "FE80::C",
+                          "duplicate-address-detection": true
+                        },
+                        "neighbor-discovery": {
+                          "local-proxy-nd": true,
+                          "static-neighbor": [
+                            {
+                              "ipv6-address": "2600::9",
+                              "mac-address": "10:00:00:00:00:0B"
+                            }
+                          ]
+                        },
+                        "urpf-check": {
+                          "mode": "strict-no-ecmp"
+                        },
+                        "vrrp": [
+                          {
+                            "admin-state": "enable",
+                            "backup": [
+                              "2600::9"
+                            ],
+                            "bfd-liveness": {
+                              "dest-ip": "fe20::6",
+                              "interface-name": "int1"
+                            },
+                            "init-delay": 3,
+                            "mac": "0A:0A:0A:52:32:22",
+                            "master-int-inherit": true,
+                            "message-interval": 101,
+                            "ntp-reply": true,
+                            "oper-group": "10",
+                            "owner": false,
+                            "passive": false,
+                            "ping-reply": true,
+                            "policy": "1",
+                            "preempt": true,
+                            "priority": 6,
+                            "standby-forwarding": true,
+                            "telnet-reply": true,
+                            "traceroute-reply": true,
+                            "virtual-router-id": 4
+                          }
+                        ]
+                      },
+                      "isis": {
+                        "admin-state": "unlocked",
+                        "interface-type": "point-to-point",
+                        "isis-instance": "5",
+                        "level-capability": "2",
+                        "passive": true
+                      },
+                      "loopback": false,
+                      "mac": "10:00:00:00:00:0B",
+                      "mac-accounting": true,
+                      "monitor-oper-group": "10",
+                      "ospf": {
+                        "admin-state": "unlocked",
+                        "area-id": "0.0.0.1",
+                        "authentication-key": "key",
+                        "authentication-type": "message-digest",
+                        "bfd-liveness": {
+                          "remain-down-on-failure": true
+                        },
+                        "interface-type": "point-to-point",
+                        "metric": 4,
+                        "passive": true
+                      },
+                      "rip": {
+                        "group-name": "ripG1"
+                      },
+                      "sap": {
+                        "accounting-policy-id": 1,
+                        "admin-state": "unlocked",
+                        "collect-stats": true,
+                        "cpu-protection": {
+                          "policy-id": "255"
+                        },
+                        "description": "my sap desc",
+                        "egress": {
+                          "filter": {
+                            "ip": "test-ipfilter",
+                            "ipv6": "test-ipv6filter"
+                          },
+                          "percent-agg-rate": {
+                            "cir": "40",
+                            "pir": "50"
+                          },
+                          "qos": {
+                            "policer-control-policy": {
+                              "overrides": {
+                                "root": {
+                                  "max-rate": "1000",
+                                  "priority-mbs-thresholds": {
+                                    "min-thresh-separation": 8000,
+                                    "priority": [
+                                      {
+                                        "mbs-contribution": 2000,
+                                        "priority-level": 6
+                                      }
+                                    ]
+                                  }
+                                }
+                              },
+                              "policy-name": "policerPol"
+                            },
+                            "qinq-mark-top-only": true,
+                            "sap-egress": {
+                              "overrides": {
+                                "policer": [
+                                  {
+                                    "cbs": "1000",
+                                    "mbs": "2000",
+                                    "policer-id": 1,
+                                    "rate": {
+                                      "cir": "5000",
+                                      "pir": "6000"
+                                    },
+                                    "stat-mode": "minimal"
+                                  },
+                                  {
+                                    "cbs": "2000",
+                                    "mbs": "3000",
+                                    "percent-rate": {
+                                      "cir": "30",
+                                      "pir": "70"
+                                    },
+                                    "policer-id": 2
+                                  }
+                                ],
+                                "queue": [
+                                  {
+                                    "cbs": "4000",
+                                    "mbs": "4000",
+                                    "queue-id": 1,
+                                    "rate": {
+                                      "cir": "2000",
+                                      "pir": "3000"
+                                    }
+                                  }
+                                ]
+                              },
+                              "policy-name": "sapEgr988"
+                            },
+                            "scheduler-policy": {
+                              "overrides": {
+                                "scheduler": [
+                                  {
+                                    "parent": {
+                                      "cir-weight": 90,
+                                      "weight": 70
+                                    },
+                                    "rate": {
+                                      "cir": "7000",
+                                      "pir": "8000"
+                                    },
+                                    "scheduler-name": "Scheduler_Ingress_1"
+                                  }
+                                ]
+                              },
+                              "policy-name": "Scheduler_Policy_1"
+                            },
+                            "vlan-qos-policy": {
+                              "port-redirect": true
+                            }
+                          }
+                        },
+                        "enable-filter": true,
+                        "enable-qos": true,
+                        "encap-type": "qinq",
+                        "ingress": {
+                          "aggregate-policer": {
+                            "burst": 30000,
+                            "cbs": 19000,
+                            "cir": 18000,
+                            "rate": 20000
+                          },
+                          "filter": {
+                            "ip": "test-ipfilter",
+                            "ipv6": "test-ipv6filter"
+                          },
+                          "percent-agg-rate": {
+                            "cir": "40",
+                            "pir": "50"
+                          },
+                          "qos": {
+                            "match-qinq-dot1p": "top",
+                            "policer-control-policy": {
+                              "overrides": {
+                                "root": {
+                                  "max-rate": "1000",
+                                  "priority-mbs-thresholds": {
+                                    "min-thresh-separation": 8000,
+                                    "priority": [
+                                      {
+                                        "mbs-contribution": 2000,
+                                        "priority-level": 6
+                                      }
+                                    ]
+                                  }
+                                }
+                              },
+                              "policy-name": "policerPol"
+                            },
+                            "sap-ingress": {
+                              "overrides": {
+                                "policer": [
+                                  {
+                                    "cbs": "1000",
+                                    "mbs": "2000",
+                                    "policer-id": 1,
+                                    "rate": {
+                                      "cir": "5000",
+                                      "pir": "6000"
+                                    },
+                                    "stat-mode": "minimal"
+                                  },
+                                  {
+                                    "cbs": "2000",
+                                    "mbs": "3000",
+                                    "percent-rate": {
+                                      "cir": "30",
+                                      "pir": "70"
+                                    },
+                                    "policer-id": 2
+                                  }
+                                ],
+                                "queue": [
+                                  {
+                                    "cbs": "4000",
+                                    "mbs": "4000",
+                                    "queue-id": 1,
+                                    "rate": {
+                                      "cir": "2000",
+                                      "pir": "3000"
+                                    }
+                                  }
+                                ]
+                              },
+                              "policy-name": "sapIng987",
+                              "queuing-type": "shared"
+                            },
+                            "scheduler-policy": {
+                              "overrides": {
+                                "scheduler": [
+                                  {
+                                    "parent": {
+                                      "cir-weight": 90,
+                                      "weight": 70
+                                    },
+                                    "rate": {
+                                      "cir": "7000",
+                                      "pir": "8000"
+                                    },
+                                    "scheduler-name": "Scheduler_Ingress_1"
+                                  }
+                                ]
+                              },
+                              "policy-name": "Scheduler_Policy_1"
+                            }
+                          }
+                        },
+                        "inner-vlan-tag": 456,
+                        "outer-vlan-tag": 456,
+                        "port-id": "1/1/9"
+                      },
+                      "vpls": {
+                        "egress": {
+                          "routed-override-filter": {
+                            "ip": "test-ipfilter",
+                            "ipv6": "test-ipv6filter"
+                          }
+                        },
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 225,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 224,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false,
+                        "ingress": {
+                          "routed-override-filter": {
+                            "ip": "test-ipfilter",
+                            "ipv6": "test-ipv6filter"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intsdp",
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "outer-vlan-tag": -1
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intloop",
+                      "loopback": true,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "outer-vlan-tag": -1
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intVrrp2",
+                      "ipv6-details": {
+                        "vrrp": [
+                          {
+                            "admin-state": "enable",
+                            "message-interval": 100,
+                            "ntp-reply": false,
+                            "owner": true,
+                            "passive": true,
+                            "ping-reply": false,
+                            "preempt": true,
+                            "standby-forwarding": false,
+                            "telnet-reply": false,
+                            "traceroute-reply": false,
+                            "virtual-router-id": 5
+                          }
+                        ]
+                      },
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "outer-vlan-tag": -1
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intAggRate",
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "egress": {
+                          "agg-rate": {
+                            "cir": 3000,
+                            "rate": "2000"
+                          }
+                        },
+                        "enable-filter": true,
+                        "enable-qos": true,
+                        "encap-type": "qinq",
+                        "ingress": {
+                          "agg-rate": {
+                            "cir": 3000,
+                            "rate": "2000"
+                          }
+                        },
+                        "inner-vlan-tag": 456,
+                        "outer-vlan-tag": 10,
+                        "port-id": "1/1/9"
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intIpsec",
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "ip-tunnel": [
+                          {
+                            "admin-state": "unlocked",
+                            "delivery-service": "asdf",
+                            "dest-ip": [
+                              {
+                                "dest-ip-address": "1.1.1.1"
+                              }
+                            ],
+                            "gre-header": {
+                              "admin-state": "unlocked"
+                            },
+                            "ip-mtu": 1511,
+                            "local-ip-address": "3.3.3.3",
+                            "remote-ip-address": "2.2.2.2",
+                            "tunnel-name": "test-tunnel"
+                          }
+                        ],
+                        "outer-vlan-tag": 456,
+                        "port-id": "tunnel-1.private"
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intVpls",
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "outer-vlan-tag": -1
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": true,
+                        "vpls-name": "test"
+                      }
+                    },
+                    {
+                      "admin-state": "unlocked",
+                      "hold-time": {
+                        "ipv4": {
+                          "down": {
+                            "init-only": false
+                          }
+                        },
+                        "ipv6": {
+                          "down": {
+                            "init-only": false
+                          }
+                        }
+                      },
+                      "ingress-stats": false,
+                      "interface-name": "intipv6",
+                      "ipv6-details": {
+                        "ipv6": [
+                          {
+                            "duplicate-address-detection": true,
+                            "ipv6-address": "2609::1",
+                            "prefix-length": 64
+                          }
+                        ],
+                        "vrrp": [
+                          {
+                            "admin-state": "enable",
+                            "monitor-oper-group": "monGroup",
+                            "virtual-router-id": 6
+                          }
+                        ]
+                      },
+                      "loopback": false,
+                      "sap": {
+                        "admin-state": "unlocked",
+                        "enable-filter": false,
+                        "enable-qos": false,
+                        "inner-vlan-tag": -1,
+                        "multi-service-site": "test",
+                        "outer-vlan-tag": -1
+                      },
+                      "vpls": {
+                        "evpn": {
+                          "arp": {
+                            "advertise-dynamic": false,
+                            "advertise-dynamic-route-tag": 0,
+                            "advertise-static": false,
+                            "advertise-static-route-tag": 0,
+                            "learn-dynamic": true
+                          }
+                        },
+                        "evpn-tunnel": false
+                      }
+                    }
+                  ]
+                },
+                "ipv6": {
+                  "router-advertisement": {
+                    "interface": [
+                      {
+                        "admin-state": "disable",
+                        "current-hop-limit": 63,
+                        "dns-options": {
+                          "include-rdnss": true,
+                          "rdnss-lifetime": 1805,
+                          "server": [
+                            "fe40::9"
+                          ]
+                        },
+                        "ip-int-name": "int1",
+                        "managed-configuration": true,
+                        "max-advertisement-interval": 601,
+                        "min-advertisement-interval": 200,
+                        "mtu": 1400,
+                        "nd-router-preference": "medium",
+                        "other-stateful-configuration": true,
+                        "prefix": [
+                          {
+                            "autonomous": true,
+                            "ipv6-prefix": "2002::0/64",
+                            "on-link": true,
+                            "preferred-lifetime": 249000,
+                            "valid-lifetime": 259190
+                          }
+                        ],
+                        "reachable-time": 45,
+                        "retransmit-time": 50,
+                        "router-lifetime": 1802,
+                        "use-virtual-mac": true
+                      }
+                    ]
+                  }
+                },
+                "isis": [
+                  {
+                    "admin-state": "unlocked",
+                    "advertise-router-capability": "area",
+                    "export-policy": [
+                      "isis-export-bgp"
+                    ],
+                    "import-policy": [
+                      "isis-import-bgp"
+                    ],
+                    "isis-instance": 5,
+                    "level-capability": "1/2"
+                  }
+                ],
+                "maximum-routes": {
+                  "maximum-ipv4-routes": {
+                    "maxNumberOfRoutes": 666,
+                    "maxNumberOfRoutesLogOnly": true,
+                    "midRouteThreshold": 76
+                  },
+                  "maximum-ipv6-routes": {
+                    "maxNumberOfRoutes": 777,
+                    "maxNumberOfRoutesLogOnly": true,
+                    "midRouteThreshold": 77
+                  },
+                  "mc-maximum-routes": {
+                    "maxNumberOfMcastRoutes": 888,
+                    "maxNumberOfMcastRoutesLogOnly": true,
+                    "midRouteMcastThreshold": 78
+                  }
+                },
+                "mtu": 1506,
+                "ne-service-id": 456,
+                "ospf": {
+                  "compatible-rfc1583": true,
+                  "export-policy": [
+                    "vrf-bgp-to-ospf-export"
+                  ],
+                  "graceful-restart": {
+                    "helper-mode": true,
+                    "strict-lsa-checking": true
+                  },
+                  "import-policy": [
+                    "vrf-bgp-to-ospf-import"
+                  ],
+                  "overload-on-boot": {
+                    "timeout": 63
+                  },
+                  "timers": {
+                    "incremental-spf-wait": 900,
+                    "lsa-accumulate": 901,
+                    "lsa-arrival": 902,
+                    "lsa-generate": {
+                      "lsa-initial-wait": 4901,
+                      "lsa-second-wait": 4902,
+                      "max-lsa-wait": 4900
+                    },
+                    "redistribute-delay": 903,
+                    "spf-wait": {
+                      "spf-initial-wait": 906,
+                      "spf-max-wait": 9901,
+                      "spf-second-wait": 907
+                    }
+                  }
+                },
+                "rip": {
+                  "admin-state": "unlocked",
+                  "export-policy": [
+                    "rip-export-bgp"
+                  ],
+                  "group": [
+                    {
+                      "admin-state": "unlocked",
+                      "export-policy": [
+                        "rip-export-bgp"
+                      ],
+                      "group-name": "ripG1",
+                      "import-policy": [
+                        "rip-import-bgp"
+                      ],
+                      "metric-in": 9,
+                      "metric-out": 8,
+                      "preference": 82,
+                      "receive": "version-2",
+                      "send": "broadcast",
+                      "timers": {
+                        "flush": 574,
+                        "timeout": 573,
+                        "update": 572
+                      }
+                    }
+                  ],
+                  "import-policy": [
+                    "rip-import-bgp"
+                  ],
+                  "metric-in": 6,
+                  "metric-out": 2,
+                  "preference": 95,
+                  "propagate-metric": true,
+                  "receive": "version-2",
+                  "send": "broadcast",
+                  "timers": {
+                    "flush": 592,
+                    "timeout": 591,
+                    "update": 590
+                  }
+                },
+                "route-aggregation": {
+                  "aggregate": [
+                    {
+                      "community": [
+                        "2000:2000"
+                      ],
+                      "ip-prefix": "28.28.28.0/24",
+                      "next-hop": "blackhole",
+                      "summary-only": true
+                    },
+                    {
+                      "ip-prefix": "8a:5D:6F:5F::/64",
+                      "next-hop": "indirect",
+                      "summary-only": false
+                    },
+                    {
+                      "indirect": "10.0.0.1",
+                      "ip-prefix": "8.8.8.0/24",
+                      "next-hop": "indirect",
+                      "summary-only": false
+                    }
+                  ]
+                },
+                "route-distinguisher": "65001:456",
+                "route-distinguisher-type": "type0",
+                "route-target": [
+                  {
+                    "target-type": "exp",
+                    "target-value": "65002:1456"
+                  },
+                  {
+                    "target-type": "imp",
+                    "target-value": "65002:456"
+                  }
+                ],
+                "router-id": "150.150.150.150",
+                "site-name": "exampleSvc",
+                "snmp-community": [
+                  "sr"
+                ],
+                "static-route-details": {
+                  "static-routes": [
+                    {
+                      "ip-prefix": "8.8.4.4",
+                      "is-blackhole": true,
+                      "prefix-length": 32,
+                      "route-type": "unicast"
+                    },
+                    {
+                      "indirect": [
+                        {
+                          "admin-state": "unlocked",
+                          "ip-address": "20.0.0.5",
+                          "preference": 10,
+                          "tag": 4
+                        }
+                      ],
+                      "ip-prefix": "8.8.8.0",
+                      "is-blackhole": false,
+                      "next-hop": [
+                        {
+                          "admin-state": "unlocked",
+                          "bfd-liveness": true,
+                          "ip-address": "10.0.0.5",
+                          "preference": 5,
+                          "tag": 12
+                        }
+                      ],
+                      "prefix-length": 24,
+                      "route-type": "unicast",
+                      "tag": 5
+                    },
+                    {
+                      "ip-prefix": "2900::8",
+                      "is-blackhole": true,
+                      "prefix-length": 128,
+                      "route-type": "unicast"
+                    },
+                    {
+                      "indirect": [
+                        {
+                          "admin-state": "unlocked",
+                          "ip-address": "2702::5",
+                          "preference": 6,
+                          "tag": 3
+                        }
+                      ],
+                      "ip-prefix": "2800::0",
+                      "is-blackhole": false,
+                      "next-hop": [
+                        {
+                          "admin-state": "unlocked",
+                          "bfd-liveness": true,
+                          "ip-address": "2600::5",
+                          "preference": 5,
+                          "tag": 11
+                        }
+                      ],
+                      "prefix-length": 64,
+                      "route-type": "unicast"
+                    }
+                  ]
+                },
+                "vrf-export": [
+                  "vrf-export"
+                ],
+                "vrf-import": [
+                  "vrf-import"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "intent-type": "vprn",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc",
+      "template-name": "vprnGapAnalysis"
+    }
+  ]
+}

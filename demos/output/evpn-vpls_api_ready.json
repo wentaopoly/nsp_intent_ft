@@ -1,0 +1,111 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-type": "evpn-vpls",
+      "intent-type-version": "1",
+      "olc-state": "deployed",
+      "template-name": "evpn-vpls-default",
+      "intent-specific-data": {
+        "evpn-vpls:evpn-vpls": {
+          "customer-id": 45,
+          "ne-service-id": 800,
+          "mtu": 1500,
+          "description": "EVPN-VPLS-800-Campus bridge domain",
+          "site-details": {
+            "site": [
+              {
+                "device-id": "192.168.0.16",
+                "description": "EVPN-VPLS-800-Campus site-1",
+                "mtu": 1500,
+                "evi": 800,
+                "ecmp": 4,
+                "evpn-type": "mpls",
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c4/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 800
+                    }
+                  ]
+                },
+                "mpls": {
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:800",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65000:800"
+                      }
+                    ],
+                    "vsi-import": [
+                      "EVPN-VPLS-800-Campus-import"
+                    ],
+                    "vsi-export": [
+                      "EVPN-VPLS-800-Campus-export"
+                    ]
+                  },
+                  "auto-bind-tunnel": {
+                    "resolution": "filter",
+                    "resolution-filter": {
+                      "bgp": true,
+                      "ldp": true,
+                      "sr-isis": true
+                    }
+                  }
+                }
+              },
+              {
+                "device-id": "192.168.0.37",
+                "description": "EVPN-VPLS-800-Campus site-2",
+                "mtu": 1500,
+                "evi": 800,
+                "ecmp": 4,
+                "evpn-type": "mpls",
+                "routed-vpls": false,
+                "sap-details": {
+                  "sap": [
+                    {
+                      "port-id": "1/2/c5/1",
+                      "inner-vlan-tag": -1,
+                      "outer-vlan-tag": 800
+                    }
+                  ]
+                },
+                "mpls": {
+                  "bgp-instance": {
+                    "bgp-instance-id": 1,
+                    "route-distinguisher": "65000:800",
+                    "route-target": [
+                      {
+                        "target-type": "import-export",
+                        "target-value": "65000:800"
+                      }
+                    ],
+                    "vsi-import": [
+                      "EVPN-VPLS-800-Campus-import"
+                    ],
+                    "vsi-export": [
+                      "EVPN-VPLS-800-Campus-export"
+                    ]
+                  },
+                  "auto-bind-tunnel": {
+                    "resolution": "filter",
+                    "resolution-filter": {
+                      "bgp": true,
+                      "ldp": true,
+                      "sr-isis": true
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "service-name": "EVPN-VPLS-800-Campus"
+    }
+  ]
+}

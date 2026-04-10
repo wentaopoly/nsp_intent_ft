@@ -1,0 +1,124 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "evpn-epipe:evpn-epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "test",
+          "evpn-type": "vxlan",
+          "job-id": "test",
+          "mtu": 1,
+          "ne-service-id": 600,
+          "site-a": {
+            "description": "test",
+            "device-id": "15.15.15.15",
+            "ecmp": 1,
+            "evi": 1,
+            "local-ac": {
+              "eth-tag": 10,
+              "name": "AcName1"
+            },
+            "mtu": 1,
+            "remote-ac": {
+              "eth-tag": 20,
+              "name": "AcName2"
+            },
+            "sap-details": {
+              "sap": [
+                {
+                  "admin-state": "unlocked",
+                  "connection-profile-id": 20,
+                  "egress": {
+                    "agg-rate": {
+                      "cir": "60",
+                      "rate": "80"
+                    },
+                    "filter": {
+                      "mac": "test-macfilter"
+                    },
+                    "qos": {
+                      "sap-egress": {
+                        "overrides": {
+                          "policer": [
+                            {
+                              "cbs": "2000",
+                              "mbs": "3000",
+                              "percent-rate": {
+                                "cir": "30",
+                                "pir": "70"
+                              },
+                              "policer-id": 2
+                            }
+                          ]
+                        },
+                        "policy-name": "sapEgr988"
+                      }
+                    }
+                  },
+                  "enable-filter": true,
+                  "enable-qos": true,
+                  "encap-type": "dot1q",
+                  "ingress": {
+                    "agg-rate": {
+                      "cir": "60",
+                      "rate": "80"
+                    },
+                    "filter": {
+                      "mac": "test-macfilter"
+                    },
+                    "qos": {
+                      "sap-ingress": {
+                        "overrides": {
+                          "policer": [
+                            {
+                              "cbs": "2000",
+                              "mbs": "3000",
+                              "percent-rate": {
+                                "cir": "30",
+                                "pir": "70"
+                              },
+                              "policer-id": 2
+                            }
+                          ]
+                        },
+                        "policy-name": "sapIng987"
+                      }
+                    }
+                  },
+                  "inner-vlan-tag": -1,
+                  "outer-vlan-tag": -1,
+                  "port-id": "1/1/8"
+                }
+              ]
+            },
+            "site-name": "test",
+            "vxlan": {
+              "bgp-instance": {
+                "route-distinguisher": "65000:600",
+                "route-target": [
+                  {
+                    "target-type": "import-export",
+                    "target-value": "65001:600"
+                  }
+                ],
+                "vsi-export": [
+                  "bgp-export"
+                ],
+                "vsi-import": [
+                  "bgp-import"
+                ]
+              },
+              "vni": 1
+            }
+          }
+        }
+      },
+      "intent-type": "evpn-epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "exampleSvc",
+      "template-name": "evpn-epipeGapAnalysis"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "nsp-service-intent:intent": [
+    {
+      "intent-specific-data": {
+        "epipe:epipe": {
+          "admin-state": "unlocked",
+          "customer-id": 1,
+          "description": "svcDescription",
+          "job-id": "1111",
+          "mtu": 1515,
+          "ne-service-id": 1214,
+          "sdp-details": {
+            "sdp": [
+              {
+                "admin-state": "unlocked",
+                "collect-stats": true,
+                "control-word": true,
+                "description": "sdpDesc",
+                "entropy-label": [
+                  null
+                ],
+                "destination-device-id": "16.16.16.16",
+                "override-vc-id": true,
+                "pw-status": {
+                  "block-on-peer-fault": true,
+                  "signaling": true
+                },
+                "sdp-id": "800",
+                "source-device-id": "15.15.15.15",
+                "vc-id": "1213",
+                "vc-type": "ether"
+              }
+            ]
+          },
+          "site-a": {
+            "description": "siteADesc",
+            "device-id": "15.15.15.15",
+            "endpoint": [
+              {
+                "connection-profile-id": 20,
+                "egress": {
+                  "agg-rate": {
+                    "cir": 3000,
+                    "rate": "2000"
+                  },
+                  "filter": {
+                    "mac": "test-macfilter"
+                  }
+                },
+                "enable-filter": true,
+                "enable-qos": true,
+                "ingress": {
+                  "agg-rate": {
+                    "cir": 3000,
+                    "rate": "2000"
+                  },
+                  "filter": {
+                    "mac": "test-macfilter"
+                  }
+                },
+                "inner-vlan-tag": -1,
+                "outer-vlan-tag": -1,
+                "port-id": "1/1/8"
+              }
+            ],
+            "mtu": 1516,
+            "site-name": "siteB"
+          }
+        }
+      },
+      "intent-type": "epipe",
+      "intent-type-version": "2",
+      "olc-state": "deployed",
+      "service-name": "EpipeService2",
+      "template-name": "epipeGapAnalysis"
+    }
+  ]
+}

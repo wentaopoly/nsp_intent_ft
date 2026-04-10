@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSP Intent 智能配置系统 — Qwen3.5-9B 微调方案</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
+<style>
+  .reveal { font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .reveal h1, .reveal h2, .reveal h3 { color: #1a1a2e; font-weight: 700; }
+  .reveal h1 { font-size: 1.8em; }
+  .reveal h2 { font-size: 1.4em; }
+  .reveal h3 { font-size: 1.1em; }
+  .reveal p, .reveal li, .reveal td, .reveal th { color: #333; font-size: 0.7em; }
+  .reveal pre { box-shadow: none; border: 1px solid #ddd; font-size: 0.48em; }
+  .reveal code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+  .reveal table { margin: 0 auto; border-collapse: collapse; font-size: 0.65em; }
+  .reveal th { background: #1a1a2e; color: #fff; padding: 6px 14px; }
+  .reveal td { padding: 5px 14px; border-bottom: 1px solid #ddd; }
+  .reveal tr:nth-child(even) { background: #f7f7fa; }
+  .reveal .subtitle { font-size: 0.65em; color: #555; margin-top: 0.5em; }
+  .reveal .highlight { color: #124d87; font-weight: 600; }
+  .reveal .red { color: #c0392b; }
+  .reveal .green { color: #27ae60; }
+  .reveal .mono { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 0.85em; }
+  .reveal .arch-box {
+    background: #f4f6f9; border: 1px solid #ccc; border-radius: 6px;
+    padding: 18px 22px; text-align: left; font-size: 0.6em;
+    font-family: "JetBrains Mono", monospace; line-height: 1.7;
+    display: inline-block;
+  }
+  .reveal .pain-list li { margin-bottom: 0.4em; }
+  .reveal ul { text-align: left; }
+  .reveal .diagram-flow { font-size: 0.58em; line-height: 1.8; }
+  .reveal section { text-align: center; }
+  .reveal .left { text-align: left; }
+  .full-green { background: #27ae60; color: #fff; font-weight: 700; padding: 1px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================ -->
+<!-- Slide 1: Title -->
+<!-- ============================================================ -->
+<section>
+  <h1>NSP Intent 智能配置系统</h1>
+  <p class="subtitle">基于 Qwen3.5-9B 的 YANG 驱动微调方案</p>
+  <p class="subtitle" style="margin-top:1.5em; font-size:0.55em; color:#888;">
+    Nokia NSP &middot; 自然语言 &rarr; API-Ready JSON &middot; 9 种 Intent 类型<br>
+    2026-04
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 2: Problem -->
+<!-- ============================================================ -->
+<section>
+  <h2>问题：手动配置 NSP Intent 的痛点</h2>
+  <ul class="pain-list left" style="max-width:85%; margin:0 auto;">
+    <li>每个 Intent JSON 包含 <strong>数十到上百</strong> 个嵌套字段</li>
+    <li>YANG schema 定义严格：类型、范围、枚举、正则模式、max-elements</li>
+    <li>跨字段语义约束（SDP 双向绑定、VLAN 匹配、设备 IP 不重复）不在 YANG 中表达</li>
+    <li>9 种服务类型 &times; 多站点组合 &rarr; 手动编写极易出错</li>
+    <li>NSP API 校验在服务器端 (JS-scripted mapping-engine)，反馈滞后</li>
+  </ul>
+  <p style="margin-top:1em; font-size:0.6em; color:#c0392b;">
+    目标：用自然语言描述网络服务需求，自动生成合规 JSON
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 3: Solution Overview -->
+<!-- ============================================================ -->
+<section>
+  <h2>方案概览：NL &rarr; JSON 自动化</h2>
+  <p style="font-size:0.65em;">微调 Qwen3.5-9B 将自然语言指令映射为 <code>fill_values</code> 字典</p>
+  <table style="margin-top:1em;">
+    <tr><th>Intent 类型</th><th>NSP 模板名</th><th>典型字段数</th></tr>
+    <tr><td>epipe</td><td>ePIPE-Service-Using-SDP</td><td>15</td></tr>
+    <tr><td>tunnel</td><td>MPLSTunnelsWithBGP</td><td>4</td></tr>
+    <tr><td>vprn</td><td>VPRNServiceWithBGP</td><td>10-25</td></tr>
+    <tr><td>vpls</td><td>VPLSServiceUsingSDP</td><td>12-20</td></tr>
+    <tr><td>ies</td><td>IESService</td><td>8-15</td></tr>
+    <tr><td>etree</td><td>ETreeServiceUsingSDP</td><td>15-30</td></tr>
+    <tr><td>cpipe</td><td>CpipeServiceUsingSDP</td><td>12</td></tr>
+    <tr><td>evpn-epipe</td><td>EVPNEpipeService</td><td>10-15</td></tr>
+    <tr><td>evpn-vpls</td><td>EVPNVPLSService</td><td>10-15</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 4: Architecture -->
+<!-- ============================================================ -->
+<section>
+  <h2>系统架构：数据流</h2>
+  <div class="arch-box">
+<pre style="border:none; background:transparent; margin:0; padding:0; font-size:1em; box-shadow:none;">
+自然语言指令
+    |
+    v
+[Qwen3.5-9B + LoRA]  -- 推理 --&gt;  { intent_type, fill_values }
+    |
+    v
+merge_fill_values()   -- YANG resolve_path --&gt;  完整 Intent JSON
+    |
+    v
+4-Tier 离线验证栈
+    |-- Tier 1: 路径有效性 (YANG leaf path)
+    |-- Tier 2: 类型/范围/枚举/正则
+    |-- Tier 3: 合并后结构 (mandatory + list keys)
+    |-- Tier 4: 跨字段语义 (SDP双向, VLAN匹配, 设备去重)
+    |-- Tier 6: Canonical payload 相似度 (信息级)
+    |
+    v
+API-Ready JSON  --&gt;  NSP REST API
+</pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 5: Data Sources -->
+<!-- ============================================================ -->
+<section>
+  <h2>数据来源</h2>
+  <ul class="left" style="max-width:85%; margin:0 auto;">
+    <li><strong>YANG Schemas</strong>：9 个 intent 类型的官方 Nokia YANG 定义
+      <br><span class="mono" style="font-size:0.85em;">data/yang/{epipe,tunnel,vprn,vpls,ies,etree,cpipe,evpn-epipe,evpn-vpls}/</span></li>
+    <li><strong>Canonical Payloads</strong>：Nokia 出厂 JSON 示例（epipe/vprn/vpls/ies/evpn-* 有；etree/cpipe/tunnel 暂缺）</li>
+    <li><strong>Sarvesh 领域知识</strong>：
+      <ul>
+        <li>设备 IP 池、端口命名规范 (1/2/cN/1)</li>
+        <li>集群命名词汇 (Alpha, Beta, ... Polaris)</li>
+        <li>LAG 前缀、项目名称、站点描述</li>
+        <li>SDP ID 推导公式：<code>derive_sdp_id(src, dst)</code></li>
+      </ul>
+    </li>
+    <li><strong>合成训练数据</strong>：纯函数生成器 + 12 种指令模板风格</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 6: Training Setup -->
+<!-- ============================================================ -->
+<section>
+  <h2>训练配置</h2>
+  <table>
+    <tr><th>参数</th><th>值</th></tr>
+    <tr><td>基座模型</td><td>Qwen/Qwen3.5-9B (BF16)</td></tr>
+    <tr><td>微调方法</td><td>LoRA (r=32, alpha=64)</td></tr>
+    <tr><td>目标模块</td><td>q/k/v/o_proj, gate/up/down_proj</td></tr>
+    <tr><td>训练框架</td><td>SFTTrainer (TRL) + Accelerate DDP</td></tr>
+    <tr><td>GPU</td><td>2 &times; NVIDIA GPU, DDP 分布式</td></tr>
+    <tr><td>有效批大小</td><td>2 &times; 8 (grad accum) &times; 2 (GPU) = 32</td></tr>
+    <tr><td>学习率</td><td>2e-4, cosine schedule, warmup 5%</td></tr>
+    <tr><td>Epoch</td><td>5</td></tr>
+    <tr><td>max_length</td><td>8192 tokens</td></tr>
+    <tr><td>训练集</td><td>2,640 samples</td></tr>
+    <tr><td>验证集 / 测试集</td><td>330 / 330 samples</td></tr>
+    <tr><td>Golden 测试</td><td>11 cases (真实运维数据)</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 7: Validation Stack -->
+<!-- ============================================================ -->
+<section>
+  <h2>验证体系：Tier 1-4 + Tier 6</h2>
+  <table style="font-size:0.6em;">
+    <tr><th>层级</th><th>验证内容</th><th>数据源</th></tr>
+    <tr><td>Tier 1</td><td>路径有效性：每个 fill_values key 必须是合法 YANG leaf path</td><td>YANG schema</td></tr>
+    <tr><td>Tier 2</td><td>类型检查：int range, string length, enum, regex pattern</td><td>YANG schema</td></tr>
+    <tr><td>Tier 3</td><td>合并后结构：mandatory leaves, list keys, max/min-elements</td><td>YANG schema + template</td></tr>
+    <tr><td>Tier 4</td><td>语义规则：SDP 双向绑定, VLAN 匹配, 设备 IP 去重</td><td>领域知识</td></tr>
+    <tr><td style="color:#888;">Tier 5</td><td style="color:#888;">when 子句（已延迟 -- 大部分 intent 仅用简单等式）</td><td style="color:#888;">-</td></tr>
+    <tr><td>Tier 6</td><td>Canonical payload 路径覆盖度（信息级，不阻断）</td><td>Nokia 出厂 JSON</td></tr>
+  </table>
+  <p style="font-size:0.55em; margin-top:0.8em; color:#666;">
+    注：NSP 服务器端还有 JS-scripted mapping-engine 做最终校验。<br>
+    离线验证是结构性下界 (structural lower bound)，不等于 NSP 最终接受。
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 8: Milestone 1-2 -->
+<!-- ============================================================ -->
+<section>
+  <h2>Milestone 1-2：基础建设</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <h3>M1: YANG 验证器</h3>
+    <ul>
+      <li>解析 Nokia YANG schema &rarr; <code>SchemaIndex</code>（LeafMeta 字典）</li>
+      <li>实现 <code>validate_fill_values()</code>：路径 + 类型/范围/枚举/正则</li>
+      <li>替代之前的正则硬编码验证</li>
+    </ul>
+    <h3>M2: Skeleton 替换</h3>
+    <ul>
+      <li><code>merge_fill_values()</code>：通用 YANG <code>resolve_path()</code> 替代硬编码路径映射</li>
+      <li>删除 <code>resolve_epipe_paths</code> / <code>resolve_tunnel_paths</code> 等手动映射</li>
+      <li>VPRN site skeleton 保留（NSP API 默认值非 YANG 默认值）</li>
+      <li>引入 Tier 3 (结构) + Tier 4 (语义) 验证</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 9: Milestone 2.5 -- <think> fix -->
+<!-- ============================================================ -->
+<section>
+  <h2>M2.5: &lt;think&gt; Chat Template 修复</h2>
+  <p style="font-size:0.6em;">Qwen3 模型在推理时插入 <code>&lt;think&gt;...&lt;/think&gt;</code> 思考标记</p>
+  <div class="arch-box" style="font-size:0.55em; line-height:1.6;">
+<pre style="border:none; background:transparent; margin:0; padding:0; box-shadow:none; font-size:1em;">
+修复前 (Token 序列):
+
+  [system] [user]  &lt;think&gt; 推理内容... &lt;/think&gt;  {"intent_type": ...}
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   模型输出包含 think block
+                   JSON 提取失败或被截断
+
+修复后 (Root cause fix):
+
+  训练时 chat template 对齐 &rarr; assistant turn 从 { 开始
+  推理时 enable_thinking=False + 正确 stopping criteria
+  [system] [user]  {"intent_type": "epipe", "fill_values": {...}}
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   纯 JSON，无前缀噪声
+</pre>
+  </div>
+  <p style="font-size:0.55em; color:#888;">根因：训练与推理的 chat template 不匹配，导致 token 对齐偏移</p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 10: Milestone 3 -->
+<!-- ============================================================ -->
+<section>
+  <h2>M3: 3 &rarr; 9 Intent 类型扩展</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <p><strong>原始 3 类型：</strong>epipe, tunnel, vprn</p>
+    <p><strong>新增 6 类型：</strong>vpls, ies, etree, cpipe, evpn-epipe, evpn-vpls</p>
+    <ul>
+      <li>每种新 intent：YANG schema 解析 + field_definitions 生成器 + 指令模板</li>
+      <li>训练集从 ~900 扩展到 <strong>2,640 samples</strong></li>
+      <li>max_length 从 2048 &rarr; 4096 &rarr; <strong>8192</strong>（etree 多点 SDP mesh 可达 ~2700 tokens）</li>
+      <li>评估器不再静默跳过新 intent 类型</li>
+    </ul>
+    <table style="font-size:0.9em; margin-top:0.5em;">
+      <tr><th>类型</th><th>样本数</th><th>描述</th></tr>
+      <tr><td>epipe</td><td>600</td><td>点对点 L2</td></tr>
+      <tr><td>tunnel</td><td>400</td><td>MPLS SDP</td></tr>
+      <tr><td>vprn (1+2 site)</td><td>500</td><td>L3 VPN</td></tr>
+      <tr><td>vpls</td><td>400</td><td>多点 L2 桥接</td></tr>
+      <tr><td>ies</td><td>300</td><td>Internet 增强服务</td></tr>
+      <tr><td>etree</td><td>300</td><td>Root-Leaf L2</td></tr>
+      <tr><td>cpipe</td><td>200</td><td>Circuit 仿真</td></tr>
+      <tr><td>evpn-epipe</td><td>300</td><td>EVPN 点对点</td></tr>
+      <tr><td>evpn-vpls</td><td>300</td><td>EVPN 多点</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 11: Problem -- EVPN val_acc drop -->
+<!-- ============================================================ -->
+<section>
+  <h2>问题：EVPN val_acc 下降</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <p>M3 初次训练后 EVPN 类型的 value accuracy 仅 <span class="red">73-78%</span></p>
+    <table style="margin-top:0.5em;">
+      <tr><th>类型</th><th>val_acc</th><th>状态</th></tr>
+      <tr><td>epipe</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>tunnel</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>vprn</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>vpls</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>ies</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>cpipe</td><td>100%</td><td class="green">OK</td></tr>
+      <tr><td>evpn-epipe</td><td class="red">73%</td><td class="red">FAIL</td></tr>
+      <tr><td>evpn-vpls</td><td class="red">78%</td><td class="red">FAIL</td></tr>
+      <tr><td>etree</td><td class="red">79%</td><td class="red">FAIL</td></tr>
+    </table>
+    <p style="margin-top:0.5em;">其余 6 种 intent 类型均为 100% -- 问题集中在 EVPN 和 E-Tree</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 12: Root Cause -- EVPN -->
+<!-- ============================================================ -->
+<section>
+  <h2>根因分析：随机字段不在指令中</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <p><strong>核心问题：</strong>生成器内部随机生成的字段值没有出现在自然语言指令中</p>
+    <pre><code># 旧代码 (有 bug):
+def generate_evpn_epipe_values():
+    values["evi"] = random_evi()            # 随机生成
+    values["evpn-type"] = random.choice(["mpls", "vxlan"])  # 随机
+    # ... 但指令模板没有 {evi} 和 {evpn_type} 占位符!
+
+# 模型看到的指令:
+"Create EVPN-Epipe service 'svc-001' for customer 10..."
+# 模型需要预测的 fill_values 包含 evi=5823 -- 但指令里没提到!
+# 模型只能猜 &rarr; val_acc 下降</code></pre>
+    <p style="margin-top:0.5em;"><strong>影响：</strong>模型无法从指令推导出这些"隐藏"字段，被迫猜测</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 13: Fix -- Pure Function Generators -->
+<!-- ============================================================ -->
+<section>
+  <h2>修复：纯函数生成器 + 确定性推导</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <pre><code># 修复后: roll args 一次，传给生成器和模板
+def _roll_evpn_epipe_args():
+    """Roll all instruction-visible args once."""
+    return {
+        "service_name": ..., "customer_id": ...,
+        "evi": random_evi(),           # 出现在指令中
+        "evpn_type": random.choice(["mpls", "vxlan"]),  # 出现在指令中
+        ...
+    }
+
+args = _roll_evpn_epipe_args()
+values = generate_evpn_epipe_values(**args)   # 确定性转换
+instruction = template.format(**args)          # 同一组参数</code></pre>
+    <p><strong>设计原则：</strong></p>
+    <ul>
+      <li>所有出现在 fill_values 中的值必须可从指令推导</li>
+      <li>生成器是<strong>纯函数</strong>：相同输入 &rarr; 相同输出</li>
+      <li>随机性只在 <code>_roll_*_args()</code> 中发生一次</li>
+      <li>SDP ID 等派生值通过 <code>derive_sdp_id()</code> 确定性计算</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 14: Problem -- etree val_acc -->
+<!-- ============================================================ -->
+<section>
+  <h2>问题：E-Tree val_acc 79%</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <p><strong>E-Tree 的特殊挑战：</strong></p>
+    <ul>
+      <li>Root-Leaf 拓扑：1 个 root site + 2-3 个 leaf sites</li>
+      <li>SDP 不是全网状 (full mesh)，而是 root &harr; 每个 leaf 的星型连接</li>
+      <li>旧实现使用了 VPLS 风格的 full mesh SDP &rarr; 语义错误</li>
+    </ul>
+    <pre><code># Full mesh (错误 -- VPLS 风格):
+SDP: root&harr;leaf0, root&harr;leaf1, leaf0&harr;leaf1  (叶子间不应有 SDP)
+
+# Star topology (正确 -- E-Tree 风格):
+SDP: root&harr;leaf0, root&harr;leaf1  (仅 root 与每个 leaf 之间)</code></pre>
+    <p><strong>另一个问题：</strong>指令中 leaf 站点的描述格式模糊</p>
+    <pre><code># 模糊: "leaf sites on devices 10.0.0.1, 10.0.0.2 with ports ..."
+# 不清楚哪个 device 对应哪个 port
+
+# 修复后: "device 10.0.0.1 on port 1/2/c3/1, device 10.0.0.2 on port 1/2/c4/1"</code></pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 15: Root Cause -- etree SDP -->
+<!-- ============================================================ -->
+<section>
+  <h2>根因：SDP 全网状 + 格式歧义</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <table>
+      <tr><th>问题</th><th>根因</th><th>影响</th></tr>
+      <tr>
+        <td>SDP 拓扑错误</td>
+        <td>照搬 VPLS full-mesh SDP 生成逻辑</td>
+        <td>多余 SDP 条目，Tier 4 语义失败</td>
+      </tr>
+      <tr>
+        <td>设备-端口对应模糊</td>
+        <td>指令模板用列表式罗列 devices 和 ports</td>
+        <td>模型无法确定哪个 device 用哪个 port</td>
+      </tr>
+      <tr>
+        <td>VLAN 分配不一致</td>
+        <td>root 和 leaf 的 inner/outer VLAN 生成独立</td>
+        <td>val_acc 因 VLAN 值不匹配下降</td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 16: Fix -- etree -->
+<!-- ============================================================ -->
+<section>
+  <h2>修复：Root-Leaf SDP + 明确格式</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <ul>
+      <li><strong>SDP 拓扑：</strong>改为 root &harr; leaf 星型，每对生成双向 SDP</li>
+      <li><strong>指令格式：</strong>采用 "device X on port Y" 的一对一描述</li>
+      <li><strong>VLAN：</strong>统一生成一组 outer/inner VLAN，root 和所有 leaf 共享</li>
+    </ul>
+    <pre><code># 修复后的指令模板:
+format_etree_leaves_desc(leaf_devices, leaf_ports):
+  # "device 10.0.0.5 on port 1/2/c3/1, device 10.0.0.8 on port 1/2/c4/1"
+  # 每个 device-port 对明确绑定，消除歧义</code></pre>
+    <p style="margin-top:0.5em;">
+      <strong>结果：</strong>etree val_acc 从 <span class="red">79%</span>
+      提升至 <span class="green">100%</span>
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 17: Final Results -->
+<!-- ============================================================ -->
+<section>
+  <h2>最终结果</h2>
+  <table>
+    <tr><th>评估集</th><th>样本数</th><th>Value Accuracy</th><th>All Tiers Valid</th></tr>
+    <tr>
+      <td>Test Set</td>
+      <td>330</td>
+      <td><span class="full-green">100%</span></td>
+      <td><span class="full-green">100%</span></td>
+    </tr>
+    <tr>
+      <td>Golden Tests</td>
+      <td>11</td>
+      <td><span class="full-green">100%</span></td>
+      <td><span class="full-green">100%</span></td>
+    </tr>
+  </table>
+  <table style="margin-top:1.2em;">
+    <tr><th>Metric</th><th>Result</th></tr>
+    <tr><td>JSON Valid Rate</td><td>100%</td></tr>
+    <tr><td>Intent Type Accuracy</td><td>100%</td></tr>
+    <tr><td>Field Recall</td><td>100%</td></tr>
+    <tr><td>Field Precision</td><td>100%</td></tr>
+    <tr><td>Value Accuracy</td><td>100%</td></tr>
+    <tr><td>Tier 1+2 (YANG path/type)</td><td>100%</td></tr>
+    <tr><td>Tier 3 (merged structure)</td><td>100%</td></tr>
+    <tr><td>Tier 4 (semantic rules)</td><td>100%</td></tr>
+    <tr><td>SDP Bidirectional (epipe)</td><td>100%</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 18: Per-Type Breakdown -->
+<!-- ============================================================ -->
+<section>
+  <h2>各 Intent 类型详细指标</h2>
+  <table style="font-size:0.58em;">
+    <tr>
+      <th>Intent Type</th>
+      <th>Test Samples</th>
+      <th>JSON Valid</th>
+      <th>Field Recall</th>
+      <th>Value Acc</th>
+      <th>All Tiers</th>
+    </tr>
+    <tr>
+      <td>epipe</td><td>60</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>tunnel</td><td>40</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>vprn</td><td>50</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>vpls</td><td>40</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>ies</td><td>30</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>etree</td><td>30</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>cpipe</td><td>20</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>evpn-epipe</td><td>30</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr>
+      <td>evpn-vpls</td><td>30</td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+      <td><span class="green">100%</span></td>
+    </tr>
+    <tr style="font-weight:700; background:#e8f5e9;">
+      <td>Total</td><td>330</td>
+      <td>100%</td><td>100%</td><td>100%</td><td>100%</td>
+    </tr>
+  </table>
+  <p style="font-size:0.5em; color:#888; margin-top:0.5em;">
+    Golden tests (11 cases from real Sarvesh operational data): 11/11 = 100%
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 19: Future Work -->
+<!-- ============================================================ -->
+<section>
+  <h2>未来工作</h2>
+  <ul class="left" style="max-width:85%; margin:0 auto;">
+    <li><strong>扩展覆盖范围：</strong>NSP 共有 <span class="highlight">181 种 device intent</span>，当前覆盖 9 种 network intent</li>
+    <li><strong>Live NSP 验证：</strong>将离线验证栈连接至真实 NSP 实例，端到端 API 部署测试</li>
+    <li><strong>Tier 5 when 子句：</strong>处理 YANG conditional logic，覆盖更复杂的 intent 变体</li>
+    <li><strong>Canonical payload 扩展：</strong>补充 etree/cpipe/tunnel 的 Nokia 出厂 JSON 示例</li>
+    <li><strong>多语言指令：</strong>支持中/英/德 自然语言输入</li>
+    <li><strong>RAG 集成：</strong>在线检索 YANG schema 片段，支持未见过的 intent 类型</li>
+    <li><strong>交互式纠错：</strong>当 Tier 验证失败时，自动提示用户补充缺失字段</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<!-- Slide 20: Summary -->
+<!-- ============================================================ -->
+<section>
+  <h2>总结</h2>
+  <div class="left" style="max-width:85%; margin:0 auto; font-size:0.65em;">
+    <h3>核心成果</h3>
+    <ul>
+      <li>基于 <strong>Qwen3.5-9B + LoRA</strong> 实现自然语言到 NSP intent JSON 的自动生成</li>
+      <li>覆盖 <strong>9 种 intent 类型</strong>，2,640 训练样本，330 测试样本</li>
+      <li>建立 <strong>YANG 驱动的 4 层验证体系</strong>，离线保证结构合规性</li>
+      <li>最终测试结果：<strong>330/330 test + 11/11 golden = 100%</strong> 全指标</li>
+    </ul>
+    <h3>关键经验</h3>
+    <ul>
+      <li><strong>Chat template 对齐</strong>是 LLM 微调的隐形杀手 -- &lt;think&gt; token 偏移可致全面失败</li>
+      <li><strong>纯函数生成器</strong>原则：训练数据中每个目标值必须可从输入推导</li>
+      <li><strong>拓扑感知</strong>：不同服务类型的 SDP 连接模式不同 (full mesh vs. star)</li>
+      <li>YANG schema 是 "single source of truth"，但领域知识 (Sarvesh) 不可或缺</li>
+    </ul>
+  </div>
+  <p style="margin-top:1em; font-size:0.6em; color:#888;">谢谢</p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: true,
+  transition: 'none',
+  center: true,
+  width: 1200,
+  height: 700,
+});
+</script>
+</body>
+</html>

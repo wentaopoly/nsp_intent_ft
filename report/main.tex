@@ -1,0 +1,977 @@
+% !TEX program = xelatex
+\documentclass[12pt, a4paper]{article}
+
+% ============================================================
+% 字体与中文支持 (Overleaf 兼容配置)
+% ============================================================
+\usepackage{fontspec}
+\usepackage[UTF8, heading=true, fontset=fandol]{ctex}
+
+% ============================================================
+% 页面布局
+% ============================================================
+\usepackage[
+  top=2.5cm, bottom=2.5cm,
+  left=2.8cm, right=2.8cm,
+]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ============================================================
+% 数学 / 符号
+% ============================================================
+\usepackage{amsmath, amssymb, bm}
+
+% ============================================================
+% 图表与浮动体
+% ============================================================
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+
+% ============================================================
+% 代码排版
+% ============================================================
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{200,200,200}
+\definecolor{codekw}{RGB}{0,112,32}
+\definecolor{codecomment}{RGB}{96,96,96}
+\definecolor{codestr}{RGB}{186,33,33}
+
+\lstset{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestr},
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=4,
+  xleftmargin=1em,
+  xrightmargin=0.5em,
+  aboveskip=0.8em,
+  belowskip=0.6em,
+  numberstyle=\tiny\color{gray},
+  numbers=left,
+  numbersep=8pt,
+  escapeinside={(*@}{@*)},
+}
+
+\lstdefinelanguage{json}{
+  morestring=[b]",
+  literate=
+    *{:}{{{\color{black}:}}}{1}
+     {,}{{{\color{black},}}}{1}
+     {\{}{{{\color{black}\{}}}{1}
+     {\}}{{{\color{black}\}}}}{1}
+     {[}{{{\color{black}[}}}{1}
+     {]}{{{\color{black}]}}}{1},
+}
+
+% ============================================================
+% 超链接与引用
+% ============================================================
+\usepackage[hidelinks]{hyperref}
+\usepackage[numbers, sort&compress]{natbib}
+
+% ============================================================
+% 自定义命令
+% ============================================================
+\newcommand{\intenttype}[1]{\texttt{#1}}
+\newcommand{\filepath}[1]{\texttt{#1}}
+\newcommand{\yang}{\textsc{YANG}}
+\newcommand{\nsp}{\textsc{NSP}}
+\newcommand{\lora}{\textsc{LoRA}}
+\newcommand{\fillvalues}{\texttt{fill\_values}}
+
+% ============================================================
+% TikZ 绘图
+% ============================================================
+\usepackage{tikz}
+\usetikzlibrary{
+  arrows.meta,
+  positioning,
+  shapes.geometric,
+  shapes.multipart,
+  fit,
+  calc,
+  backgrounds,
+  decorations.pathreplacing,
+}
+
+% ============================================================
+% 标题信息
+% ============================================================
+\title{%
+  \vspace{-1cm}
+  {\LARGE\bfseries 基于 LoRA 微调的大语言模型实现 Nokia NSP\\[4pt]
+  网络服务意图自动生成}\\[12pt]
+  {\large --- 项目方案与实施计划 ---}
+}
+\author{%
+  刘力奥 \\[3pt]
+  {\small\textit{University of Ottawa}}
+}
+\date{\today}
+
+% ============================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% ============================================================
+% 摘要
+% ============================================================
+\begin{abstract}
+\noindent
+Nokia Network Services Platform (\nsp{}) 是电信运营商广泛部署的网络服务管理平台，其核心抽象"意图"(Intent) 以声明式 JSON 描述期望的网络服务状态。手动编写意图 JSON 面临路径复杂、容错率低、知识门槛高等挑战。本项目拟基于 Qwen3.5-9B 大语言模型，采用 \lora{} (Low-Rank Adaptation) 参数高效微调技术，构建一个从自然语言到 \nsp{} 意图 JSON 的端到端自动翻译系统。系统计划覆盖 9 种意图类型（epipe, tunnel, vprn, vpls, ies, etree, cpipe, evpn-epipe, evpn-vpls），并建立基于 Nokia 官方 \yang{} schema 的多层验证框架以确保输出质量。本文档详细阐述项目的背景调研、现有数据资产、技术方案设计、训练数据构造策略和实施计划。
+
+\vspace{6pt}
+\noindent\textbf{关键词：} 大语言模型微调、LoRA、网络意图自动化、Nokia NSP、YANG schema、结构化输出生成
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{引言}
+% ============================================================
+
+\subsection{问题背景}
+
+Nokia \nsp{} 是面向电信运营商的统一网络服务编排平台。其核心工作单元是"意图" (Intent)——一种声明式 JSON 配置对象，描述期望达到的网络服务目标状态。每个意图由三个核心字段组成：
+
+\begin{itemize}
+  \item \textbf{intent\_type}：服务类型标识（如 \intenttype{epipe}、\intenttype{vprn}）
+  \item \textbf{template\_name}：对应的 \nsp{} 模板名称
+  \item \textbf{fill\_values}：以点分路径 (dot-notation) 表示的扁平字段字典，对应 \yang{} schema 中的叶节点
+\end{itemize}
+
+\noindent
+其中 \fillvalues{} 采用形如 \texttt{site[0].interface[0].ipv4.primary.address} 的路径表达，映射到 \yang{} schema 中的层级结构。一个典型的 VPRN 多站点配置可包含 30--50 个字段，路径深度达 5--6 层。
+
+手动编写 \nsp{} 意图 JSON 存在以下困难：
+
+\begin{enumerate}
+  \item \textbf{复杂性高}：字段路径深、数量多，多站点服务尤甚；
+  \item \textbf{容错率低}：任何路径拼写错误、类型不匹配或语义冲突（如 SDP 双向性缺失）均会导致部署失败；
+  \item \textbf{知识门槛高}：操作人员需同时掌握 \yang{} schema 结构、\nsp{} API 规范和特定服务类型的网络语义。
+\end{enumerate}
+
+\subsection{研究目标}
+
+本项目旨在构建一个端到端的自然语言到 JSON (NL-to-JSON) 自动化系统：操作人员用自然语言描述网络服务需求（例如"创建一个从 192.168.0.16 到 192.168.0.37 的 E-Pipe 服务"），系统自动生成符合 \nsp{} API 规范的完整意图 JSON。
+
+\subsection{拟覆盖的意图类型}
+
+系统计划支持表~\ref{tab:intent-types} 所列的 9 种 \nsp{} 服务意图类型，涵盖 L2/L3 VPN、MPLS 隧道、TDM 仿真和 EVPN 等核心电信服务类别。
+
+\begin{table}[H]
+\centering
+\caption{拟支持的 9 种 NSP 意图类型}
+\label{tab:intent-types}
+\small
+\begin{tabular}{llll}
+\toprule
+\textbf{意图类型} & \textbf{服务类别} & \textbf{典型场景} & \textbf{拓扑} \\
+\midrule
+\intenttype{epipe}       & L2 点对点     & E-Line 专线互联         & 点对点 \\
+\intenttype{tunnel}      & MPLS 隧道     & SDP 隧道建立            & 点对点 \\
+\intenttype{vprn}        & L3 VPN        & 多站点 IP-VPN 服务      & 多点 \\
+\intenttype{vpls}        & L2 多点       & 以太网桥接域            & 多点 \\
+\intenttype{ies}         & L3 路由接入   & Internet 增强服务       & 单站点 \\
+\intenttype{etree}       & L2 星形       & Hub-spoke 广播隔离      & 星形 \\
+\intenttype{cpipe}       & TDM 仿真      & E1/T1 电路仿真          & 点对点 \\
+\intenttype{evpn-epipe}  & EVPN 点对点   & BGP 控制面的 E-Line     & 点对点 \\
+\intenttype{evpn-vpls}   & EVPN 多点     & BGP 控制面的桥接域      & 多点 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{现有数据资产}
+\label{sec:data-assets}
+% ============================================================
+
+本项目的数据基础来自以下四类权威来源，已整理就绪可直接用于训练数据构造。
+
+\subsection{Nokia YANG Schema}
+
+我们已获取并整理了全部 9 种意图类型的官方 Nokia \yang{} 模块文件，存放于 \filepath{data/yang/<intent\_type>/} 目录结构下。\yang{} schema 通过 \texttt{pyang} 库解析后可提供每个字段的如下元信息：
+
+\begin{itemize}
+  \item 规范化的层级路径 (canonical path)
+  \item 基础类型（\texttt{int32}, \texttt{string}, \texttt{enumeration}, \texttt{boolean} 等）
+  \item 取值范围约束（如 VLAN ID 的 \texttt{range "1..4094"}）
+  \item 字符串长度约束和正则模式 (pattern)
+  \item 枚举值集合
+  \item \texttt{mandatory}、\texttt{leaf-list}、\texttt{union} 等属性
+  \item 列表 (list) 节点的 key 定义和 \texttt{min-elements}/\texttt{max-elements} 约束
+\end{itemize}
+
+\noindent
+这些 schema 将作为训练数据验证和模型输出校验的权威基准。
+
+\subsection{Nokia 标准载荷}
+
+从 Nokia 统一服务管理包 (\texttt{nsp-service-mgmt-unified-25.8.3-rel.173.zip}) 中提取了 18 个标准 JSON 载荷示例，分布情况如表~\ref{tab:canonical-payloads} 所示。
+
+\begin{table}[H]
+\centering
+\caption{Nokia 标准载荷分布}
+\label{tab:canonical-payloads}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{意图类型} & \textbf{载荷数量} & \textbf{备注} \\
+\midrule
+\intenttype{vpls}        & 7 & 覆盖最全面 \\
+\intenttype{vprn}        & 3 & 含字段数差异悬殊的变体 \\
+\intenttype{evpn-vpls}   & 3 & 含 mpls/vxlan/both 三种模式 \\
+\intenttype{epipe}       & 2 & 基础双端点配置 \\
+\intenttype{evpn-epipe}  & 2 & 含 mpls/vxlan 两种模式 \\
+\intenttype{ies}         & 1 & 单站点路由接入 \\
+\midrule
+\intenttype{etree}       & 0 & Nokia 包中无标准载荷 \\
+\intenttype{cpipe}       & 0 & Nokia 包中无标准载荷 \\
+\intenttype{tunnel}      & 0 & Nokia 包中无标准载荷 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+标准载荷将用于构建相似度参考验证层（详见 \S\ref{sec:tier6}），帮助评估模型输出的路径集合与真实部署配置的吻合程度。需要注意，3 种意图类型在 Nokia 标准包中没有对应载荷，且现有载荷的字段覆盖度参差不齐（如 vprn 的不同载荷分别包含 658 和 15 个字段）。
+
+\subsection{领域知识词汇库}
+
+我们已整理了一套反映 Nokia 运营商真实环境的领域知识词汇库，包括：
+
+\begin{itemize}
+  \item \textbf{IP 地址段}：\texttt{10.x.x.x} 管理网、\texttt{192.168.x.x} 设备互联
+  \item \textbf{端口命名规范}：物理端口格式（如 \texttt{1/2/c4/1}）和 LAG 聚合端口（如 \texttt{lag-1} 至 \texttt{lag-20}）
+  \item \textbf{集群名称池}：35 个希腊字母和天体名称（Alpha, Beta, Gamma, ..., Castor）
+  \item \textbf{项目名称池}：26 个运营项目名称（OurAI, NetFlow, CloudX, ...）
+  \item \textbf{站点描述词}：11 类站点角色（datacenter, office, branch, pop, ...）
+\end{itemize}
+
+\subsection{Nokia 服务管理指南}
+
+Nokia 服务管理指南 PDF 的第 4.7--4.19 章节提供了各服务类型的参数约束说明和跨字段语义规则描述，将用于设计和验证 Tier 4 语义校验规则的正确性。
+
+% ============================================================
+\section{技术方案}
+\label{sec:approach}
+% ============================================================
+
+\subsection{总体架构}
+
+我们计划构建一条完整的「数据生成 $\to$ 模型训练 $\to$ 推理 $\to$ 验证」流水线。图~\ref{fig:pipeline} 展示了系统的整体架构。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 1.2cm,
+  every node/.style={font=\small},
+  block/.style={
+    rectangle, draw, rounded corners=3pt,
+    minimum width=3.2cm, minimum height=1cm,
+    fill=blue!8, align=center,
+  },
+  data/.style={
+    rectangle, draw, rounded corners=3pt,
+    minimum width=2.6cm, minimum height=0.8cm,
+    fill=green!8, align=center,
+  },
+  valid/.style={
+    rectangle, draw, rounded corners=3pt,
+    minimum width=2.6cm, minimum height=0.8cm,
+    fill=orange!10, align=center,
+  },
+  arrow/.style={-{Stealth[length=6pt]}, thick},
+]
+  % 数据源层
+  \node[data] (yang) {YANG Schema\\{\scriptsize 9 种意图类型}};
+  \node[data, right=1.5cm of yang] (vocab) {领域词汇库\\{\scriptsize IP/端口/名称}};
+  \node[data, right=1.5cm of vocab] (canon) {标准载荷\\{\scriptsize 18 个 JSON}};
+
+  % 数据生成层
+  \node[block, below=1.2cm of vocab] (datagen) {训练数据生成器\\{\scriptsize 字段定义 + 指令模板}};
+
+  % 数据集
+  \node[data, below=0.8cm of datagen] (dataset) {训练/验证/测试集\\{\scriptsize chat 格式 JSONL}};
+
+  % 训练层
+  \node[block, below=0.8cm of dataset] (train) {LoRA 微调训练\\{\scriptsize Qwen3.5-9B + SFTTrainer}};
+
+  % 推理层
+  \node[block, below=0.8cm of train] (infer) {推理引擎\\{\scriptsize Chat Template + JSON 停止}};
+
+  % 验证层
+  \node[valid, below=0.8cm of infer] (validate) {多层验证栈\\{\scriptsize Tier 1--4 + Tier 6}};
+
+  % 箭头：数据源 → 生成器
+  \draw[arrow] (yang.south) -- ++(0,-0.3) -| (datagen.north west);
+  \draw[arrow] (vocab.south) -- (datagen.north);
+  \draw[arrow] (canon.south) -- ++(0,-0.3) -| (datagen.north east);
+
+  % 箭头：流水线
+  \draw[arrow] (datagen) -- (dataset);
+  \draw[arrow] (dataset) -- (train);
+  \draw[arrow] (train) -- (infer);
+  \draw[arrow] (infer) -- (validate);
+
+  % YANG 到验证的直接连接
+  \draw[arrow, dashed, gray] (yang.south) -- ++(0,-0.3) -- ++(-1.8,0) |- (validate.west);
+
+  % 自然语言输入
+  \node[left=1.5cm of infer, align=center, font=\small\itshape] (nl) {自然语言\\输入};
+  \draw[arrow] (nl) -- (infer);
+
+  % JSON 输出
+  \node[right=1.2cm of validate, align=center, font=\small\itshape] (out) {意图\\JSON};
+  \draw[arrow] (validate) -- (out);
+
+\end{tikzpicture}
+\caption{系统整体架构：从数据源到验证输出的完整流水线}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{YANG Schema 解析器}
+\label{sec:yang-parser}
+
+Schema 解析器是整个系统的数据基础设施。我们计划使用 \texttt{pyang} 库解析 Nokia 的 \yang{} 模块，构建统一的 \texttt{SchemaIndex} 索引。核心设计包括：
+
+\begin{enumerate}
+  \item \textbf{类型链解析}：自动追踪 \texttt{import}、\texttt{uses grouping} 和 \texttt{typedef} 引用链，将 \texttt{inet:ipv4-address-no-zone} 等派生类型解析到 \texttt{string} + \texttt{pattern} 的基础形式；
+  \item \textbf{双模式查找}：支持精确路径匹配和后缀匹配——后者用于处理项目约定中省略中间包装容器（如 \texttt{sdp-details.}）的简写路径；
+  \item \textbf{Envelope 字段处理}：\nsp{} 的信封层字段（\texttt{service-name}、\texttt{intent-type}、\texttt{olc-state} 等）不在 per-intent \yang{} 模块中，需手工注册。
+\end{enumerate}
+
+\noindent
+每个叶节点的元数据封装为如下结构：
+
+\begin{lstlisting}[language=Python, caption={LeafMeta 数据结构}]
+@dataclass
+class LeafMeta:
+    path: str               # YANG 规范化路径
+    base_type: str          # 基础类型 (int32/string/boolean/...)
+    range_expr: str | None  # 取值范围
+    length_expr: str | None # 字符串长度约束
+    pattern_list: list[str] # 正则模式
+    enum_values: list[str]  # 枚举值集合
+    mandatory: bool         # 是否必填
+    is_leaf_list: bool      # leaf-list 标记
+    union_types: list       # union 成员类型
+\end{lstlisting}
+
+\subsection{多层验证框架}
+\label{sec:validation}
+
+验证框架是系统质量保障的核心。我们计划实现五层递进式校验栈，如图~\ref{fig:validation-tiers} 所示。每一层在前一层通过的基础上运行，逐步提升校验的语义深度。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small},
+  tier/.style={
+    rectangle, draw, rounded corners=2pt,
+    minimum width=12cm, minimum height=0.9cm,
+    align=center,
+  },
+  node distance=0.35cm,
+]
+  \node[tier, fill=red!8]    (t1) {\textbf{Tier 1} — 路径有效性：fill\_values 每个键是否对应 YANG 合法叶节点};
+  \node[tier, fill=orange!8, below=of t1] (t2) {\textbf{Tier 2} — 类型/范围/枚举/模式：每个值是否符合 YANG 类型约束};
+  \node[tier, fill=yellow!10, below=of t2] (t3) {\textbf{Tier 3} — 合并 JSON 结构：信封必填字段、列表 key、min/max-elements};
+  \node[tier, fill=green!8,  below=of t3] (t4) {\textbf{Tier 4} — 语义跨字段规则：SDP 双向性、设备不重复、EVPN 子树匹配等};
+  \node[tier, fill=blue!6, dashed, below=of t4] (t6) {\textbf{Tier 6} — 标准载荷相似度（信息性）：路径集合与 Nokia 标准载荷对比};
+
+  % 左侧标注
+  \node[left=0.3cm of t1, font=\scriptsize\itshape, text=gray] {结构};
+  \node[left=0.3cm of t2, font=\scriptsize\itshape, text=gray] {类型};
+  \node[left=0.3cm of t3, font=\scriptsize\itshape, text=gray] {结构};
+  \node[left=0.3cm of t4, font=\scriptsize\itshape, text=gray] {语义};
+  \node[left=0.3cm of t6, font=\scriptsize\itshape, text=gray] {参考};
+
+  % 右侧标注
+  \node[right=0.3cm of t1, font=\scriptsize, text=red!70!black] {阻断};
+  \node[right=0.3cm of t2, font=\scriptsize, text=red!70!black] {阻断};
+  \node[right=0.3cm of t3, font=\scriptsize, text=red!70!black] {阻断};
+  \node[right=0.3cm of t4, font=\scriptsize, text=red!70!black] {阻断};
+  \node[right=0.3cm of t6, font=\scriptsize, text=blue!60!black] {信息性};
+
+\end{tikzpicture}
+\caption{五层递进式验证栈}
+\label{fig:validation-tiers}
+\end{figure}
+
+各层校验内容详述如下。
+
+\subsubsection{Tier 1: 路径有效性}
+
+检查 \fillvalues{} 中每个键是否对应 \yang{} schema 中的合法叶节点路径。使用 \texttt{SchemaIndex} 的后缀匹配机制处理简写路径。例如 \texttt{sdp[0].sdp-id} 在 \yang{} 中的完整路径为 \texttt{epipe.sdp-details.sdp[0].sdp-id}，后缀匹配可以正确识别。
+
+\subsubsection{Tier 2: 类型/范围/枚举/模式}
+
+对每个值进行类型校验：
+
+\begin{itemize}
+  \item \textbf{整数类型}（int8--int64, uint8--uint64）：检查基础类型边界和 \yang{} \texttt{range} 表达式
+  \item \textbf{字符串类型}：检查 \texttt{length} 约束和 \texttt{pattern} 正则
+  \item \textbf{枚举类型}：检查值是否在合法枚举集合中
+  \item \textbf{联合类型}（union）：尝试每个成员类型，至少一个匹配即通过
+  \item \textbf{布尔类型}：接受 Python \texttt{bool} 和字符串形式
+\end{itemize}
+
+\subsubsection{Tier 3: 合并后 JSON 结构校验}
+
+在 \fillvalues{} 合并为完整意图 JSON 后运行，检查：
+
+\begin{itemize}
+  \item 根键 \texttt{nsp-service-intent:intent} 数组存在且非空
+  \item Envelope 层级的必填字段已填充（如 tunnel 的 \texttt{name/source-ne-id/sdp-id}）
+  \item 每个 \yang{} list 条目的 key 字段已填充
+  \item List 条目数量符合 \texttt{max-elements}/\texttt{min-elements} 约束
+\end{itemize}
+
+\subsubsection{Tier 4: 语义跨字段规则}
+
+校验 \yang{} schema 无法表达但业务上必须满足的跨字段约束。表~\ref{tab:semantic-rules} 列出每种意图类型计划实现的语义规则。
+
+\begin{table}[H]
+\centering
+\caption{各意图类型的 Tier 4 语义规则}
+\label{tab:semantic-rules}
+\small
+\begin{tabular}{lp{10.5cm}}
+\toprule
+\textbf{意图类型} & \textbf{语义规则} \\
+\midrule
+\intenttype{epipe} &
+  SDP[0] 源=site-a, SDP[1] 源=site-b（双向性）；两端 VLAN 标签一致；两端设备不同 \\
+\intenttype{tunnel} &
+  source-ne-id $\neq$ destination-ne-id \\
+\intenttype{vprn} &
+  所有站点 device-id 互不相同；RD 格式为 \texttt{ASN:ID} \\
+\intenttype{vpls} / \intenttype{evpn-vpls} &
+  站点 device-id 互不相同；所有站点外层 VLAN 标签一致 \\
+\intenttype{etree} &
+  至少 1 个 root SAP + 至少 1 个 leaf SAP；站点 device-id 互不相同 \\
+\intenttype{cpipe} &
+  两端设备不同；两端 time-slots 匹配；vc-type 在合法枚举集合中 \\
+\intenttype{evpn-epipe} &
+  evpn-type 与 mpls/vxlan 子树匹配；eth-tag 与 access VLAN 一致 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Tier 6: 标准载荷相似度}
+\label{sec:tier6}
+
+将模型输出的路径集合与 Nokia 标准载荷中的路径集合对比。路径规范化包括剥离包装容器（如 \texttt{*-details.}）和将列表索引折叠为通配符（如 \texttt{site[0]} $\to$ \texttt{site[*]}）。此层为信息性指标，不阻断验证流程，因为标准载荷本身不完整——3 种意图类型完全没有标准载荷。
+
+% ============================================================
+\section{训练数据构造策略}
+\label{sec:data-generation}
+% ============================================================
+
+高质量的合成训练数据是本项目的基石。我们设计了一套模板驱动的数据生成流水线，核心流程如图~\ref{fig:datagen-flow} 所示。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  every node/.style={font=\small},
+  step/.style={
+    rectangle, draw, rounded corners=3pt,
+    minimum width=3cm, minimum height=0.9cm,
+    fill=blue!6, align=center,
+  },
+  io/.style={
+    trapezium, draw, trapezium left angle=70, trapezium right angle=110,
+    minimum width=2.2cm, minimum height=0.7cm,
+    fill=green!6, align=center, font=\small,
+  },
+  arrow/.style={-{Stealth[length=5pt]}, thick},
+  node distance=0.5cm,
+]
+  \node[step] (gen) {字段定义生成器\\{\scriptsize field\_definitions.py}};
+  \node[io, right=1.5cm of gen] (fv) {fill\_values\\{\scriptsize 字段字典}};
+  \node[step, below=0.8cm of gen] (tmpl) {指令模板选择\\{\scriptsize instruction\_templates.py}};
+  \node[io, right=1.5cm of tmpl] (inst) {自然语言指令\\{\scriptsize user message}};
+  \node[step, below=0.8cm of tmpl] (valid) {样本验证\\{\scriptsize Tier 1+2+4}};
+  \node[step, below=0.8cm of valid] (assemble) {组装 chat 格式\\{\scriptsize (system, user, assistant)}};
+  \node[io, below=0.8cm of assemble] (jsonl) {JSONL 输出\\{\scriptsize train/val/test}};
+
+  \draw[arrow] (gen) -- (fv);
+  \draw[arrow] (fv.south) -- ++(0,-0.25) -| (tmpl.east);
+  \draw[arrow] (tmpl) -- (inst);
+  \draw[arrow] (gen.south) -- (tmpl.north);
+  \draw[arrow] (tmpl) -- (valid);
+  \draw[arrow] (fv.south) -- ++(0,-0.25) -- ++(2.5,0) |- (valid.east);
+  \draw[arrow] (valid) -- node[right, font=\scriptsize] {通过} (assemble);
+  \draw[arrow] (assemble) -- (jsonl);
+\end{tikzpicture}
+\caption{训练数据生成流程}
+\label{fig:datagen-flow}
+\end{figure}
+
+\subsection{字段定义生成器}
+
+每种意图类型对应一个字段生成器函数，负责产生一组语义一致的 \fillvalues{} 字典。统一调度器根据 intent\_type 路由到对应生成器：
+
+\begin{lstlisting}[language=Python, caption={统一调度接口}]
+def generate_intent_values(intent_type: str, **opts) -> dict:
+    """Route to per-intent generator, return fill_values dict."""
+\end{lstlisting}
+
+\noindent
+生成器需要满足的约束：
+
+\begin{itemize}
+  \item 产生的 \fillvalues{} 必须通过 Tier 1+2 校验（路径和类型正确）
+  \item 字段间的语义关系必须满足 Tier 4 规则（如 epipe 的 SDP 双向性）
+  \item 使用领域知识词汇库生成真实的 IP、端口、名称等值
+\end{itemize}
+
+\subsubsection{传统型生成器}
+
+对于 epipe、tunnel、vprn、vpls、ies、etree、cpipe 七种类型，生成器内部使用随机采样产生各字段值。例如：
+
+\begin{itemize}
+  \item \texttt{random\_device\_ip()} 从 \texttt{192.168.x.x} 段采样
+  \item \texttt{random\_port\_id()} 生成 Nokia 端口格式（\texttt{1/2/c4/1} 或 \texttt{lag-12}）
+  \item \texttt{derive\_sdp\_id(src\_ip, dst\_ip)} 从 IP 确定性推导 SDP ID
+\end{itemize}
+
+这些生成器的随机值同时出现在指令模板的占位符中，因此模型可以从输入中获取所有需要的信息。
+
+\subsubsection{纯函数型生成器——关键设计创新}
+\label{sec:pure-function}
+
+对于 EVPN 类型（evpn-epipe、evpn-vpls），我们计划采用\textbf{纯函数生成器}设计。其核心契约是：
+
+\begin{quote}
+\itshape
+生成器返回的每个字段值必须满足以下三条之一：\\
+(a) 直接等于某个指令可见参数的拷贝；\\
+(b) 该意图类型的固定常量（如 mtu=1500）；\\
+(c) 指令可见参数的确定性函数（如 RD = ``65000:\{ne\_service\_id\}''）。
+\end{quote}
+
+\noindent
+这一设计的动机是：如果 \fillvalues{} 中包含指令模板不可见的随机值，模型面对的是一个\textbf{不可学习的任务}——无论训练多少轮，那些随机字段的准确率都无法超过随机基线。
+
+具体实现方式是将随机采样和确定性生成分离为两步：
+
+\begin{lstlisting}[language=Python, caption={纯函数生成器的两步分离}]
+# Step 1: 集中随机采样, 产生指令可见参数
+args = _roll_evpn_epipe_args()
+
+# Step 2: 纯函数生成 (无内部随机调用)
+fill_values = generate_evpn_epipe_values(**args)
+
+# Step 3: 同一组 args 驱动指令模板
+instruction = template.format(**args)
+\end{lstlisting}
+
+\noindent
+计划中的确定性推导规则（参考 Nokia 运营实践）如表~\ref{tab:deterministic-rules} 所示。
+
+\begin{table}[H]
+\centering
+\caption{EVPN 纯函数生成器的确定性推导规则}
+\label{tab:deterministic-rules}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{字段} & \textbf{推导规则} & \textbf{类型} \\
+\midrule
+RD / RT            & \texttt{"65000:\{ne\_service\_id\}"} & 确定性函数 \\
+VNI                & \texttt{ne\_service\_id}             & 直接拷贝 \\
+vsi-import         & \texttt{["\{service\_name\}-import"]} & 确定性函数 \\
+vsi-export         & \texttt{["\{service\_name\}-export"]} & 确定性函数 \\
+eth-tag            & \texttt{vlan}                        & 直接拷贝 \\
+mtu                & 1500                                  & 常量 \\
+ecmp               & 4                                     & 常量 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{指令模板设计}
+
+每种意图类型计划配备 10--15 个自然语言模板，覆盖四种语言风格：
+
+\begin{enumerate}
+  \item \textbf{正式/完整风格}：所有参数显式列出
+  \item \textbf{会话/请求风格}：自然的问答语气
+  \item \textbf{简洁/运维风格}：紧凑的 key=value 格式
+  \item \textbf{带上下文推理}：包含项目/场景背景
+\end{enumerate}
+
+\noindent
+以 \intenttype{epipe} 为例：
+
+\begin{lstlisting}[language={}, caption={epipe 指令模板示例（三种风格）}, numbers=none]
+(*@\textit{// 正式风格}@*)
+"Create an E-Pipe service named '{service_name}' for
+customer {customer_id}. Connect device {site_a_device}
+on port {site_a_port} to device {site_b_device}..."
+
+(*@\textit{// 会话风格}@*)
+"I need a point-to-point Ethernet connection between
+{site_a_device} and {site_b_device}. The service is
+for customer {customer_id}, called '{service_name}'..."
+
+(*@\textit{// 简洁风格}@*)
+"Deploy epipe: {service_name}, cust={customer_id},
+svc-id={ne_service_id}, mtu={mtu}, ..."
+\end{lstlisting}
+
+\noindent
+多样化的模板使模型能泛化到不同表述方式的同一网络意图。
+
+\subsection{数据格式与规模规划}
+
+每个样本采用 OpenAI chat 格式的三元组 (\texttt{system}, \texttt{user}, \texttt{assistant})：
+
+\begin{lstlisting}[language=json, caption={训练样本格式示例}]
+{
+  "messages": [
+    {"role": "system",    "content": "You are an NSP intent..."},
+    {"role": "user",      "content": "Create an E-Pipe..."},
+    {"role": "assistant", "content": "{\"intent_type\":\"epipe\",...}"}
+  ]
+}
+\end{lstlisting}
+
+\noindent
+计划生成规模：
+
+\begin{table}[H]
+\centering
+\caption{数据集划分计划}
+\label{tab:data-split}
+\small
+\begin{tabular}{lcl}
+\toprule
+\textbf{集合} & \textbf{样本数} & \textbf{用途} \\
+\midrule
+训练集 (train.jsonl) & $\sim$2640 & SFT 微调 \\
+验证集 (val.jsonl)   & $\sim$330  & 训练中的 eval\_loss 监控 \\
+测试集 (test.jsonl)  & $\sim$330  & 最终模型评估 \\
+黄金测试 (golden\_tests.jsonl) & $\sim$11 & 手工编写的边界用例 \\
+\midrule
+\textbf{总计} & $\sim$\textbf{3311} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+9 种意图类型在数据集中均匀分布，每种约 367 个样本。黄金测试集将手工编写，覆盖多站点配置、边界值、易混淆类型等难例。
+
+\subsection{数据质量保障}
+
+每个生成的训练样本在写入 JSONL 前都将通过验证器的 Tier 1+2+4 校验，确保训练数据本身的质量。这意味着模型学习到的每一个样本都是 \yang{} schema 合规且语义正确的。
+
+% ============================================================
+\section{模型训练方案}
+\label{sec:training}
+% ============================================================
+
+\subsection{基础模型选择}
+
+我们选择 \textbf{Qwen3.5-9B} (Qwen/Qwen3.5-9B) 作为基础模型，理由如下：
+
+\begin{itemize}
+  \item 参数量 90 亿，在代码生成和结构化输出任务上表现优秀
+  \item 支持 32K 上下文窗口，可容纳复杂多站点意图的长输出
+  \item 原生支持中英文，方便后续扩展
+  \item chat template 内置 \texttt{<think>} 标记，需在训练与推理间对齐（详见 \S\ref{sec:chat-template}）
+\end{itemize}
+
+\subsection{LoRA 微调配置}
+
+采用 \lora{} (Low-Rank Adaptation) 进行参数高效微调，仅训练约 0.65\% 的参数：
+
+\begin{table}[H]
+\centering
+\caption{LoRA 超参数配置}
+\label{tab:lora-config}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{参数} & \textbf{值} \\
+\midrule
+秩 ($r$)                & 32 \\
+缩放系数 ($\alpha$)     & 64（$\alpha/r = 2.0$）\\
+目标模块               & q\_proj, k\_proj, v\_proj, o\_proj, gate\_proj, up\_proj, down\_proj \\
+Dropout                & 0.05 \\
+可训练参数             & $\sim$58M / 9B (0.65\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+目标模块覆盖注意力层全部 4 个投影矩阵（Q/K/V/O）和 FFN 层的 3 个矩阵（gate/up/down），共 7 个模块类型。
+
+\subsection{训练超参数}
+
+\begin{table}[H]
+\centering
+\caption{SFT 训练超参数}
+\label{tab:sft-config}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{参数} & \textbf{值} \\
+\midrule
+训练轮数 (epochs)              & 5 \\
+单卡 batch size                & 2 \\
+梯度累积步数                   & 8 \\
+有效 batch size                & $2 \times 8 \times 2\text{ GPUs} = 32$ \\
+学习率                         & $2 \times 10^{-4}$ \\
+学习率调度                     & Cosine \\
+Warmup 比例                    & 0.05 \\
+权重衰减                       & 0.01 \\
+最大梯度范数                   & 1.0 \\
+最大序列长度                   & 8192 tokens \\
+精度                           & BF16 \\
+评估频率                       & 每 50 步 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{硬件环境}
+
+\begin{itemize}
+  \item 2 $\times$ NVIDIA RTX 6000 Ada Generation (50.9\,GB 显存)
+  \item 并行策略：DDP (Distributed Data Parallel)，通过 Accelerate 库管理
+  \item 每张 GPU 加载完整 BF16 模型（$\sim$18\,GB），无需量化
+  \item 启用梯度检查点 (gradient checkpointing) 以节省显存
+\end{itemize}
+
+\subsection{Chat Template 对齐策略}
+\label{sec:chat-template}
+
+Qwen3.5 的 chat template 在渲染 assistant 消息时会自动插入 \texttt{<think>} 块。训练数据经模板渲染后的字节序列为：
+
+\begin{lstlisting}[language={}, numbers=none]
+<|im_start|>assistant
+<think>
+
+</think>
+
+{"intent_type": ...}<|im_end|>
+\end{lstlisting}
+
+\noindent
+即 \texttt{<think>} 块始终为空且已关闭。推理时，必须确保生成起始位置的字节序列与训练时\textbf{完全一致}。我们计划通过设置 \texttt{enable\_thinking=False} 实现这一对齐：
+
+\begin{lstlisting}[language=Python, caption={推理时的 chat template 对齐}]
+prompt = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=False,  # (*@关键：字节级对齐@*)
+)
+\end{lstlisting}
+
+% ============================================================
+\section{推理与评估方案}
+\label{sec:eval}
+% ============================================================
+
+\subsection{推理引擎设计}
+
+推理模块计划实现以下技术要点：
+
+\begin{enumerate}
+  \item \textbf{JSON 停止准则}：自定义 \texttt{StoppingCriteria}，跟踪花括号嵌套计数，计数归零时立即停止生成，避免不必要的 token 浪费；
+  \item \textbf{多策略 JSON 提取}：按优先级尝试整体解析、fenced code block 提取、贪心花括号匹配三种策略；
+  \item \textbf{端到端流水线}：串联推理、JSON 提取、\fillvalues{} 合并和四层验证。
+\end{enumerate}
+
+\subsection{评估指标体系}
+
+评估模块将对每个测试样本运行完整推理+验证流程，报告如表~\ref{tab:eval-metrics} 所列指标。
+
+\begin{table}[H]
+\centering
+\caption{评估指标体系}
+\label{tab:eval-metrics}
+\small
+\begin{tabular}{lp{9.5cm}}
+\toprule
+\textbf{指标} & \textbf{定义} \\
+\midrule
+JSON Valid Rate       & 输出可解析为合法 JSON 的比例 \\
+Intent Type Accuracy  & 意图类型预测正确率 \\
+Field Recall          & $|\text{预测字段} \cap \text{真实字段}| \;/\; |\text{真实字段}|$ \\
+Field Precision       & $|\text{预测字段} \cap \text{真实字段}| \;/\; |\text{预测字段}|$ \\
+Value Accuracy        & 匹配字段中值完全一致的比例 \\
+Tier 1+2 Valid        & 路径和类型校验通过率 \\
+Tier 3 Valid          & 合并结构校验通过率 \\
+Tier 4 Valid          & 语义校验通过率 \\
+All Tiers Valid       & 全部四层同时通过的比例 \\
+Tier 6 Recognition    & 标准载荷路径覆盖率（信息性）\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+评估将按意图类型细分报告，以识别特定类型的薄弱环节。评估过程使用增量检查点文件 (checkpoint JSONL)，确保即使中途中断也不丢失已完成的推理结果。
+
+\subsection{目标指标}
+
+基于任务特性和相关工作，我们设定以下目标指标：
+
+\begin{itemize}
+  \item JSON Valid Rate $\geq$ 95\%
+  \item Value Accuracy $\geq$ 95\%
+  \item All Tiers Valid $\geq$ 95\%
+  \item 每种意图类型均应达到上述阈值
+\end{itemize}
+
+% ============================================================
+\section{实施计划与里程碑}
+\label{sec:milestones}
+% ============================================================
+
+项目按五个里程碑推进，每个里程碑有明确的交付物和验收标准。
+
+\begin{table}[H]
+\centering
+\caption{项目里程碑规划}
+\label{tab:milestones}
+\small
+\begin{tabular}{clp{7cm}l}
+\toprule
+\textbf{里程碑} & \textbf{名称} & \textbf{目标} & \textbf{交付物} \\
+\midrule
+M1 & YANG 验证器 &
+  实现 Schema 解析器和 Tier 1+2 验证；对 3 种基础类型（epipe, tunnel, vprn）建立自动化校验能力 &
+  验证器代码 + 单元测试 \\
+\addlinespace
+M2 & 路径解析统一 &
+  用 YANG 驱动的路径解析替换手写映射，确保等价性 &
+  等价性回归测试 \\
+\addlinespace
+M2.5 & 推理对齐 &
+  解决 chat template \texttt{<think>} 标记对齐；修复推理 max\_tokens &
+  推理代码 + 修复报告 \\
+\addlinespace
+M3 & 横向扩展 &
+  从 3 种扩展到 9 种意图类型；为每种类型实现字段定义、指令模板和 Tier 4 规则 &
+  完整 9 类型数据集 \\
+\addlinespace
+M3.5 & 质量冲刺 &
+  纯函数生成器（EVPN 类型）；E-Tree SDP 语义修复；标准载荷验证层 &
+  最终训练+评估 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{预期挑战与应对策略}
+\label{sec:challenges}
+% ============================================================
+
+\subsection{Chat Template 训练-推理失配}
+
+Qwen3.5 的 \texttt{<think>} 标记在训练和推理时的状态不一致可能导致模型输出退化。应对策略：在推理时使用 \texttt{enable\_thinking=False} 确保字节级对齐。
+
+\subsection{不可学习字段的信息泄漏}
+
+如果 \fillvalues{} 中存在指令不可见的随机值，模型无法学习这些字段。应对策略：对 EVPN 等复杂类型采用纯函数生成器契约（\S\ref{sec:pure-function}），并实施确定性测试加以保障。
+
+\subsection{复杂拓扑的序列长度}
+
+多站点配置（如 etree 的 5 站点 + SDP 网状）产生的 token 序列可能超出 max\_length。应对策略：将 max\_length 设置为 8192（Qwen3.5 的 32K 上下文窗口远在此之上），并通过 dry-run 脚本在训练前验证所有样本长度。
+
+\subsection{E-Tree 拓扑语义}
+
+E-Tree 服务要求叶节点之间不可通信，如果直接复用 VPLS 的全网状 SDP 拓扑将违反此语义。应对策略：仅生成 root-leaf 双向 SDP，固定 1 个 root + N 个 leaf 的拓扑。
+
+\subsection{标准载荷覆盖不完整}
+
+etree、cpipe、tunnel 在 Nokia 标准包中没有标准载荷，Tier 6 对这些类型无法提供参考。应对策略：将 Tier 6 定义为信息性指标（不阻断），并在 Tier 1--4 中确保充分的结构和语义校验。
+
+% ============================================================
+\section{局限性说明}
+\label{sec:limitations}
+% ============================================================
+
+\begin{enumerate}
+  \item \textbf{离线验证的结构下限}：Tier 1--4 通过仅意味着输出与 \yang{} schema 结构一致。\nsp{} 服务器端还有 JavaScript 映射引擎的额外转换和验证，\texttt{valid=True} 不等于 \nsp{} 会接受该意图。
+  \item \textbf{测试集与训练集同分布}：测试集由同一生成器产生，无法评估模型对分布外指令的泛化能力。
+  \item \textbf{未覆盖设备意图}：Nokia \nsp{} 包含 181 种设备意图类型 (device-intent)，本项目仅覆盖 9 种服务意图 (service-intent)。
+\end{enumerate}
+
+% ============================================================
+\section{未来工作展望}
+% ============================================================
+
+\begin{itemize}
+  \item \textbf{设备意图类型扩展}：向 181 种 device-intent 扩展，\yang{} schema 目录结构已预留扩展空间。
+  \item \textbf{实机部署验证}：接入真实 \nsp{} 实例，验证生成意图在实际环境中的部署成功率。
+  \item \textbf{CLI 生成}：利用 Nokia 标准包中的 \texttt{payload*.cli.txt} 配对数据，训练 JSON-to-CLI 或 NL-to-CLI 能力。
+  \item \textbf{复合意图}：探索组合多种服务类型的复合意图和主备切换的冗余意图。
+\end{itemize}
+
+% ============================================================
+% 参考文献
+% ============================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem{hu2022lora}
+E.~J.~Hu, Y.~Shen, P.~Wallis, Z.~Allen-Zhu, Y.~Li, S.~Wang, L.~Wang, and
+  W.~Chen.
+\newblock Lo{RA}: Low-rank adaptation of large language models.
+\newblock In {\em ICLR}, 2022.
+
+\bibitem{qwen2025}
+Qwen Team.
+\newblock Qwen3 technical report.
+\newblock {\em arXiv preprint arXiv:2505.09388}, 2025.
+
+\bibitem{rfc7950}
+M.~Bjorklund.
+\newblock The {YANG} 1.1 data modeling language.
+\newblock RFC 7950, IETF, August 2016.
+
+\bibitem{nokia-nsp}
+Nokia.
+\newblock {\em Network Services Platform --- Service Management Guide}, release
+  25.8 edition, 2025.
+
+\bibitem{trl}
+L.~von Werra, Y.~Belkada, L.~Tunstall, E.~Beeching, T.~Thrush, N.~Lambert,
+  and S.~Huang.
+\newblock {TRL}: Transformer Reinforcement Learning.
+\newblock \url{https://github.com/huggingface/trl}, 2020.
+
+\bibitem{peft}
+S.~Mangrulkar, S.~Gugger, L.~Debut, Y.~Belkada, S.~Paul, and B.~Bossan.
+\newblock {PEFT}: State-of-the-art parameter-efficient fine-tuning methods.
+\newblock \url{https://github.com/huggingface/peft}, 2022.
+
+\bibitem{pyang}
+M.~Bjorklund.
+\newblock pyang --- {YANG} validator and converter.
+\newblock \url{https://github.com/mbj4668/pyang}, 2023.
+
+\end{thebibliography}
+
+\end{document}

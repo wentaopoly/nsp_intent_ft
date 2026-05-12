@@ -8,6 +8,7 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+demos/notebook_exec.log
 
 # Claude
 .claude/
@@ -19,6 +20,15 @@ output/qwen3-nsp-intent-adapter/adapter_model.safetensors
 # Evaluation logs and per-sample checkpoints
 logs/
 data/generated/_eval_checkpoint_*.jsonl
+
+# Local archive of standalone repos merged into this project
+archive/source_repos/
+
+# Local TeX Live user tree
+.texmf/
+.texmf-var/
+.texmf-config/
+missfont.log
 
 # OS
 .DS_Store

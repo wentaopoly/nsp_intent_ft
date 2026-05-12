@@ -56,7 +56,7 @@ The following generation flags are not valid and may be ignored: ['temperature',
     novel: site-b.endpoint[0].outer-vlan-tag
     novel: site-b.endpoint[0].port-id
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -150,7 +150,7 @@ Create an MPLS tunnel from 192.168.0.16 to 192.168.0.37 with SDP ID 1637. Name i
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   N/A (no canonical payloads)
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-tunnel-intent:intent": [
     {
@@ -227,7 +227,7 @@ Create a VPRN L3 VPN service 'VPRN-100-DataCenter' for customer 5. Configure sit
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   16/16 known
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -473,7 +473,7 @@ Create a VPLS service 'VPLS-500-Campus' for customer 20, NE service ID 500, MTU 
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   18/18 known
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -571,7 +571,7 @@ Set up an IES service 'IES-300-Access' for customer 15 with NE service ID 300 on
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   13/13 known
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -678,7 +678,7 @@ Create an E-Tree service 'ETree-400-HubSpoke' for customer 25 with NE service ID
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   N/A (no canonical payloads)
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -798,7 +798,7 @@ Create a Cpipe TDM service 'Cpipe-600-TDM' for customer 35 with NE service ID 60
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   N/A (no canonical payloads)
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -904,7 +904,7 @@ Create an mpls-EVPN E-Line service 'EVPN-Epipe-700-DC' for customer 40 with NE s
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   27/27 known
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -1051,7 +1051,7 @@ Create a mpls-EVPN VPLS service 'EVPN-VPLS-800-Campus' for customer 45 with NE s
   Tier 4 (semantic rules):    PASS
   Tier 6 (canonical match):   45/45 known
 
-📦 NSP API-Ready JSON:
+📦 NSP RESTCONF-shaped JSON (offline validated):
 {
   "nsp-service-intent:intent": [
     {
@@ -1170,7 +1170,7 @@ Create a mpls-EVPN VPLS service 'EVPN-VPLS-800-Campus' for customer 45 with NE s
 ═══════════════════════════════════════════════════
 DEMO 总结
 ═══════════════════════════════════════════════════
-  类型              验证       JSON有效      API-Ready
+  类型              验证       JSON有效      RESTCONF-shaped
   epipe           ✅        ✅           ✅
   tunnel          ✅        ✅           ✅
   vprn            ✅        ✅           ✅

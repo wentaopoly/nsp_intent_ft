@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NSP Intent 智能配置系统 — Qwen3.5-9B 微调方案</title>
+<title>NSP Intent 智能配置系统 — Qwen3.5-9B 实现与评估</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/white.css">
 <style>
@@ -47,9 +47,9 @@
 <!-- ============================================================ -->
 <section>
   <h1>NSP Intent 智能配置系统</h1>
-  <p class="subtitle">基于 Qwen3.5-9B 的 YANG 驱动微调方案</p>
+  <p class="subtitle">基于 Qwen3.5-9B 的 YANG 驱动微调实现与评估</p>
   <p class="subtitle" style="margin-top:1.5em; font-size:0.55em; color:#888;">
-    Nokia NSP &middot; 自然语言 &rarr; API-Ready JSON &middot; 9 种 Intent 类型<br>
+    Nokia NSP &middot; 自然语言 &rarr; 离线验证 JSON &middot; 9 种 Intent 类型<br>
     2026-04
   </p>
 </section>
@@ -75,7 +75,7 @@
 <!-- Slide 3: Solution Overview -->
 <!-- ============================================================ -->
 <section>
-  <h2>方案概览：NL &rarr; JSON 自动化</h2>
+  <h2>实现概览：NL &rarr; JSON 自动化</h2>
   <p style="font-size:0.65em;">微调 Qwen3.5-9B 将自然语言指令映射为 <code>fill_values</code> 字典</p>
   <table style="margin-top:1em;">
     <tr><th>Intent 类型</th><th>NSP 模板名</th><th>典型字段数</th></tr>
@@ -115,7 +115,7 @@ merge_fill_values()   -- YANG resolve_path --&gt;  完整 Intent JSON
     |-- Tier 6: Canonical payload 相似度 (信息级)
     |
     v
-API-Ready JSON  --&gt;  NSP REST API
+RESTCONF-shaped JSON  --&gt;  后续真实 NSP 验证
 </pre>
   </div>
 </section>

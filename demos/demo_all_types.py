@@ -174,11 +174,11 @@ def run_demo():
         # 2c. Merge
         # ------------------------------------------------------------------
         merged = None
-        api_ready = False
+        restconf_shaped = False
         if json_ok and fill_values:
             try:
                 merged = merge_fill_values(got_intent_type or intent_type, fill_values)
-                api_ready = merged is not None
+                restconf_shaped = merged is not None
             except Exception as exc:
                 print(f"  Merge error: {exc}")
 
@@ -223,10 +223,10 @@ def run_demo():
                 print(f"    novel: {p}")
 
         # ------------------------------------------------------------------
-        # 2e. Print and save API-ready JSON
+        # 2e. Print and save RESTCONF-shaped JSON
         # ------------------------------------------------------------------
         if merged:
-            print(f"\n\U0001f4e6 NSP API-Ready JSON:")
+            print(f"\n\U0001f4e6 NSP RESTCONF-shaped JSON (offline validated):")
             api_str = json.dumps(merged, indent=2, ensure_ascii=False)
             print(api_str)
 
@@ -235,13 +235,13 @@ def run_demo():
                 f.write(api_str + "\n")
             print(f"\n  -> saved to {out_path}")
         else:
-            print(f"\n\U0001f4e6 NSP API-Ready JSON: [not available]")
+            print(f"\n\U0001f4e6 NSP RESTCONF-shaped JSON: [not available]")
 
         # Record for summary
         results[intent_type] = {
             "val_ok": val_ok,
             "json_ok": json_ok,
-            "api_ready": api_ready,
+            "restconf_shaped": restconf_shaped,
         }
 
     # ------------------------------------------------------------------
@@ -250,15 +250,15 @@ def run_demo():
     print(f"\n\n{SEP}")
     print("DEMO 总结")
     print(f"{SEP}")
-    print(f"  {'类型':<15s} {'验证':<8s} {'JSON有效':<11s} {'API-Ready'}")
+    print(f"  {'类型':<15s} {'验证':<8s} {'JSON有效':<11s} {'RESTCONF形态'}")
 
     n_pass = 0
     for intent_type in INTENT_ORDER:
         r = results[intent_type]
         v = "\u2705" if r["val_ok"] else "\u274c"
         j = "\u2705" if r["json_ok"] else "\u274c"
-        a = "\u2705" if r["api_ready"] else "\u274c"
-        if r["val_ok"] and r["json_ok"] and r["api_ready"]:
+        a = "\u2705" if r["restconf_shaped"] else "\u274c"
+        if r["val_ok"] and r["json_ok"] and r["restconf_shaped"]:
             n_pass += 1
         print(f"  {intent_type:<15s} {v:<8s} {j:<11s} {a}")
 

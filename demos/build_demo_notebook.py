@@ -956,6 +956,8 @@ cells.append(new_markdown_cell(
 # ==========================================================================
 
 nb.cells = cells
+for idx, cell in enumerate(nb.cells, start=1):
+    cell["id"] = f"nsp-demo-{idx:02d}"
 
 out_path = os.path.join(os.path.dirname(__file__), "demo_notebook.ipynb")
 with open(out_path, "w", encoding="utf-8") as f:
